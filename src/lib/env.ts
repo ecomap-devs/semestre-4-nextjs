@@ -37,4 +37,7 @@ function exigir<T extends Record<string, string | undefined>>(grupo: string, val
 }
 
 export const configFirebase = () => exigir("Firebase", firebase);
+
+/** Se todas as variáveis do Firebase vieram. Para decidir sem disparar o erro. */
+export const firebaseConfigurado = () => Object.values(firebase).every(Boolean);
 export const configSupabase = () => exigir("Supabase", supabase);

@@ -10,13 +10,13 @@
     "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "@supabase/supabase-js": "^2.117.2",
     "firebase": "^12.19.0",
     "leaflet": "^1.9.4",
     "next": "16.3.8",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "react-leaflet": "^5.0.0"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

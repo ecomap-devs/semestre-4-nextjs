@@ -1,26 +1,105 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Base herdada do App.css do React. Fica em @layer base para que um utilitário do
+   Tailwind, se usado, ainda vença. */
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  html {
+    /* O cabeçalho da Home é fixo (64px): sem isto, a âncora de cada seção parava
+       escondida debaixo dele. */
+    scroll-padding-top: 64px;
+  }
 
-@media (prefers-color-scheme: dark) {
+  /* Tipografia do index.css do React (vinha do modelo do Vite e valia em todo o site:
+     texto base de 18px, entrelinha de 145%). As cores de modo escuro do mesmo arquivo
+     ficaram de fora: escureciam só parte da página e os campos de formulário. */
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    font: 18px/145% system-ui, "Segoe UI", Roboto, sans-serif;
+    letter-spacing: 0.18px;
+    color: #6b6375;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  @media (max-width: 1024px) {
+    :root {
+      font-size: 16px;
+    }
+  }
+
+  body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9fafb;
+  }
+
+  h1,
+  h2 {
+    font-weight: 500;
+    color: #08060d;
+  }
+
+  h1 {
+    font-size: 56px;
+    letter-spacing: -1.68px;
+    margin: 32px 0;
+  }
+
+  h2 {
+    font-size: 24px;
+    line-height: 118%;
+    letter-spacing: -0.24px;
+    margin: 0 0 8px;
+  }
+
+  @media (max-width: 1024px) {
+    h1 {
+      font-size: 36px;
+      margin: 20px 0;
+    }
+    h2 {
+      font-size: 20px;
+    }
+  }
+
+  button {
+    font-family: inherit;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Transição entre páginas (o React fazia um fade de 300ms ao trocar de rota). */
+@keyframes entrar-na-pagina {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.pagina {
+  animation: entrar-na-pagina 300ms ease both;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }

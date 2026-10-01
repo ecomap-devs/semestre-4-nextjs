@@ -7,7 +7,7 @@
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
   <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white">
   <img alt="Firebase Hosting" src="https://img.shields.io/badge/Firebase-Hosting_est%C3%A1tico-ffca28?logo=firebase&logoColor=black">
-  <img alt="Estado" src="https://img.shields.io/badge/estado-porte_em_andamento-d95926">
+  <img alt="Estado" src="https://img.shields.io/badge/estado-porte_conclu%C3%ADdo-199e70">
   <img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-5b6270">
 </p>
 
@@ -22,9 +22,9 @@ Os dois usam o mesmo backend, então a conta é a mesma e uma avaliação feita 
 aparece no site.
 
 > [!NOTE]
-> **A base está pronta e o código ainda não entrou.** Configuração, credenciais, CI,
-> preview e deploy funcionam; as páginas são placeholders. O porte começa pelas três
-> telas do React: `Home.jsx`, `Mapa.jsx` e `Animais.jsx`.
+> **As três telas do React estão portadas** (Início, Mapa e Animais, com login e
+> avaliações), com a mesma interface e os defeitos conhecidos corrigidos. O site ainda
+> **não está no endereço principal**: a troca segue a seção "A troca de endereço".
 
 ## 🧭 Onde este repositório entra
 
@@ -52,8 +52,9 @@ flowchart LR
 |---|---|---|
 | **Framework** | Next.js 16 (App Router) · React 19 | Cada página sai como HTML pronto no build, e não como uma `div` vazia montada por JS |
 | **Linguagem** | TypeScript `strict` | Decidido em 30/09/2026, no início do porte, que é quando trocar custa menos |
-| **Estilo** | Tailwind CSS 4 | O React do 3º semestre já usava Tailwind |
-| **Mapa** | `leaflet` + `react-leaflet` | O mesmo Leaflet do React, com os mesmos tiles de satélite |
+| **Estilo** | Estilo inline, como no React · Tailwind 4 só como base | O porte manteve o visual idêntico; o Tailwind entra pelo reset de estilos |
+| **Ícones** | Font Awesome 6, pelo npm | O React carregava de um CDN |
+| **Mapa** | `leaflet` | O mesmo Leaflet do React, agora pelo npm e com versão fixa (o React baixava do unpkg sem versão) |
 | **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
 | **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
 | **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
@@ -140,6 +141,36 @@ Os mesmos nomes do semestre-4-flutter, para quem já configurou um configurar o 
 | `FIREBASE_MESSAGING_SENDER_ID` · `FIREBASE_PROJECT_ID` · `FIREBASE_AUTH_DOMAIN` · `FIREBASE_STORAGE_BUCKET` | Configuração do SDK no console do Firebase |
 | `SUPABASE_URL` · `SUPABASE_PUBLISHABLE_KEY` | Project Settings → API Keys no Supabase |
 | `FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756` | Conta de serviço com permissão de deploy no Hosting. Sem ela, o preview avisa e pula |
+
+</details>
+
+## 🔁 O que o porte corrigiu
+
+A interface é a mesma do React, conferida lado a lado em capturas de tela no desktop e no
+celular. O que mudou foi de propósito:
+
+<details>
+<summary>Defeitos do React corrigidos</summary>
+
+| Onde | No React | Agora |
+|---|---|---|
+| Login | O texto digitado nos campos era branco sobre fundo branco | Legível |
+| Cadastro | Gravava o e-mail em `usuarios/{uid}` (LGPD) | Não grava, como o Flutter |
+| Avatar | Usava a `anon` key do Supabase, desativada em 08/09/2026 | `sb_publishable_` |
+| Avaliações | Baixava a coleção inteira; falha no envio deixava o botão em "Enviando..." | `limit()`, média e total agregados no servidor, erro tratado, hora do servidor |
+| Avaliações | Entre 28 e 29 dias aparecia "há 0 mês" | "há 4 semanas" |
+| Mapa | Clicar em São Paulo abria a ficha do Cerrado | Escolhe o bioma mais específico, como o Flutter |
+| Mapa | Legenda com "Limites Estaduais", sem camada correspondente | Só o que está desenhado |
+| Mapa | Leaflet do unpkg sem versão | Do npm, com versão fixa |
+| Início | Carregava a MapLibre do unpkg para um mapa que não existia na página | Removido |
+| Início | "Compartilhar" não fazia nada; "Baixar Dados" apontava para um `.zip` inexistente | Compartilha (ou copia o link); baixa o GeoJSON dos alertas |
+| Início | A âncora de cada seção parava debaixo do cabeçalho fixo | Desconta o cabeçalho |
+| Início | Equipe com quatro pessoas | As cinco |
+| Início e rodapé | Cinza sobre verde-escuro quase ilegível; contato e redes com texto de exemplo e links `#` | Contraste corrigido; só o que é real |
+| Animais | Busca exigia acento ("onca" não achava a onça) | Sem acento e sem caixa |
+| Animais | Cards piscavam ao entrar; ficha sem Esc e com o fundo rolando | Corrigido |
+| Imagens | Foto que não carregava virava ícone quebrado | Imagem reserva |
+| Geral | A página ficava em branco até o Firebase responder | A página aparece na hora; só o botão de login espera |
 
 </details>
 

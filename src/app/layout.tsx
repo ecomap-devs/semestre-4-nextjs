@@ -1,16 +1,8 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { ProvedorAuth } from "@/componentes/autenticacao/ProvedorAuth";
 
 export const metadata: Metadata = {
   title: {
@@ -18,12 +10,19 @@ export const metadata: Metadata = {
     template: "%s · EcoMapBrasil",
   },
   description: "Desmatamento e fauna ameaçada nos biomas brasileiros, em mapa, gráfico e ficha de espécie.",
+  icons: { icon: "/logo.png" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#15803d",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="pt-BR">
+      <body>
+        <ProvedorAuth>{children}</ProvedorAuth>
+      </body>
     </html>
   );
 }

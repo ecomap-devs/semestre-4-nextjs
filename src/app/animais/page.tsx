@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 
-export const metadata: Metadata = { title: "Animais" };
+import { Animais } from "@/componentes/animais/Animais";
 
-// Placeholder até o porte da Animais.jsx.
-export default function Animais() {
-  return (
-    <main className="flex flex-1 items-center justify-center p-8">
-      <p className="opacity-80">O catálogo de espécies entra aqui.</p>
-    </main>
-  );
+export const metadata: Metadata = {
+  title: "Animais",
+  description: "Espécies brasileiras ameaçadas pelo desmatamento: status de conservação, tendência populacional e principais ameaças.",
+};
+
+export default function Pagina() {
+  return <Animais />;
 }
