@@ -1,27 +1,34 @@
 "use client";
 
+import { FirebaseError } from "firebase/app";
 import {
-  addDoc,
   average,
   collection,
   count,
+  doc,
   getAggregateFromServer,
+  getDocs,
   limit,
   onSnapshot,
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
 } from "firebase/firestore";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
+import { fotoConfiavel } from "@/lib/avatar";
 import { firebaseConfigurado } from "@/lib/env";
 import { db } from "@/lib/firebase";
 import { paraAvaliacao, type Avaliacao } from "@/tipos/avaliacao";
 
 const POR_PAGINA = 6;
-const TETO = 100; // "Mostrar mais" traz até aqui: a coleção não é baixada inteira.
+const A_MAIS = 12; // cada "Mostrar mais" traz mais estas, até acabar
 const MAX_COMENTARIO = 2000; // o mesmo limite das Firestore Rules
+const MAX_NOME = 200;
 
 function Estrelas({ valor, aoMudar, tamanho = 16 }: { valor: number; aoMudar?: (n: number) => void; tamanho?: number }) {
   const [sobre, setSobre] = useState(0);
@@ -88,20 +95,41 @@ export function Avaliacoes() {
   const { usuario, abrirLogin } = useAuth();
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [resumo, setResumo] = useState<Resumo>({ total: 0, media: null });
-  const [mostrarTodas, setMostrarTodas] = useState(false);
+  const [limite, setLimite] = useState(POR_PAGINA);
   const [nota, setNota] = useState(0);
   const [comentario, setComentario] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
-  const [sucesso, setSucesso] = useState(false);
+  const [sucesso, setSucesso] = useState("");
   const [falhaAoCarregar, setFalhaAoCarregar] = useState(() => !firebaseConfigurado());
   // Sem rede, o Firestore não dá erro: entrega o cache (vazio) e segue tentando.
   const [doServidor, setDoServidor] = useState(false);
 
+  // Média e total vêm de uma agregação no servidor, e não de somar a lista. Só a
+  // resposta do pedido mais recente vale: uma lenta que chegue depois não
+  // sobrescreve a nova.
+  const pedidoResumo = useRef(0);
+  const atualizarResumo = useCallback(() => {
+    const pedido = ++pedidoResumo.current;
+    getAggregateFromServer(collection(db(), "avaliacoes"), { total: count(), media: average("nota") })
+      .then((r) => {
+        if (pedido === pedidoResumo.current) setResumo({ total: r.data().total, media: r.data().media });
+      })
+      .catch((e) => console.error("Resumo das avaliações:", e));
+  }, []);
+
+  // Agregação não é tempo real: uma edição fora da página visível não dispara a
+  // lista. O resumo é refeito também de tempos em tempos.
+  useEffect(() => {
+    if (!firebaseConfigurado()) return;
+    const relogio = setInterval(atualizarResumo, 60_000);
+    return () => clearInterval(relogio);
+  }, [atualizarResumo]);
+
   // Lista em tempo real, só do que aparece na tela.
   useEffect(() => {
     if (!firebaseConfigurado()) return;
-    const q = query(collection(db(), "avaliacoes"), orderBy("criadoEm", "desc"), limit(mostrarTodas ? TETO : POR_PAGINA));
+    const q = query(collection(db(), "avaliacoes"), orderBy("criadoEm", "desc"), limit(limite));
     return onSnapshot(
       q,
       (snap) => {
@@ -112,17 +140,14 @@ export function Avaliacoes() {
             .map((d) => paraAvaliacao(d.id, d.data({ serverTimestamps: "estimate" })))
             .filter((a): a is Avaliacao => a !== null),
         );
-        // Média e total vêm de uma agregação no servidor, e não de somar a lista.
-        getAggregateFromServer(collection(db(), "avaliacoes"), { total: count(), media: average("nota") })
-          .then((r) => setResumo({ total: r.data().total, media: r.data().media }))
-          .catch((e) => console.error("Resumo das avaliações:", e));
+        atualizarResumo();
       },
       (e) => {
         console.error("Avaliações:", e);
         setFalhaAoCarregar(true);
       },
     );
-  }, [mostrarTodas]);
+  }, [limite, atualizarResumo]);
 
   async function enviar() {
     setErro("");
@@ -140,23 +165,36 @@ export function Avaliacoes() {
     }
     setEnviando(true);
     try {
-      await addDoc(collection(db(), "avaliacoes"), {
-        uid: usuario.uid,
-        nome: (usuario.displayName || "Usuário").slice(0, 200),
-        photoURL: usuario.photoURL || "",
+      const dados = {
+        nome: (usuario.displayName?.trim() || "Usuário").slice(0, MAX_NOME),
+        photoURL: fotoConfiavel(usuario.photoURL),
         nota,
         comentario: comentario.trim(),
+      };
+      // Uma avaliação por pessoa (as rules exigem que o id seja o uid). Se a pessoa
+      // já avaliou — inclusive numa avaliação antiga, de antes dessa regra —, a
+      // existente é atualizada em vez de criar outra.
+      const existente = await getDocs(query(collection(db(), "avaliacoes"), where("uid", "==", usuario.uid), limit(1)));
+      const anterior = existente.docs[0];
+      if (anterior) {
+        await updateDoc(anterior.ref, { ...dados, atualizadoEm: serverTimestamp() });
+      } else {
         // Hora do servidor, não do relógio de quem avalia.
-        criadoEm: serverTimestamp(),
-      });
+        await setDoc(doc(db(), "avaliacoes", usuario.uid), { ...dados, uid: usuario.uid, criadoEm: serverTimestamp() });
+      }
+      atualizarResumo();
       setNota(0);
       setComentario("");
-      setSucesso(true);
-      setTimeout(() => setSucesso(false), 3000);
+      setSucesso(anterior ? "Sua avaliação foi atualizada." : "Avaliação enviada com sucesso!");
+      setTimeout(() => setSucesso(""), 3000);
     } catch (e) {
       // No React, uma falha aqui deixava o botão em "Enviando..." para sempre.
       console.error(e);
-      setErro("Não foi possível enviar sua avaliação. Tente de novo.");
+      setErro(
+        e instanceof FirebaseError && e.code === "permission-denied"
+          ? `O servidor recusou a avaliação. Confira se o comentário tem até ${MAX_COMENTARIO} caracteres e tente de novo.`
+          : "Não foi possível enviar sua avaliação. Verifique sua conexão e tente de novo.",
+      );
     } finally {
       setEnviando(false);
     }
@@ -204,7 +242,7 @@ export function Avaliacoes() {
                 <div style={{ width: 42, height: 42, borderRadius: "50%", overflow: "hidden", background: "linear-gradient(135deg,#d1fae5,#a7f3d0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {av.photoURL ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={av.photoURL} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => (e.currentTarget.style.display = "none")} />
+                    <img src={av.photoURL} alt="" referrerPolicy="no-referrer" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => (e.currentTarget.style.display = "none")} />
                   ) : (
                     <span style={{ fontSize: 16, fontWeight: 700, color: "#16a34a" }}>{av.nome.charAt(0).toUpperCase()}</span>
                   )}
@@ -222,16 +260,18 @@ export function Avaliacoes() {
           ))}
         </div>
 
-        {(mostrarTodas || restantes > 0) && resumo.total > POR_PAGINA && (
+        {(restantes > 0 || limite > POR_PAGINA) && resumo.total > POR_PAGINA && (
           <div style={{ textAlign: "center", marginBottom: 48 }}>
             <button
               type="button"
-              onClick={() => setMostrarTodas((v) => !v)}
+              // De 12 em 12, até acabar. Antes "Mostrar mais" trazia no máximo 100 e
+              // anunciava as que passassem disso como restantes, sem chegar nelas.
+              onClick={() => setLimite((l) => (restantes > 0 ? l + A_MAIS : POR_PAGINA))}
               style={{ background: "none", border: "1px solid #16a34a", color: "#16a34a", borderRadius: 10, padding: "10px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "background 0.2s" }}
               onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdf4")}
               onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
             >
-              {mostrarTodas ? "Mostrar menos" : `Mostrar mais (${restantes} restantes)`}
+              {restantes > 0 ? `Mostrar mais (${restantes} restantes)` : "Mostrar menos"}
             </button>
           </div>
         )}
@@ -241,7 +281,7 @@ export function Avaliacoes() {
 
           {sucesso && (
             <div role="status" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#16a34a", fontWeight: 600 }}>
-              ✓ Avaliação enviada com sucesso!
+              ✓ {sucesso}
             </div>
           )}
           {erro && (
