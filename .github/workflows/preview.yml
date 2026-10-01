@@ -2,6 +2,19 @@ name: Preview do PR
 
 # Cada PR ganha uma URL própria no Firebase Hosting, que expira em 7 dias. Canal de
 # preview não mexe no site no ar.
+#
+# Dois jobs, de propósito (revisão de 01/10/2026). Antes era um só, e a conta de
+# serviço do Firebase ficava no ambiente do mesmo job que roda `npm ci` e
+# `npm run build` com o código do PR: um PR podia mudar um script de build e ler a
+# credencial — a mesma usada no deploy de produção — antes de qualquer revisão.
+#
+#   build:    roda o código do PR, SEM a conta de serviço. Só usa as chaves
+#             públicas de cliente (as mesmas que vão para o navegador).
+#   publicar: tem a conta de serviço e NÃO executa código do PR. Pega o `out/`
+#             pronto do job anterior e o `firebase.json` da `main`.
+#
+# Consequência: mudanças no `firebase.json` feitas no PR não aparecem no preview;
+# só valem depois do merge.
 on:
   pull_request:
     branches: [main]
@@ -11,43 +24,27 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  checks: write
   contents: read
-  pull-requests: write
 
 jobs:
-  preview:
-    name: Build e preview
+  build:
+    name: Build do preview
     runs-on: ubuntu-latest
     # PR vindo de fork não tem acesso aos secrets: pular em vez de falhar.
     if: github.event.pull_request.head.repo.full_name == github.repository
-    env:
-      CONTA_DE_SERVICO: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 }}
     steps:
-      - name: Conferir a conta de serviço
-        id: conta
-        run: |
-          if [ -z "$CONTA_DE_SERVICO" ]; then
-            echo "::warning::Sem o secret FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 não há preview. Veja o README, seção CI e deploy."
-            echo "ok=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "ok=true" >> "$GITHUB_OUTPUT"
-          fi
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/checkout@v7
-        if: steps.conta.outputs.ok == 'true'
-
-      - uses: actions/setup-node@v7
-        if: steps.conta.outputs.ok == 'true'
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm
 
       - run: npm ci
-        if: steps.conta.outputs.ok == 'true'
 
-      - name: Build com as credenciais
-        if: steps.conta.outputs.ok == 'true'
+      - name: Build com as credenciais de cliente
         env:
           FIREBASE_API_KEY_WEB: ${{ secrets.FIREBASE_API_KEY_WEB }}
           FIREBASE_APP_ID_WEB: ${{ secrets.FIREBASE_APP_ID_WEB }}
@@ -59,9 +56,53 @@ jobs:
           SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
         run: bash .github/scripts/build-com-credenciais.sh
 
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: site-preview
+          path: out/
+          retention-days: 1
+
+  publicar:
+    name: Publicar preview
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+    steps:
+      - name: Conferir a conta de serviço
+        id: conta
+        env:
+          CONTA_DE_SERVICO: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 }}
+        run: |
+          if [ -z "$CONTA_DE_SERVICO" ]; then
+            echo "::warning::Sem o secret FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 não há preview. Veja o README, seção CI e deploy."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      # A configuração do Hosting vem da `main`, não do PR.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.conta.outputs.ok == 'true'
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          sparse-checkout: |
+            firebase.json
+            .firebaserc
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        if: steps.conta.outputs.ok == 'true'
+        with:
+          name: site-preview
+          path: out/
+
       - name: Publicar canal de preview
         if: steps.conta.outputs.ok == 'true'
-        uses: FirebaseExtended/action-hosting-deploy@v0
+        uses: FirebaseExtended/action-hosting-deploy@500ac625ca2dd40cbd15f7659af953801858032a # v0.11.0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 }}
