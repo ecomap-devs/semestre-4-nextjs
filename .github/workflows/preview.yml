@@ -1,0 +1,69 @@
+name: Preview do PR
+
+# Cada PR ganha uma URL própria no Firebase Hosting, que expira em 7 dias. Canal de
+# preview não mexe no site no ar.
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  preview:
+    name: Build e preview
+    runs-on: ubuntu-latest
+    # PR vindo de fork não tem acesso aos secrets: pular em vez de falhar.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    env:
+      CONTA_DE_SERVICO: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 }}
+    steps:
+      - name: Conferir a conta de serviço
+        id: conta
+        run: |
+          if [ -z "$CONTA_DE_SERVICO" ]; then
+            echo "::warning::Sem o secret FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 não há preview. Veja o README, seção CI e deploy."
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.conta.outputs.ok == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.conta.outputs.ok == 'true'
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+        if: steps.conta.outputs.ok == 'true'
+
+      - name: Build com as credenciais
+        if: steps.conta.outputs.ok == 'true'
+        env:
+          FIREBASE_API_KEY_WEB: ${{ secrets.FIREBASE_API_KEY_WEB }}
+          FIREBASE_APP_ID_WEB: ${{ secrets.FIREBASE_APP_ID_WEB }}
+          FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: bash .github/scripts/build-com-credenciais.sh
+
+      - name: Publicar canal de preview
+        if: steps.conta.outputs.ok == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756 }}
+          projectId: ecomapbrasil-17756
+          expires: 7d

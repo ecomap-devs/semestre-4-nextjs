@@ -1,0 +1,43 @@
+name: CI
+
+# Roda em todo push e em todo PR para a main. É o portão que impede main quebrada.
+# Não usa secret nenhum: o Firebase e o Supabase são inicializados só no navegador,
+# então o build estático compila sem credenciais.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Lint, tipos e build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Build (exportação estática)
+        run: npm run build
+
+      - name: Conferir que cada rota virou HTML
+        run: |
+          for f in index mapa animais 404; do
+            test -f "out/$f.html" || { echo "::error::out/$f.html não foi gerado"; exit 1; }
+          done
