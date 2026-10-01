@@ -23,8 +23,8 @@ aparece no site.
 
 > [!NOTE]
 > **As três telas do React estão portadas** (Início, Mapa e Animais, com login e
-> avaliações), com a mesma interface e os defeitos conhecidos corrigidos. O site ainda
-> **não está no endereço principal**: a troca segue a seção "A troca de endereço".
+> avaliações), com a mesma interface e os defeitos conhecidos corrigidos, e o site está
+> no endereço principal desde 01/10/2026: **[ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app)**.
 
 ## 🧭 Onde este repositório entra
 
@@ -124,7 +124,7 @@ done
 |---|---|---|
 | **CI** | Push ou PR na `main` | Lint, tipos, build e confere que cada rota virou HTML. Não usa secret |
 | **Preview do PR** | PR aberto | Build com as credenciais e deploy num canal de preview com URL própria, que expira em 7 dias |
-| **Deploy para produção** | **Só manual**, com confirmação | Publica no endereço principal |
+| **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 
 O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secret vazio
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
@@ -174,21 +174,26 @@ celular. O que mudou foi de propósito:
 
 </details>
 
-## 🔀 A troca de endereço
+## 🔀 A troca de endereço (feita em 01/10/2026)
 
 Decidido em 30/09/2026: o site fica com o endereço principal
-(`ecomapbrasil-17756.web.app`) e o Flutter vira só o app Android. **Hoje o endereço ainda
-serve o build web do Flutter.** No dia da troca:
+(`ecomapbrasil-17756.web.app`) e o Flutter vira só o app Android. A troca foi feita em
+01/10/2026:
 
-1. Rodar **Deploy para produção** aqui, digitando `substituir o site` na confirmação.
-2. Conferir o site e os cabeçalhos de cache (comando acima).
-3. Trocar o gatilho do `deploy.yml` para `push` na `main`.
-4. No semestre-4-flutter: tirar o deploy no Hosting, o preview por PR e o build web da
-   CI, e o check `Build web` da proteção da `main`.
+1. ✅ **Deploy para produção** rodado na mão, ainda com confirmação.
+2. ✅ Site conferido: as três rotas com `no-cache`, `_next/static/` imutável, os
+   arquivos do Flutter (`main.dart.js`, `flutter_bootstrap.js`) respondendo 404, e as
+   avaliações reais carregando no navegador.
+3. ✅ O `deploy.yml` passou a rodar a cada merge na `main`.
+4. ✅ No semestre-4-flutter saíram o deploy no Hosting, o preview por PR, o build web da
+   CI e o check `Build web` da proteção da `main`.
 
-Quem ficou preso na interface antiga do Flutter se solta sozinho: o `/` tem cache de uma
-hora, e o HTML novo não pede mais o `main.dart.js`. O service worker do Flutter já se
-desregistra sozinho.
+Quem ficou preso na interface antiga do Flutter se solta sozinho: o `/` tinha cache de
+uma hora, e o HTML novo não pede mais o `main.dart.js`. O service worker do Flutter já
+se desregistrava sozinho.
+
+Se precisar voltar uma versão, o Firebase Hosting guarda o histórico: Console →
+Hosting → histórico de lançamentos → Reverter.
 
 ## 🤝 Contribuindo
 

@@ -1,17 +1,15 @@
 name: Deploy para produção
 
-# ⚠️ Só roda na mão (Actions → Deploy para produção → Run workflow), e de propósito.
+# Todo merge na main publica o site em ecomapbrasil-17756.web.app. Também dá para rodar
+# na mão (Actions → Deploy para produção → Run workflow), por exemplo para republicar
+# depois de trocar um secret.
 #
-# O endereço ecomapbrasil-17756.web.app ainda serve o build web do semestre-4-flutter.
-# Publicar daqui SUBSTITUI aquele site. No dia da troca (README, seção "A troca de
-# endereço"): rodar este workflow uma vez, conferir o site, e só então trocar o gatilho
-# abaixo por `push: branches: [main]` e tirar o deploy web do repositório do Flutter.
+# Até 01/10/2026 este workflow só rodava na mão, com confirmação, porque o endereço
+# ainda servia o build web do Flutter. A troca foi feita nesse dia.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
-    inputs:
-      confirmacao:
-        description: 'Digite "substituir o site" para confirmar que este deploy troca o site no ar'
-        required: true
 
 concurrency:
   group: deploy-producao
@@ -23,15 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     steps:
-      - name: Conferir a confirmação
-        env:
-          CONFIRMACAO: ${{ inputs.confirmacao }}
-        run: |
-          if [ "$CONFIRMACAO" != "substituir o site" ]; then
-            echo "::error::Confirmação diferente de \"substituir o site\". Nada foi publicado."
-            exit 1
-          fi
-
       - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v7

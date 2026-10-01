@@ -137,6 +137,6 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
 
 ## Deploy
 
-**Não rode `firebase deploy` da sua máquina.** O endereço principal ainda serve o build
-web do Flutter, e um deploy daqui o substitui. O deploy de produção é um workflow
-manual, com confirmação; o procedimento da troca está no README.
+**Não rode `firebase deploy` da sua máquina.** O deploy sai da `main`, pela CI, a cada
+merge: é o que garante que o site no ar é código revisado. Deploy de árvore local não é
+reproduzível.
