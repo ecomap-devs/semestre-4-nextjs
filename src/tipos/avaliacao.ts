@@ -1,5 +1,7 @@
 import type { DocumentData } from "firebase/firestore";
 
+import { fotoConfiavel } from "@/lib/avatar";
+
 /** Avaliação publicada por um usuário logado, na coleção `avaliacoes`. */
 export type Avaliacao = {
   id: string;
@@ -15,10 +17,10 @@ export type Avaliacao = {
  * Converte um documento do Firestore em `Avaliacao`, ou devolve `null` se ele não
  * tiver o formato esperado.
  *
- * O tipo acima NÃO valida o que chega do banco: ele só vale depois desta função. As
- * rules validam a nota no `create`, mas não no `update`, então um documento pode ter
+ * O tipo acima NÃO valida o que chega do banco: ele só vale depois desta função. Até
+ * 01/10/2026 as rules não validavam o `update`, e um documento pode ter ficado com
  * `nota: "5"` ou `99`. Um documento ruim é descartado aqui, em vez de derrubar a
- * lista inteira, como acontecia no `Avaliacao.doFirestore` do Flutter.
+ * lista inteira. A foto só vale se vier do bucket de avatares.
  */
 export function paraAvaliacao(id: string, d: DocumentData): Avaliacao | null {
   const nota = d.nota;
@@ -32,7 +34,7 @@ export function paraAvaliacao(id: string, d: DocumentData): Avaliacao | null {
     id,
     uid: d.uid,
     nome: typeof d.nome === "string" && d.nome ? d.nome : "Usuário",
-    photoURL: typeof d.photoURL === "string" ? d.photoURL : "",
+    photoURL: fotoConfiavel(d.photoURL),
     nota: nota as Avaliacao["nota"],
     comentario: d.comentario,
     criadoEm,

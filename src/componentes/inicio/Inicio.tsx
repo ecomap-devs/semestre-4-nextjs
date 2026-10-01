@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
 import { Avaliacoes } from "@/componentes/avaliacoes/Avaliacoes";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
+import { fotoConfiavel } from "@/lib/avatar";
 import { animaisDestaque, comparacaoRegional, equipe, linksNavegacao, numeros, slides, solucoes } from "@/dados/inicio";
 
 import { BarrasAnimadas, GraficoLinha, LinhaDoTempo, Radar, Rosca } from "./Graficos";
@@ -98,9 +99,9 @@ function Cabecalho() {
           {/* Enquanto o Firebase não responde, o espaço fica vazio em vez de piscar "Entrar". */}
           {usuario === undefined ? null : usuario ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              {usuario.photoURL && (
+              {fotoConfiavel(usuario.photoURL) && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={usuario.photoURL} alt="" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: "2px solid #4ade80" }} />
+                <img src={fotoConfiavel(usuario.photoURL)} alt="" referrerPolicy="no-referrer" style={{ width: 32, height: 32, borderRadius: "50%", objectFit: "cover", border: "2px solid #4ade80" }} />
               )}
               <span style={{ fontSize: 13, color: "rgba(255,255,255,0.85)" }}>{usuario.displayName || usuario.email}</span>
               <button type="button" onClick={() => void sair()} className="nav-link" style={{ color: "#fca5a5" }}>
