@@ -69,10 +69,17 @@ npm run build      # gera out/, sem precisar de credencial
 ### Estrutura
 ```
 src/
-├── app/        rotas: uma pasta por página (page.tsx), layout.tsx na raiz
-├── lib/        env, firebase, supabase: a ponte com o mundo de fora
-└── tipos/      tipos de domínio + a função que valida o dado que chega
+├── app/          rotas: uma pasta por página (page.tsx), layout.tsx e template.tsx na raiz
+├── componentes/  uma pasta por tela (inicio, mapa, animais) + autenticacao, avaliacoes, comum
+├── dados/        dados de referência herdados do React (biomas, espécies, números da Home)
+├── lib/          env, firebase, supabase: a ponte com o mundo de fora
+└── tipos/        tipos de domínio + a função que valida o dado que chega
+
+public/alertas-desmatamento.json   GeoJSON do DETER-B, o mesmo arquivo do app Flutter
 ```
+
+As páginas em `app/` são finas: só metadados e o componente da tela. A tela mora em
+`componentes/` e é `'use client'`.
 
 ### O que a exportação estática proíbe
 Não há servidor. Não use route handlers, `proxy.ts`, server actions, `cookies()`, ISR,
@@ -100,6 +107,9 @@ senão o build quebra com `window is not defined`.
 
 ## Checklist do porte
 
+O porte foi feito em 01/10/2026, e cada item abaixo está cumprido. Ficam aqui como regra
+para o código que vier depois. O README tem a lista completa do que mudou.
+
 O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o defeito:**
 
 - **E-mail fora do Firestore.** O `AuthModal.jsx` gravava `email` em `usuarios/{uid}`.
@@ -109,9 +119,11 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   percorra as features à mão precisa tratar `MultiPolygon`.
 - **Bioma sobreposto.** Os polígonos simplificados dos biomas se sobrepõem. Ao tocar no
   mapa, escolha o **mais específico** (menor área), não o primeiro da lista: senão São
-  Paulo abre a ficha do Cerrado.
+  Paulo abre a ficha do Cerrado. Está em `biomaMaisEspecifico()` (`src/dados/biomas.ts`).
 - **Avaliações sem limite.** O Flutter baixa a coleção inteira para mostrar 6. Use
-  `limit()` e `orderBy()`.
+  `limit()` e `orderBy()`; média e total vêm de `getAggregateFromServer`.
+- **Alertas em SVG, não canvas.** Com `preferCanvas` o Leaflet desenhava os alertas
+  pequenos bem mais finos, e o mapa parecia ter muito menos desmatamento.
 - **Cache.** Já resolvido no `firebase.json`: HTML com `no-cache`, `_next/static/` com
   `immutable` (lá o nome do arquivo tem hash). Não marque outra coisa como `immutable`.
 
