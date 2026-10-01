@@ -9,6 +9,12 @@ on:
   pull_request:
     branches: [main]
 
+# O token da CI só lê o repositório (revisão de 01/10/2026: sem isto valia o
+# padrão do GitHub, que pode dar escrita). Actions fixadas por SHA: uma tag pode
+# ser movida para outro commit; um SHA, não.
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -18,9 +24,9 @@ jobs:
     name: Lint, tipos e build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24
           cache: npm

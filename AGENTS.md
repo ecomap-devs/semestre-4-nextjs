@@ -41,7 +41,16 @@ com os nomes em `.env.example`, e são lidas só em `src/lib/env.ts`.
 
 O banco é um só para o site e o app, então as regras são uma só, em
 [`firestore.rules` do semestre-4-flutter](https://github.com/ecomap-devs/semestre-4-flutter/blob/main/firestore.rules).
-Mudou como o site lê ou grava um dado? A regra muda **lá**, num PR daquele repositório.
+Mudou como o site lê ou grava um dado? A regra muda **lá**, num PR daquele repositório,
+com caso novo nos testes de `firestore-testes/`.
+
+O que as regras exigem hoje (01/10/2026), e o site precisa respeitar:
+- **avaliação nova** tem id = uid de quem avalia, `criadoEm: serverTimestamp()` e só os
+  campos `uid`, `nome`, `photoURL`, `nota`, `comentario`, `criadoEm`;
+- **edição** muda só `nome`, `photoURL`, `nota`, `comentario`, com `atualizadoEm:
+  serverTimestamp()`;
+- **`photoURL`** vazio ou do bucket `avatars` do projeto (`fotoConfiavel()` em
+  `src/lib/avatar.ts`).
 
 ---
 
@@ -92,8 +101,8 @@ Components rodam no **build**, e inicializar ali exigiria credencial para compil
 Importe-os só em componentes `'use client'`.
 
 ### Tipo não valida dado do banco
-O TypeScript confere o código, não o que chega do Firestore. As rules validam a nota
-no `create`, mas não no `update`, e um documento pode ter `nota: "5"`. Todo documento
+O TypeScript confere o código, não o que chega do Firestore. Até 01/10/2026 as rules não
+validavam o `update`, e documentos antigos podem ter `nota: "5"`. Todo documento
 passa por uma função como `paraAvaliacao()` (`src/tipos/avaliacao.ts`), que devolve
 `null` para o que não tem o formato certo. **Um documento ruim é pulado, não derruba a
 lista.** Nada de `as Avaliacao` direto no `doc.data()`.
@@ -127,6 +136,15 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
 - **Cache.** Já resolvido no `firebase.json`: HTML com `no-cache`, `_next/static/` com
   `immutable` (lá o nome do arquivo tem hash). Não marque outra coisa como `immutable`.
 
+### Modal é `Dialogo`
+Todo modal usa `src/componentes/comum/Dialogo.tsx`: foco preso, fundo inerte, Esc e
+foco devolvido. Nada de `div` com `position: fixed` fazendo papel de diálogo.
+
+### CSP
+Os cabeçalhos estão no `firebase.json`. Domínio externo novo (imagem, API) **entra na
+CSP no mesmo PR**, senão o navegador bloqueia em produção. O preview usa o
+`firebase.json` da `main`, então só a produção mostra o efeito da mudança.
+
 ---
 
 ## Git
@@ -134,6 +152,8 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
 - Branch a partir da `main`: `feat/…`, `fix/…`, `docs/…`.
 - Commit em português, no imperativo, com o porquê quando não for óbvio.
 - PR com CI verde e a revisão de alguém do grupo.
+- Actions dos workflows fixadas por SHA, com a versão no comentário. Para atualizar,
+  troque o SHA pelo da tag nova (`gh api repos/<dono>/<action>/commits/<tag> --jq .sha`).
 
 ## Deploy
 

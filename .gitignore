@@ -44,3 +44,6 @@ next-env.d.ts
 # firebase
 .firebase/
 firebase-debug.log
+
+# Credenciais no formato do app Flutter (env.json): nunca entram aqui.
+env.json

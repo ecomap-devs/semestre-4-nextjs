@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useState } from "react";
+import { useId, useState } from "react";
 
 import { useApareceu, useLarguraElemento, useLarguraJanela } from "@/componentes/comum/ganchos";
+import { Dialogo } from "@/componentes/comum/Dialogo";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { animais, ANOS_TENDENCIA, filtrosBioma, filtrosStatus, type Animal } from "@/dados/animais";
 
@@ -80,93 +81,78 @@ function MiniGrafico({ tendencia, cor }: { tendencia: number[]; cor: string }) {
 }
 
 function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boolean; aoFechar: () => void }) {
-  // Esc fecha e a página de trás não rola — no React, nenhum dos dois.
-  useEffect(() => {
-    const aoTeclar = (e: KeyboardEvent) => {
-      if (e.key === "Escape") aoFechar();
-    };
-    document.addEventListener("keydown", aoTeclar);
-    const anterior = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", aoTeclar);
-      document.body.style.overflow = anterior;
-    };
-  }, [aoFechar]);
-
   const primeiro = animal.tendencia[0] ?? 0;
   const ultimo = animal.tendencia.at(-1) ?? 0;
   const cor = corDaTendencia(animal.tendencia);
 
   return (
-    <div className="modal-overlay" onClick={aoFechar}>
-      <div className="modal-content" role="dialog" aria-modal="true" aria-labelledby="titulo-ficha" onClick={(e) => e.stopPropagation()}>
-        <div style={{ height: ehMobile ? 200 : 280, overflow: "hidden", borderRadius: ehMobile ? "16px 16px 0 0" : "20px 20px 0 0", position: "relative" }}>
-          <ImagemComReserva src={animal.imagem} alt={animal.nome} loading="eager" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
-          <button
-            type="button"
-            onClick={aoFechar}
-            aria-label="Fechar"
-            autoFocus
-            style={{ position: "absolute", top: 14, right: 14, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", width: 40, height: 40, borderRadius: "50%", cursor: "pointer", fontSize: 16, backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}
-          >
-            <i className="fas fa-times" />
-          </button>
-          <div style={{ position: "absolute", bottom: 14, left: 18 }}>
-            <span style={{ background: animal.fundoStatus, color: animal.corStatus, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 6 }}>{animal.status}</span>
+    // Foco preso na ficha, fundo inerte, Esc fecha e o foco volta ao card (Dialogo).
+    <Dialogo aoFechar={aoFechar} idTitulo="titulo-ficha" classeFundo="modal-overlay" classeCaixa="modal-content" fechaNoFundo>
+      <div style={{ height: ehMobile ? 200 : 280, overflow: "hidden", borderRadius: ehMobile ? "16px 16px 0 0" : "20px 20px 0 0", position: "relative" }}>
+        <ImagemComReserva src={animal.imagem} alt={animal.nome} loading="eager" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%)" }} />
+        <button
+          type="button"
+          onClick={aoFechar}
+          aria-label="Fechar"
+          data-foco-inicial
+          style={{ position: "absolute", top: 14, right: 14, background: "rgba(0,0,0,0.5)", border: "none", color: "#fff", width: 40, height: 40, borderRadius: "50%", cursor: "pointer", fontSize: 16, backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center" }}
+        >
+          <i className="fas fa-times" />
+        </button>
+        <div style={{ position: "absolute", bottom: 14, left: 18 }}>
+          <span style={{ background: animal.fundoStatus, color: animal.corStatus, fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 6 }}>{animal.status}</span>
+        </div>
+      </div>
+
+      <div style={{ padding: ehMobile ? "18px 16px 24px" : "28px 28px 32px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 10 }}>
+          <h2 id="titulo-ficha" style={{ fontSize: ehMobile ? 20 : 26, fontWeight: 800, color: "#111", margin: 0 }}>
+            {animal.nome}
+          </h2>
+          <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 8, whiteSpace: "nowrap", flexShrink: 0 }}>{animal.bioma}</span>
+        </div>
+
+        <p style={{ fontSize: ehMobile ? 13 : 14, color: "#4b5563", lineHeight: 1.7, marginBottom: 20 }}>{animal.descricao}</p>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ehMobile ? 10 : 12, marginBottom: 20 }}>
+          {[
+            { rotulo: "População estimada", valor: animal.populacao === 0 ? "Extinta" : numero.format(animal.populacao), cor: animal.populacao === 0 ? "#ef4444" : "#111" },
+            {
+              rotulo: `Variação (${ANOS_TENDENCIA[0]}–${ANOS_TENDENCIA.at(-1)})`,
+              valor: primeiro === 0 ? "N/A" : `${ultimo >= primeiro ? "+" : ""}${Math.round(((ultimo - primeiro) / primeiro) * 100)}%`,
+              cor,
+            },
+          ].map((d) => (
+            <div key={d.rotulo} style={{ background: "#f8fafc", borderRadius: 12, padding: ehMobile ? "12px 14px" : "14px 16px", border: "1px solid #e5e7eb" }}>
+              <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{d.rotulo}</div>
+              <div style={{ fontSize: ehMobile ? 18 : 22, fontWeight: 800, color: d.cor }}>{d.valor}</div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10 }}>
+            Evolução Populacional ({ANOS_TENDENCIA[0]}–{ANOS_TENDENCIA.at(-1)})
+          </div>
+          <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 12px" }}>
+            <MiniGrafico tendencia={animal.tendencia} cor={cor} />
           </div>
         </div>
 
-        <div style={{ padding: ehMobile ? "18px 16px 24px" : "28px 28px 32px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8, gap: 10 }}>
-            <h2 id="titulo-ficha" style={{ fontSize: ehMobile ? 20 : 26, fontWeight: 800, color: "#111", margin: 0 }}>
-              {animal.nome}
-            </h2>
-            <span style={{ background: "#f0fdf4", color: "#16a34a", fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 8, whiteSpace: "nowrap", flexShrink: 0 }}>{animal.bioma}</span>
-          </div>
-
-          <p style={{ fontSize: ehMobile ? 13 : 14, color: "#4b5563", lineHeight: 1.7, marginBottom: 20 }}>{animal.descricao}</p>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: ehMobile ? 10 : 12, marginBottom: 20 }}>
-            {[
-              { rotulo: "População estimada", valor: animal.populacao === 0 ? "Extinta" : numero.format(animal.populacao), cor: animal.populacao === 0 ? "#ef4444" : "#111" },
-              {
-                rotulo: `Variação (${ANOS_TENDENCIA[0]}–${ANOS_TENDENCIA.at(-1)})`,
-                valor: primeiro === 0 ? "N/A" : `${ultimo >= primeiro ? "+" : ""}${Math.round(((ultimo - primeiro) / primeiro) * 100)}%`,
-                cor,
-              },
-            ].map((d) => (
-              <div key={d.rotulo} style={{ background: "#f8fafc", borderRadius: 12, padding: ehMobile ? "12px 14px" : "14px 16px", border: "1px solid #e5e7eb" }}>
-                <div style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 4 }}>{d.rotulo}</div>
-                <div style={{ fontSize: ehMobile ? 18 : 22, fontWeight: 800, color: d.cor }}>{d.valor}</div>
-              </div>
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10 }}>Principais Ameaças</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {animal.ameacas.map((t) => (
+              <span key={t} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: ehMobile ? 11 : 12, fontWeight: 600, padding: "6px 12px", borderRadius: 8 }}>
+                <i className="fas fa-exclamation-triangle" style={{ marginRight: 5, fontSize: 10 }} />
+                {t}
+              </span>
             ))}
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10 }}>
-              Evolução Populacional ({ANOS_TENDENCIA[0]}–{ANOS_TENDENCIA.at(-1)})
-            </div>
-            <div style={{ background: "#f8fafc", border: "1px solid #e5e7eb", borderRadius: 12, padding: "14px 12px" }}>
-              <MiniGrafico tendencia={animal.tendencia} cor={cor} />
-            </div>
-          </div>
-
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 700, color: "#374151", marginBottom: 10 }}>Principais Ameaças</div>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {animal.ameacas.map((t) => (
-                <span key={t} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", fontSize: ehMobile ? 11 : 12, fontWeight: 600, padding: "6px 12px", borderRadius: 8 }}>
-                  <i className="fas fa-exclamation-triangle" style={{ marginRight: 5, fontSize: 10 }} />
-                  {t}
-                </span>
-              ))}
-            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Dialogo>
   );
 }
 

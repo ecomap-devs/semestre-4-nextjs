@@ -7,7 +7,17 @@
     "headers": [
       {
         "source": "**",
-        "headers": [{ "key": "Cache-Control", "value": "no-cache" }]
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://wqvxjttidoxcblkfjoaf.supabase.co https://server.arcgisonline.com https://static.biologianet.com https://imagens.ebc.com.br https://static.todamateria.com.br https://s3.static.brasilescola.uol.com.br https://www.parquedasaves.com.br https://portal.pcs.ifsuldeminas.edu.br; font-src 'self' data:; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com https://wqvxjttidoxcblkfjoaf.supabase.co; frame-src https://ecomapbrasil-17756.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+          },
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=(), payment=()" }
+        ]
       },
       {
         "source": "/_next/static/**",
