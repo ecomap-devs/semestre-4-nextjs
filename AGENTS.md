@@ -7,3 +7,124 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# AGENTS.md — regras do EcoMapBrasil (site)
+
+Regras para quem mexe neste repositório: os cinco do grupo e qualquer assistente de IA.
+O bloco acima é do Next e é regravado pelo `next dev`; as regras do projeto começam aqui.
+
+---
+
+## O projeto em três linhas
+
+O site do EcoMapBrasil, em **Next.js com TypeScript**, exportado como site estático e
+publicado no **Firebase Hosting**. É o porte da versão React do 3º semestre
+([semestre-3-react](https://github.com/ecomap-devs/semestre-3-react)). O app Android
+mora em [semestre-4-flutter](https://github.com/ecomap-devs/semestre-4-flutter), e os
+dois usam o mesmo backend: Firebase (Auth, Firestore) e Supabase (Storage).
+
+---
+
+## 🔴 Credenciais
+
+**Nenhuma chave entra no código.** As credenciais vivem em `.env.local` (fora do git),
+com os nomes em `.env.example`, e são lidas só em `src/lib/env.ts`.
+
+- Tudo é `NEXT_PUBLIC_*`, então **vai para o navegador**: são chaves públicas de cliente
+  por design. Quem protege o dado são as **Firestore Rules** e o **RLS do Supabase**.
+- Use a chave **web** do Firebase (restrita por referenciador), nunca a do Android.
+- Do Supabase, a `sb_publishable_...`. As `anon` keys legadas estão **desativadas**.
+- Variável ausente não pode virar `undefined` calado: `env.ts` lança um erro dizendo o
+  que falta. Não contorne com valor padrão.
+
+## 📜 As regras do Firestore não moram aqui
+
+O banco é um só para o site e o app, então as regras são uma só, em
+[`firestore.rules` do semestre-4-flutter](https://github.com/ecomap-devs/semestre-4-flutter/blob/main/firestore.rules).
+Mudou como o site lê ou grava um dado? A regra muda **lá**, num PR daquele repositório.
+
+---
+
+## Antes de abrir PR
+
+O mesmo que a CI roda:
+
+```bash
+npm run lint
+npm run typecheck
+npm run build      # gera out/, sem precisar de credencial
+```
+
+---
+
+## Como escrever código aqui
+
+### Idioma
+- **Código em português**: componentes, funções, variáveis, tipos (`Avaliacao`,
+  `paraAvaliacao`, `percentualDesmatado`), como no app Flutter.
+- **Exceção**: o que vem de fora mantém o nome de lá (`uid`, `photoURL`, `Timestamp`,
+  as chaves do GeoJSON como `AREAHA`).
+- Comentários e documentação em português.
+
+### Estrutura
+```
+src/
+├── app/        rotas: uma pasta por página (page.tsx), layout.tsx na raiz
+├── lib/        env, firebase, supabase: a ponte com o mundo de fora
+└── tipos/      tipos de domínio + a função que valida o dado que chega
+```
+
+### O que a exportação estática proíbe
+Não há servidor. Não use route handlers, `proxy.ts`, server actions, `cookies()`, ISR,
+nem rota dinâmica sem `generateStaticParams`. Redirects e headers vão no
+`firebase.json`, não no `next.config.ts`.
+
+### Firebase e Supabase só no navegador
+`src/lib/firebase.ts` e `src/lib/supabase.ts` são preguiçosos de propósito: Server
+Components rodam no **build**, e inicializar ali exigiria credencial para compilar.
+Importe-os só em componentes `'use client'`.
+
+### Tipo não valida dado do banco
+O TypeScript confere o código, não o que chega do Firestore. As rules validam a nota
+no `create`, mas não no `update`, e um documento pode ter `nota: "5"`. Todo documento
+passa por uma função como `paraAvaliacao()` (`src/tipos/avaliacao.ts`), que devolve
+`null` para o que não tem o formato certo. **Um documento ruim é pulado, não derruba a
+lista.** Nada de `as Avaliacao` direto no `doc.data()`.
+
+### Leaflet
+O Leaflet toca `window` no import. O mapa entra como Client Component carregado com
+`dynamic(() => import(...), { ssr: false })` a partir de um componente `'use client'`,
+senão o build quebra com `window is not defined`.
+
+---
+
+## Checklist do porte
+
+O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o defeito:**
+
+- **E-mail fora do Firestore.** O `AuthModal.jsx` gravava `email` em `usuarios/{uid}`.
+  Desde 09/09/2026 o e-mail vive só no Firebase Auth, e `usuarios/{uid}` só o dono lê.
+- **`MultiPolygon` no GeoJSON.** O parser do Flutter descartava 25% da área desmatada
+  por ler só `Polygon`. O `L.geoJSON` do Leaflet lê os dois, mas qualquer código que
+  percorra as features à mão precisa tratar `MultiPolygon`.
+- **Bioma sobreposto.** Os polígonos simplificados dos biomas se sobrepõem. Ao tocar no
+  mapa, escolha o **mais específico** (menor área), não o primeiro da lista: senão São
+  Paulo abre a ficha do Cerrado.
+- **Avaliações sem limite.** O Flutter baixa a coleção inteira para mostrar 6. Use
+  `limit()` e `orderBy()`.
+- **Cache.** Já resolvido no `firebase.json`: HTML com `no-cache`, `_next/static/` com
+  `immutable` (lá o nome do arquivo tem hash). Não marque outra coisa como `immutable`.
+
+---
+
+## Git
+
+- Branch a partir da `main`: `feat/…`, `fix/…`, `docs/…`.
+- Commit em português, no imperativo, com o porquê quando não for óbvio.
+- PR com CI verde e a revisão de alguém do grupo.
+
+## Deploy
+
+**Não rode `firebase deploy` da sua máquina.** O endereço principal ainda serve o build
+web do Flutter, e um deploy daqui o substitui. O deploy de produção é um workflow
+manual, com confirmação; o procedimento da troca está no README.

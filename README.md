@@ -1,36 +1,175 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<p align="center">
+  <img src=".github/arte/banner.svg" alt="EcoMapBrasil — os alertas de desmatamento do DETER-B desenhados como mapa, ao lado do título" width="100%">
+</p>
 
-## Getting Started
+<p align="center">
+  <img alt="Next.js" src="https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white">
+  <img alt="Tailwind" src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss&logoColor=white">
+  <img alt="Firebase Hosting" src="https://img.shields.io/badge/Firebase-Hosting_est%C3%A1tico-ffca28?logo=firebase&logoColor=black">
+  <img alt="Estado" src="https://img.shields.io/badge/estado-porte_em_andamento-d95926">
+  <img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-5b6270">
+</p>
 
-First, run the development server:
+O **EcoMapBrasil** mostra num lugar só **onde** o desmatamento acontece nos biomas
+brasileiros, **quais espécies** estão ameaçadas e o que dá para fazer a respeito. Este
+repositório é **o site**, no 4º semestre: o porte da
+[versão React do 3º semestre](https://github.com/ecomap-devs/semestre-3-react) para
+**Next.js com TypeScript**, exportado como site estático e publicado no Firebase Hosting.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+O app Android é o [semestre-4-flutter](https://github.com/ecomap-devs/semestre-4-flutter).
+Os dois usam o mesmo backend, então a conta é a mesma e uma avaliação feita no celular
+aparece no site.
+
+> [!NOTE]
+> **A base está pronta e o código ainda não entrou.** Configuração, credenciais, CI,
+> preview e deploy funcionam; as páginas são placeholders. O porte começa pelas três
+> telas do React: `Home.jsx`, `Mapa.jsx` e `Animais.jsx`.
+
+## 🧭 Onde este repositório entra
+
+```mermaid
+flowchart LR
+    subgraph faces[Duas faces, um backend]
+        direction TB
+        web["🌐 Site · Next.js + TypeScript<br/>este repositório"]
+        app["📱 App Android · Flutter<br/>semestre-4-flutter"]
+    end
+    subgraph backend[Backend]
+        direction TB
+        auth[🔐 Firebase Auth]
+        fs[(🗄️ Firestore)]
+        sb[(🖼️ Supabase Storage)]
+    end
+    web --> auth & fs & sb
+    app --> auth & fs & sb
+    regras["📜 firestore.rules<br/>no semestre-4-flutter"] -. protege .-> fs
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🛠️ Stack
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Camada | Escolha | Por quê |
+|---|---|---|
+| **Framework** | Next.js 16 (App Router) · React 19 | Cada página sai como HTML pronto no build, e não como uma `div` vazia montada por JS |
+| **Linguagem** | TypeScript `strict` | Decidido em 30/09/2026, no início do porte, que é quando trocar custa menos |
+| **Estilo** | Tailwind CSS 4 | O React do 3º semestre já usava Tailwind |
+| **Mapa** | `leaflet` + `react-leaflet` | O mesmo Leaflet do React, com os mesmos tiles de satélite |
+| **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
+| **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
+| **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🚀 Como rodar
 
-## Learn More
+> Pré-requisito: Node.js 24.
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+git clone https://github.com/ecomap-devs/semestre-4-nextjs.git
+cd semestre-4-nextjs
+npm install
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+cp .env.example .env.local     # e preencha os valores
+npm run dev                    # http://localhost:3000
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Comando | O que faz |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | Gera os tipos das rotas e roda o `tsc` |
+| `npm run build` | Exportação estática em `out/`, **sem precisar de credencial** |
 
-## Deploy on Vercel
+> [!IMPORTANT]
+> Tudo no `.env.local` é `NEXT_PUBLIC_*` e vai para o navegador: são chaves públicas de
+> cliente. Quem protege o dado são as Firestore Rules e o RLS do Supabase. Sem o
+> `.env.local`, o site compila, e o primeiro uso do Firebase lança um erro dizendo
+> exatamente qual variável falta.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🏗️ Exportação estática
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`next build` gera um HTML por rota em `out/`, e o Firebase Hosting serve esses arquivos.
+Não há servidor, então ficam de fora route handlers, `proxy.ts`, server actions, ISR e o
+otimizador do `next/image`. Para este site não custa nada: login, avaliações e mapa já
+rodavam no navegador no React.
+
+<details>
+<summary>Como o Hosting está configurado (<code>firebase.json</code>)</summary>
+
+| Regra | Por quê |
+|---|---|
+| `cleanUrls: true` | `/mapa` serve `mapa.html` |
+| `trailingSlash: false` | `/mapa/` redireciona para `/mapa` |
+| `**` com `no-cache` | O HTML é revalidado a cada visita: deploy novo aparece na hora |
+| `/_next/static/**` com `immutable` por um ano | O nome desses arquivos tem hash e muda a cada build |
+
+A ordem importa: **a última regra que casa vence**. E `immutable` só vale em arquivo com
+hash no nome. O app Flutter marcou `main.dart.js` assim, e os visitantes ficaram presos
+na interface antiga.
+
+Rotas, `cleanUrls`, `trailingSlash` e o 404 foram conferidos no emulador do Hosting. Os
+cabeçalhos de cache **não**: o emulador ignora a seção `headers`. Confira no primeiro
+deploy:
+
+```bash
+for u in / /mapa /_next/static/; do
+  echo -n "$u  "; curl -sI "https://ecomapbrasil-17756.web.app$u" | grep -i '^cache-control'
+done
+```
+
+</details>
+
+## 🔄 CI e deploy
+
+| Workflow | Quando | O que faz |
+|---|---|---|
+| **CI** | Push ou PR na `main` | Lint, tipos, build e confere que cada rota virou HTML. Não usa secret |
+| **Preview do PR** | PR aberto | Build com as credenciais e deploy num canal de preview com URL própria, que expira em 7 dias |
+| **Deploy para produção** | **Só manual**, com confirmação | Publica no endereço principal |
+
+O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secret vazio
+e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
+As duas guardas foram testadas nos dois sentidos.
+
+<details>
+<summary>Secrets do repositório</summary>
+
+Os mesmos nomes do semestre-4-flutter, para quem já configurou um configurar o outro:
+
+| Secret | De onde vem |
+|---|---|
+| `FIREBASE_API_KEY_WEB` · `FIREBASE_APP_ID_WEB` | O app **web** no console do Firebase |
+| `FIREBASE_MESSAGING_SENDER_ID` · `FIREBASE_PROJECT_ID` · `FIREBASE_AUTH_DOMAIN` · `FIREBASE_STORAGE_BUCKET` | Configuração do SDK no console do Firebase |
+| `SUPABASE_URL` · `SUPABASE_PUBLISHABLE_KEY` | Project Settings → API Keys no Supabase |
+| `FIREBASE_SERVICE_ACCOUNT_ECOMAPBRASIL_17756` | Conta de serviço com permissão de deploy no Hosting. Sem ela, o preview avisa e pula |
+
+</details>
+
+## 🔀 A troca de endereço
+
+Decidido em 30/09/2026: o site fica com o endereço principal
+(`ecomapbrasil-17756.web.app`) e o Flutter vira só o app Android. **Hoje o endereço ainda
+serve o build web do Flutter.** No dia da troca:
+
+1. Rodar **Deploy para produção** aqui, digitando `substituir o site` na confirmação.
+2. Conferir o site e os cabeçalhos de cache (comando acima).
+3. Trocar o gatilho do `deploy.yml` para `push` na `main`.
+4. No semestre-4-flutter: tirar o deploy no Hosting, o preview por PR e o build web da
+   CI, e o check `Build web` da proteção da `main`.
+
+Quem ficou preso na interface antiga do Flutter se solta sozinho: o `/` tem cache de uma
+hora, e o HTML novo não pede mais o `main.dart.js`. O service worker do Flutter já se
+desregistra sozinho.
+
+## 🤝 Contribuindo
+
+As regras estão no **[AGENTS.md](AGENTS.md)**: credenciais, o que a exportação estática
+proíbe, como validar dado do Firestore e o **checklist do porte**, com os defeitos do
+React que o Flutter já corrigiu e que não devem voltar. Valem para os cinco do grupo e
+para qualquer assistente de IA.
+
+## 👥 Equipe
+
+**Vinicius** · **Bruno** · **Cesar** · **João Flávio** · **João Gabriel**
+
+## 📄 Licença
+
+[MIT](LICENSE). Projeto acadêmico, sem fins lucrativos.
