@@ -123,12 +123,42 @@ done
 | Workflow | Quando | O que faz |
 |---|---|---|
 | **CI** | Push ou PR na `main` | Lint, tipos, build e confere que cada rota virou HTML. Não usa secret |
-| **Preview do PR** | PR aberto | Build com as credenciais e deploy num canal de preview com URL própria, que expira em 7 dias |
+| **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 
 O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secret vazio
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
 As duas guardas foram testadas nos dois sentidos.
+
+Os workflows têm token só de leitura e as actions são fixadas por SHA. O preview usa o
+`firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
+
+## 🛡️ Segurança
+
+Revisão de 01/10/2026 (Codex), corrigida no mesmo dia:
+
+| O quê | Como ficou |
+|---|---|
+| Avaliações | Uma por pessoa (o id é o uid); esquema completo também na edição; hora do servidor; sem campo extra. Testado em `firestore-testes/` do semestre-4-flutter |
+| Foto do avatar | Só do bucket `avatars` do projeto (nas rules, no código e na CSP), com `referrerPolicy="no-referrer"`. Antes, uma URL livre podia registrar o IP de quem abrisse as avaliações |
+| Upload do avatar | Reencodado para WebP de até 512 px no navegador (só imagem de verdade, sem EXIF), em `<uid>/<uuid>.webp`, sem sobrescrever |
+| Preview do PR | A conta de serviço não fica mais no job que roda o código do PR |
+| Cabeçalhos | CSP com os domínios usados, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` |
+| Modais | Foco preso no diálogo, fundo inerte, Esc fecha, o foco volta à origem (`src/componentes/comum/Dialogo.tsx`) |
+
+<details>
+<summary>O que ficou de fora, e por quê</summary>
+
+- **Domínio da foto não amarrado ao dono.** O Supabase não sabe quem envia: os apps
+  entram pelo Firebase Auth. Amarrar exige a integração de terceiros do Supabase com o
+  Firebase, que pede uma claim `role` em todos os usuários (Admin SDK ou funções de
+  bloqueio). As políticas do bucket estão em `supabase/avatars.sql` do semestre-4-flutter.
+- **Mesma conta de serviço no preview e na produção.** Separar exige criar outra conta no
+  Google Cloud com permissão só de canais de preview.
+- **`'unsafe-inline'` em `script-src`.** A exportação estática do Next põe scripts inline
+  diferentes em cada página; a CSP restringe a origem dos scripts externos, não os inline.
+
+</details>
 
 <details>
 <summary>Secrets do repositório</summary>
