@@ -94,6 +94,22 @@ function focar(m: L.Map, bioma: Bioma, onde?: L.LatLng) {
   L.popup().setLatLng(onde ?? limites.getCenter()).setContent(htmlDoBioma(bioma)).openOn(m);
 }
 
+/**
+ * Os anéis de todos os alertas, no formato de multipolígono do Leaflet: uma lista de
+ * polígonos, cada um com o contorno e os buracos. Feature sem geometria de área é
+ * pulada, não derruba o mapa.
+ */
+function partesDosAlertas(dados: GeoJSON.FeatureCollection): L.LatLngExpression[][][] {
+  const paraLatLng = (anel: GeoJSON.Position[]) => anel.map(([lng, lat]) => [lat, lng] as L.LatLngTuple);
+  const partes: L.LatLngExpression[][][] = [];
+  for (const f of dados.features) {
+    const g = f.geometry;
+    if (g?.type === "Polygon") partes.push(g.coordinates.map(paraLatLng));
+    else if (g?.type === "MultiPolygon") for (const p of g.coordinates) partes.push(p.map(paraLatLng));
+  }
+  return partes;
+}
+
 function resumir(dados: GeoJSON.FeatureCollection): ResumoAlertas {
   let areaHa = 0;
   let anoMin: number | null = null;
@@ -168,12 +184,19 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, ao
         return r.json() as Promise<GeoJSON.FeatureCollection>;
       })
       .then((dados) => {
-        // L.geoJSON lê Polygon e MultiPolygon: os 25% de área que o parser do Flutter
-        // perdia não se perdem aqui. O traço de 2 px faz até o alerta pequeno aparecer
-        // como ponto com o Brasil inteiro na tela.
-        L.geoJSON(dados, {
-          style: { color: "#ef4444", weight: 2, fillColor: "#ef4444", fillOpacity: 0.45 },
+        // Todos os alertas num polígono só: UM elemento SVG em vez de 18 mil. Com o
+        // `L.geoJSON`, cada alerta virava um <path>, e mexer no mapa travava — mais
+        // ainda no celular. O desenho é o mesmo (SVG, traço de 2 px: o alerta pequeno
+        // continua aparecendo como ponto de longe). Polygon e MultiPolygon são lidos
+        // os dois: os 25% de área que o parser do Flutter perdia não se perdem aqui.
+        L.polygon(partesDosAlertas(dados), {
+          color: "#ef4444",
+          weight: 2,
+          fillColor: "#ef4444",
+          fillOpacity: 0.45,
           interactive: false,
+          // De longe o detalhe do contorno nem aparece; simplificar mais alivia o zoom.
+          smoothFactor: 2,
         }).addTo(m);
         callbacks.current.aoResumirAlertas(resumir(dados));
         callbacks.current.aoMudarAlertas("ok");
