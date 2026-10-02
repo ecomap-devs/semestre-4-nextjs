@@ -356,9 +356,12 @@ export function Inicio() {
                 </div>
               ))}
             </div>
-            <div style={{ textAlign: "center", marginTop: 40 }}>
+            <div style={{ display: "flex", justifyContent: "center", flexWrap: "wrap", gap: 12, marginTop: 40 }}>
               <Link href="/animais" className="botao-contorno" style={{ display: "inline-block", border: "1px solid #16a34a", color: "#16a34a", borderRadius: 10, padding: "12px 28px", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>
                 <i className="fas fa-book" style={{ marginRight: 8 }} /> Ver Lista Completa
+              </Link>
+              <Link href="/fotos" className="botao-contorno" style={{ display: "inline-block", border: "1px solid #16a34a", color: "#16a34a", borderRadius: 10, padding: "12px 28px", fontSize: 14, fontWeight: 600, textDecoration: "none" }}>
+                <i className="fas fa-camera" style={{ marginRight: 8 }} /> Identificar por foto
               </Link>
             </div>
           </div>

@@ -140,6 +140,9 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
       }
       aoFechar();
     } catch (falha) {
+      // A tela mostra a mensagem amigável; o console guarda o erro real. Sem isto,
+      // todo código fora de MENSAGENS virava "Algo deu errado" sem deixar pista.
+      console.error("Login/cadastro falhou:", falha);
       setErro(mensagemDeErro(falha));
     } finally {
       setCarregando(false);
