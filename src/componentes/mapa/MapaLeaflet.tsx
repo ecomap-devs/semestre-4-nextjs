@@ -12,16 +12,55 @@ import { biomaMaisEspecifico, biomas, type Bioma } from "@/dados/biomas";
 
 export type EstadoAlertas = "carregando" | "ok" | "falhou";
 
+/** O fundo do mapa. Começa no claro: biomas e alertas aparecem muito mais sobre ele. */
+export type Fundo = "claro" | "satelite";
+
+/** O que a legenda conta dos alertas, calculado do próprio GeoJSON do DETER-B. */
+export type ResumoAlertas = { total: number; areaHa: number; anoMin: number | null; anoMax: number | null };
+
 type Props = {
   /** Pedido de foco vindo do painel; `vez` muda a cada clique, mesmo no mesmo bioma. */
   foco: { chave: string; vez: number } | null;
+  /** O bioma ativo, desenhado em destaque. */
+  selecionado: string | null;
+  fundo: Fundo;
   /** Muda quando o layout em volta muda e o mapa precisa remedir o contêiner. */
   versaoLayout: string;
   aoSelecionarBioma: (chave: string) => void;
   aoMudarAlertas: (estado: EstadoAlertas) => void;
+  aoResumirAlertas: (resumo: ResumoAlertas) => void;
 };
 
 const formatoArea = new Intl.NumberFormat("pt-BR");
+
+const ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services";
+const CREDITO = 'Mapa: <a href="https://www.esri.com">Esri</a> · Biomas: IBGE · Alertas: INPE';
+
+/**
+ * As camadas de cada fundo: a base e os nomes de cidades e fronteiras. Os nomes vão
+ * num painel acima dos biomas e dos alertas, senão o preenchimento os apagaria.
+ */
+function camadasDoFundo(fundo: Fundo): { base: L.TileLayer; nomes: L.TileLayer } {
+  const comum = { maxZoom: 16 } as const;
+  return fundo === "claro"
+    ? {
+        base: L.tileLayer(`${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`, { ...comum, attribution: CREDITO }),
+        nomes: L.tileLayer(`${ESRI}/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { ...comum, pane: "nomes" }),
+      }
+    : {
+        base: L.tileLayer(`${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`, { ...comum, attribution: CREDITO }),
+        nomes: L.tileLayer(`${ESRI}/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}`, { ...comum, pane: "nomes" }),
+      };
+}
+
+/**
+ * Os biomas pelo limite do IBGE. Até 02/10/2026 não eram desenhados: os contornos eram
+ * retângulos herdados do React, e mostrá-los seria apresentar fronteira inventada.
+ * O preenchimento é fraco de propósito, para não abafar o vermelho dos alertas.
+ */
+function estiloDoBioma(b: Bioma, ativo: boolean): L.PathOptions {
+  return { color: b.cor, weight: ativo ? 3 : 1.2, fillColor: b.cor, fillOpacity: ativo ? 0.3 : 0.12 };
+}
 
 function htmlDoBioma(b: Bioma): string {
   return `
@@ -44,7 +83,7 @@ function htmlDoBioma(b: Bioma): string {
     </div>`;
 }
 
-/** Retângulo que envolve todos os polígonos do bioma. */
+/** Retângulo que envolve todas as partes do bioma. */
 function limitesDo(b: Bioma): L.LatLngBounds {
   return L.latLngBounds(b.poligonos.flatMap((p) => p[0] ?? []).map(([lng, lat]) => L.latLng(lat, lng)));
 }
@@ -55,14 +94,49 @@ function focar(m: L.Map, bioma: Bioma, onde?: L.LatLng) {
   L.popup().setLatLng(onde ?? limites.getCenter()).setContent(htmlDoBioma(bioma)).openOn(m);
 }
 
-export default function MapaLeaflet({ foco, versaoLayout, aoSelecionarBioma, aoMudarAlertas }: Props) {
+/**
+ * Os anéis de todos os alertas, no formato de multipolígono do Leaflet: uma lista de
+ * polígonos, cada um com o contorno e os buracos. Feature sem geometria de área é
+ * pulada, não derruba o mapa.
+ */
+function partesDosAlertas(dados: GeoJSON.FeatureCollection): L.LatLngExpression[][][] {
+  const paraLatLng = (anel: GeoJSON.Position[]) => anel.map(([lng, lat]) => [lat, lng] as L.LatLngTuple);
+  const partes: L.LatLngExpression[][][] = [];
+  for (const f of dados.features) {
+    const g = f.geometry;
+    if (g?.type === "Polygon") partes.push(g.coordinates.map(paraLatLng));
+    else if (g?.type === "MultiPolygon") for (const p of g.coordinates) partes.push(p.map(paraLatLng));
+  }
+  return partes;
+}
+
+function resumir(dados: GeoJSON.FeatureCollection): ResumoAlertas {
+  let areaHa = 0;
+  let anoMin: number | null = null;
+  let anoMax: number | null = null;
+  for (const f of dados.features) {
+    const p = f.properties ?? {};
+    const area = Number(p.AREAHA);
+    if (Number.isFinite(area)) areaHa += area;
+    // Ano 0 ou ausente é alerta sem data no arquivo: fica fora do período.
+    const ano = Number(p.ANODETEC);
+    if (Number.isInteger(ano) && ano > 0) {
+      anoMin = anoMin === null || ano < anoMin ? ano : anoMin;
+      anoMax = anoMax === null || ano > anoMax ? ano : anoMax;
+    }
+  }
+  return { total: dados.features.length, areaHa, anoMin, anoMax };
+}
+
+export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, aoSelecionarBioma, aoMudarAlertas, aoResumirAlertas }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
+  const camadasBioma = useRef(new Map<string, L.Polygon[]>());
 
   // Os callbacks vivem num ref: o efeito que monta o mapa roda uma vez só.
-  const callbacks = useRef({ aoSelecionarBioma, aoMudarAlertas });
+  const callbacks = useRef({ aoSelecionarBioma, aoMudarAlertas, aoResumirAlertas });
   useEffect(() => {
-    callbacks.current = { aoSelecionarBioma, aoMudarAlertas };
+    callbacks.current = { aoSelecionarBioma, aoMudarAlertas, aoResumirAlertas };
   });
 
   useEffect(() => {
@@ -72,14 +146,29 @@ export default function MapaLeaflet({ foco, versaoLayout, aoSelecionarBioma, aoM
     const m = L.map(container.current, { center: [-14, -52], zoom: 4, zoomControl: false });
     mapa.current = m;
 
+    // Painel dos nomes: acima dos biomas e dos alertas (overlayPane é 400), abaixo dos
+    // popups, e sem roubar o clique do mapa.
+    const painelNomes = m.createPane("nomes");
+    painelNomes.style.zIndex = "450";
+    painelNomes.style.pointerEvents = "none";
+
     L.control.zoom({ position: "bottomright", zoomInTitle: "Aproximar", zoomOutTitle: "Afastar" }).addTo(m);
-    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { attribution: "Tiles © Esri", maxZoom: 18 }).addTo(m);
-    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", { attribution: "© Esri", maxZoom: 18 }).addTo(m);
     L.control.scale({ position: "bottomleft", metric: true, imperial: false }).addTo(m);
 
-    // Os biomas não são desenhados (no React eram invisíveis mas clicáveis). O clique é
-    // tratado no mapa inteiro para escolher o bioma mais específico: por conta própria,
-    // o Leaflet entregaria o polígono que estivesse por cima.
+    // Os biomas entram antes dos alertas, para os alertas ficarem por cima. Não são
+    // interativos: o clique é tratado no mapa inteiro, para escolher o bioma mais
+    // específico — por conta própria, o Leaflet entregaria o polígono de cima.
+    const biomasDesenhados = camadasBioma.current;
+    for (const b of biomas) {
+      const partes = b.poligonos.map((p) =>
+        L.polygon(
+          p.map((anel) => anel.map(([lng, lat]) => L.latLng(lat, lng))),
+          { ...estiloDoBioma(b, false), interactive: false },
+        ).addTo(m),
+      );
+      biomasDesenhados.set(b.chave, partes);
+    }
+
     m.on("click", (e: L.LeafletMouseEvent) => {
       const bioma = biomaMaisEspecifico([e.latlng.lng, e.latlng.lat]);
       if (!bioma) return;
@@ -95,12 +184,21 @@ export default function MapaLeaflet({ foco, versaoLayout, aoSelecionarBioma, aoM
         return r.json() as Promise<GeoJSON.FeatureCollection>;
       })
       .then((dados) => {
-        // L.geoJSON lê Polygon e MultiPolygon: os 25% de área que o parser do Flutter
-        // perdia não se perdem aqui.
-        L.geoJSON(dados, {
-          style: { color: "#ef4444", weight: 2, fillColor: "#ef4444", fillOpacity: 0.45 },
+        // Todos os alertas num polígono só: UM elemento SVG em vez de 18 mil. Com o
+        // `L.geoJSON`, cada alerta virava um <path>, e mexer no mapa travava — mais
+        // ainda no celular. O desenho é o mesmo (SVG, traço de 2 px: o alerta pequeno
+        // continua aparecendo como ponto de longe). Polygon e MultiPolygon são lidos
+        // os dois: os 25% de área que o parser do Flutter perdia não se perdem aqui.
+        L.polygon(partesDosAlertas(dados), {
+          color: "#ef4444",
+          weight: 2,
+          fillColor: "#ef4444",
+          fillOpacity: 0.45,
           interactive: false,
+          // De longe o detalhe do contorno nem aparece; simplificar mais alivia o zoom.
+          smoothFactor: 2,
         }).addTo(m);
+        callbacks.current.aoResumirAlertas(resumir(dados));
         callbacks.current.aoMudarAlertas("ok");
       })
       .catch((erro: unknown) => {
@@ -113,8 +211,33 @@ export default function MapaLeaflet({ foco, versaoLayout, aoSelecionarBioma, aoM
       controlador.abort();
       m.remove();
       mapa.current = null;
+      biomasDesenhados.clear();
     };
   }, []);
+
+  // Troca de fundo: as camadas antigas saem inteiras e as novas entram. No app, trocar
+  // só o endereço dentro da mesma camada deixava a imagem velha na tela.
+  useEffect(() => {
+    const m = mapa.current;
+    if (!m) return;
+    const { base, nomes } = camadasDoFundo(fundo);
+    base.addTo(m);
+    nomes.addTo(m);
+    return () => {
+      base.remove();
+      nomes.remove();
+    };
+  }, [fundo]);
+
+  // O destaque é só estilo, sem `bringToFront`: trazer o bioma para a frente o poria
+  // por cima dos alertas, e o preenchimento esconderia o vermelho justo nele.
+  useEffect(() => {
+    for (const b of biomas) {
+      for (const parte of camadasBioma.current.get(b.chave) ?? []) {
+        parte.setStyle(estiloDoBioma(b, b.chave === selecionado));
+      }
+    }
+  }, [selecionado]);
 
   useEffect(() => {
     const m = mapa.current;

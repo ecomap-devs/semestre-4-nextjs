@@ -7,7 +7,15 @@ import { useState } from "react";
 import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { biomas, linhaDoTempoMapa, type Bioma } from "@/dados/biomas";
 
-import type { EstadoAlertas } from "./MapaLeaflet";
+import type { EstadoAlertas, Fundo, ResumoAlertas } from "./MapaLeaflet";
+
+const milhar = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+const umaCasa = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+
+/** "1,2 mi ha" ou "845.320 ha". */
+function hectares(ha: number): string {
+  return ha >= 1_000_000 ? `${umaCasa.format(ha / 1_000_000)} mi ha` : `${milhar.format(ha)} ha`;
+}
 
 // Porte da Mapa.jsx. O Leaflet era baixado do unpkg sem versão fixa; agora vem do npm
 // e só carrega no navegador.
@@ -55,6 +63,8 @@ export function Mapa() {
   const [aba, setAba] = useState<"biomas" | "timeline">("biomas");
   const [menuAberto, setMenuAberto] = useState(false);
   const [alertas, setAlertas] = useState<EstadoAlertas>("carregando");
+  const [resumo, setResumo] = useState<ResumoAlertas | null>(null);
+  const [fundo, setFundo] = useState<Fundo>("claro");
 
   const focarBioma = (b: Bioma) => {
     setBiomaAtivo(b.chave);
@@ -128,7 +138,27 @@ export function Mapa() {
       )}
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
-        <MapaLeaflet foco={foco} versaoLayout={versaoLayout} aoSelecionarBioma={setBiomaAtivo} aoMudarAlertas={setAlertas} />
+        <MapaLeaflet
+          foco={foco}
+          selecionado={biomaAtivo}
+          fundo={fundo}
+          versaoLayout={versaoLayout}
+          aoSelecionarBioma={setBiomaAtivo}
+          aoMudarAlertas={setAlertas}
+          aoResumirAlertas={setResumo}
+        />
+
+        {/* No desktop o painel lateral ocupa a direita: o botão fica à esquerda dele. */}
+        <button
+          type="button"
+          onClick={() => setFundo((f) => (f === "claro" ? "satelite" : "claro"))}
+          aria-label={fundo === "claro" ? "Mostrar imagem de satélite" : "Mostrar mapa"}
+          className="botao-fundo"
+          style={{ position: "absolute", top: 12, right: ehMobile ? 16 : larguraPainel + 16, zIndex: 1000, display: "flex", alignItems: "center", gap: 8, minHeight: 44, padding: "0 14px", borderRadius: 10, border: "1px solid rgba(0,0,0,0.12)", background: "#fff", color: "#111827", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: "0 2px 10px rgba(0,0,0,0.2)" }}
+        >
+          <i className={`fas ${fundo === "claro" ? "fa-satellite" : "fa-map"}`} style={{ color: "#16a34a" }} />
+          {fundo === "claro" ? "Satélite" : "Mapa"}
+        </button>
 
         {alertas !== "ok" && (
           <div role="status" style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", zIndex: 1000, background: "rgba(17,24,39,0.92)", border: "1px solid rgba(255,255,255,0.1)", color: alertas === "falhou" ? "#fca5a5" : "#d1d5db", fontSize: 12, padding: "6px 14px", borderRadius: 20, pointerEvents: "none" }}>
@@ -177,12 +207,30 @@ export function Mapa() {
           </aside>
         )}
 
-        {/* No React a legenda tinha "Limites Estaduais" em azul, mas nenhuma camada azul é desenhada. */}
-        <div style={{ position: "absolute", bottom: ehMobile ? (painelAberto ? 210 : 90) : 32, left: 16, background: "rgba(17,24,39,0.92)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", padding: "10px 14px", borderRadius: 10, boxShadow: "0 4px 24px rgba(0,0,0,0.4)", zIndex: 1000, transition: "bottom 0.3s ease" }}>
+        {/* No React a legenda tinha "Limites Estaduais" em azul, mas nenhuma camada azul é
+            desenhada. Fonte, período e totais saem do próprio GeoJSON, não de texto fixo. */}
+        <div style={{ position: "absolute", bottom: ehMobile ? (painelAberto ? 210 : 90) : 40, left: 16, maxWidth: ehMobile ? "calc(100% - 32px)" : 320, background: "rgba(17,24,39,0.92)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)", padding: "10px 14px", borderRadius: 10, boxShadow: "0 4px 24px rgba(0,0,0,0.4)", zIndex: 1000, transition: "bottom 0.3s ease" }}>
           <p style={{ margin: "0 0 6px", fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 1 }}>Legenda</p>
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 3, background: "#ef4444", flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: "#d1d5db" }}>Áreas afetadas (alertas DETER-B)</span>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 7 }}>
+            <div style={{ width: 12, height: 12, borderRadius: 3, background: "#ef4444", flexShrink: 0, marginTop: 2 }} />
+            <div>
+              <span style={{ fontSize: 11, color: "#d1d5db" }}>Áreas afetadas (alertas DETER-B / INPE)</span>
+              {resumo && (
+                <div style={{ fontSize: 10, color: "#9ca3af", marginTop: 2 }}>
+                  {resumo.anoMin !== null && (resumo.anoMin === resumo.anoMax ? `${resumo.anoMin} · ` : `${resumo.anoMin}–${resumo.anoMax} · `)}
+                  {milhar.format(resumo.total)} alertas · {hectares(resumo.areaHa)}
+                </div>
+              )}
+            </div>
+          </div>
+          <p style={{ margin: "8px 0 4px", fontSize: 10, color: "#9ca3af" }}>Biomas (limites do IBGE)</p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px 10px" }}>
+            {biomas.map((b) => (
+              <span key={b.chave} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#d1d5db" }}>
+                <span style={{ width: 10, height: 10, borderRadius: 3, background: `${b.cor}55`, border: `1.5px solid ${b.cor}`, flexShrink: 0 }} />
+                {b.nome}
+              </span>
+            ))}
           </div>
         </div>
 
