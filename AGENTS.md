@@ -151,6 +151,14 @@ Os cabeçalhos estão no `firebase.json`. Domínio externo novo (imagem, API) **
 CSP no mesmo PR**, senão o navegador bloqueia em produção. O preview usa o
 `firebase.json` da `main`, então só a produção mostra o efeito da mudança.
 
+### Login em preview e em `npm run dev`
+A **Web key** do Firebase é restrita por referenciador (Google Cloud → Credenciais).
+Endereço fora da lista dá "Algo deu errado" no login, com
+`auth/requests-from-referer-...-are-blocked` no console. `http://localhost:3000/*` está
+liberado (use a porta 3000). Cada **preview de PR** tem um endereço próprio, e o Google
+não aceita curinga no meio do nome (`ecomapbrasil-17756--*.web.app` é recusado): para
+testar login num preview, adicione o endereço exato dele à chave. Não mexa na Android key.
+
 ---
 
 ## Git
