@@ -126,9 +126,15 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
 - **`MultiPolygon` no GeoJSON.** O parser do Flutter descartava 25% da área desmatada
   por ler só `Polygon`. O `L.geoJSON` do Leaflet lê os dois, mas qualquer código que
   percorra as features à mão precisa tratar `MultiPolygon`.
-- **Bioma sobreposto.** Os polígonos simplificados dos biomas se sobrepõem. Ao tocar no
-  mapa, escolha o **mais específico** (menor área), não o primeiro da lista: senão São
-  Paulo abre a ficha do Cerrado. Está em `biomaMaisEspecifico()` (`src/dados/biomas.ts`).
+- **Bioma desenhado com fronteira inventada.** Os contornos do React eram retângulos (um
+  avançava pelo oceano). Desde 02/10/2026 vêm do **IBGE** (`src/dados/biomasContornos.ts`,
+  gerado por `scripts/biomas/gerar.mjs`, que diz como refazer) — a mesma receita do app.
+  Não edite os contornos à mão. Ao tocar no mapa, `biomaMaisEspecifico()` ainda escolhe o
+  menor anel que contém o ponto (a simplificação deixa encostos na fronteira) e ignora os
+  buracos, que são massas d'água que o IBGE tira do bioma.
+- **Trocar o fundo é trocar a camada.** Fundo claro ↔ satélite remove as camadas antigas e
+  adiciona as novas (`MapaLeaflet.tsx`). No app, trocar só o endereço dentro da mesma
+  camada deixava a imagem velha na tela.
 - **Avaliações sem limite.** O Flutter baixa a coleção inteira para mostrar 6. Use
   `limit()` e `orderBy()`; média e total vêm de `getAggregateFromServer`.
 - **Alertas em SVG, não canvas.** Com `preferCanvas` o Leaflet desenhava os alertas
