@@ -155,25 +155,25 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
     <Dialogo
       aoFechar={aoFechar}
       idTitulo={`${id}-titulo`}
-      estiloFundo={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-      estiloCaixa={{ background: "#fff", borderRadius: 20, padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 24px 60px rgba(0,0,0,0.25)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
+      estiloFundo={{ position: "fixed", inset: 0, background: "rgba(29,38,32,0.55)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+      estiloCaixa={{ background: "var(--branco)", borderRadius: "var(--raio)", padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 12px 40px rgba(29,38,32,0.2)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
     >
       <style>{`
-        .campo-auth:focus-visible { border-color: #16a34a !important; box-shadow: 0 0 0 3px rgba(22,163,74,0.25); }
-        .rotulo-auth { display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+        .campo-auth:focus-visible { border-color: var(--mata) !important; outline: none; box-shadow: 0 0 0 3px var(--mata-clara); }
+        .rotulo-auth { display: block; font-size: 14px; color: var(--tinta-2); margin-bottom: 4px; }
       `}</style>
       <form onSubmit={enviar} noValidate>
-        <button type="button" onClick={aoFechar} aria-label="Fechar" style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#6b7280" }}>
+        <button type="button" onClick={aoFechar} aria-label="Fechar" style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--tinta-3)" }}>
           ✕
         </button>
 
-        <h2 id={`${id}-titulo`} style={{ fontSize: 22, fontWeight: 800, color: "#111", marginBottom: 6 }}>
+        <h2 id={`${id}-titulo`} style={{ fontSize: 26, marginBottom: 6 }}>
           {modo === "login" ? "Entrar na conta" : "Criar conta"}
         </h2>
-        <p style={{ fontSize: 13, color: "#6b7280", marginBottom: 24 }}>{modo === "login" ? "Acesse para deixar sua avaliação." : "Cadastre-se para participar da comunidade."}</p>
+        <p style={{ fontSize: 15, color: "var(--tinta-3)", marginBottom: 24 }}>{modo === "login" ? "Acesse para deixar sua avaliação." : "Cadastre-se para participar da comunidade."}</p>
 
         {erro && (
-          <div role="alert" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626" }}>
+          <div role="alert" style={{ background: "var(--terra-clara)", borderRadius: "var(--raio)", padding: "10px 14px", marginBottom: 16, fontSize: 15, color: "var(--terra)" }}>
             {erro}
           </div>
         )}
@@ -202,16 +202,16 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
                 onClick={() => inputFoto.current?.click()}
                 aria-label={previa ? "Trocar foto de perfil" : "Escolher foto de perfil"}
                 disabled={Boolean(pendente && fotoConfiavel(pendente.photoURL))}
-                style={{ width: 80, height: 80, borderRadius: "50%", background: "#f0fdf4", border: "2px dashed #16a34a", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", overflow: "hidden", marginBottom: 8, padding: 0 }}
+                style={{ width: 80, height: 80, borderRadius: "50%", background: "var(--mata-clara)", border: "1px dashed var(--mata)", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", overflow: "hidden", marginBottom: 8, padding: 0 }}
               >
                 {previa ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={previa} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : (
-                  <i className="fas fa-camera" aria-hidden="true" style={{ fontSize: 24, color: "#16a34a" }} />
+                  <i className="fas fa-camera" aria-hidden="true" style={{ fontSize: 24, color: "var(--mata)" }} />
                 )}
               </button>
-              <span style={{ fontSize: 12, color: "#6b7280" }}>Foto de perfil (opcional)</span>
+              <span style={{ fontSize: 14, color: "var(--tinta-3)" }}>Foto de perfil (opcional)</span>
               <input ref={inputFoto} type="file" accept="image/jpeg,image/png,image/webp" onChange={escolherFoto} style={{ display: "none" }} />
             </div>
           </>
@@ -252,7 +252,8 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
         <button
           type="submit"
           disabled={carregando}
-          style={{ width: "100%", padding: "12px", background: carregando ? "#86efac" : "#16a34a", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: carregando ? "not-allowed" : "pointer", marginBottom: 12, transition: "background 0.2s" }}
+          className="botao botao-cheio"
+          style={{ width: "100%", marginBottom: 12 }}
         >
           {textoBotao}
         </button>
@@ -264,7 +265,7 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
               setModo(modo === "login" ? "cadastro" : "login");
               setErro("");
             }}
-            style={{ width: "100%", background: "none", border: "none", color: "#15803d", fontSize: 13, cursor: "pointer", textDecoration: "underline" }}
+            style={{ width: "100%", background: "none", border: "none", color: "var(--mata)", fontSize: 15, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 4 }}
           >
             {modo === "login" ? "Não tem conta? Cadastre-se" : "Já tem conta? Entrar"}
           </button>
@@ -277,8 +278,8 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
 const estiloCampo: CSSProperties = {
   width: "100%",
   padding: "11px 14px",
-  border: "1.5px solid #d1d5db",
-  borderRadius: 10,
+  border: "1px solid var(--linha)",
+  borderRadius: "var(--raio)",
   fontSize: 14,
   marginBottom: 12,
   // O contorno padrão sai, mas o foco ganha borda verde e halo (.campo-auth).
@@ -286,6 +287,6 @@ const estiloCampo: CSSProperties = {
   display: "block",
   boxSizing: "border-box",
   // O React usava #fff aqui: o texto digitado sumia no fundo branco do campo.
-  color: "#111",
-  background: "#fff",
+  color: "var(--tinta)",
+  background: "var(--branco)",
 };

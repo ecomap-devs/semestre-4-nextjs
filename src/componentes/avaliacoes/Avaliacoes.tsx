@@ -39,7 +39,7 @@ function Estrelas({ valor, aoMudar, tamanho = 16 }: { valor: number; aoMudar?: (
         const estilo = {
           fontSize: tamanho,
           cursor: editavel ? "pointer" : "default",
-          color: n <= (sobre || valor) ? "#f59e0b" : "#d1d5db",
+          color: n <= (sobre || valor) ? "var(--ocre)" : "var(--linha)",
           transition: "color 0.15s",
           userSelect: "none" as const,
           background: "none",
@@ -185,7 +185,7 @@ export function Avaliacoes() {
       atualizarResumo();
       setNota(0);
       setComentario("");
-      setSucesso(anterior ? "Sua avaliação foi atualizada." : "Avaliação enviada com sucesso!");
+      setSucesso(anterior ? "Sua avaliação foi atualizada." : "Obrigado! Sua avaliação foi publicada.");
       setTimeout(() => setSucesso(""), 3000);
     } catch (e) {
       // No React, uma falha aqui deixava o botão em "Enviando..." para sempre.
@@ -203,95 +203,90 @@ export function Avaliacoes() {
   const restantes = resumo.total - avaliacoes.length;
 
   return (
-    <section style={{ background: "#f8fafc", padding: "72px 24px" }}>
-      <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-        <p style={{ textAlign: "center", fontSize: 11, fontWeight: 700, letterSpacing: 2, color: "#16a34a", textTransform: "uppercase", marginBottom: 12 }}>Comunidade</p>
-        <h2 style={{ textAlign: "center", fontSize: "clamp(24px,4vw,36px)", fontWeight: 800, color: "#111", marginBottom: 8 }}>Avaliações do Site</h2>
-
-        {resumo.media !== null && resumo.total > 0 ? (
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "12px 24px", boxShadow: "0 2px 8px rgba(0,0,0,0.06)" }}>
-              <span style={{ fontSize: 36, fontWeight: 800, color: "#111" }}>{resumo.media.toFixed(1).replace(".", ",")}</span>
+    <section className="section-pad" style={{ padding: "120px 24px" }}>
+      <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 40 }}>
+          <div>
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 56px)", marginBottom: 12, letterSpacing: "-0.02em", lineHeight: 1.05 }}>O que dizem do site</h2>
+            <p style={{ fontSize: 18, color: "var(--tinta-2)" }}>Opiniões de quem passou por aqui.</p>
+          </div>
+          {resumo.media !== null && resumo.total > 0 && (
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 40, color: "var(--tinta)", lineHeight: 1 }}>{resumo.media.toFixed(1).replace(".", ",")}</span>
               <div>
                 <Estrelas valor={Math.round(resumo.media)} />
-                <p style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>
-                  Classificação do site • {resumo.total} {resumo.total === 1 ? "avaliação" : "avaliações"}
+                <p style={{ fontSize: 14, color: "var(--tinta-3)", marginTop: 2 }}>
+                  {resumo.total} {resumo.total === 1 ? "avaliação" : "avaliações"}
                 </p>
               </div>
             </div>
-          </div>
-        ) : (
-          <div style={{ marginBottom: 48 }} />
-        )}
+          )}
+        </div>
 
         {falhaAoCarregar ? (
-          <p style={{ textAlign: "center", color: "#6b7280", marginBottom: 24 }}>Não foi possível carregar as avaliações agora.</p>
+          <p style={{ color: "var(--tinta-3)", marginBottom: 24 }}>Não foi possível carregar as avaliações agora.</p>
         ) : (
           !doServidor &&
           avaliacoes.length === 0 && (
-            <p role="status" style={{ textAlign: "center", color: "#6b7280", marginBottom: 24 }}>
+            <p role="status" style={{ color: "var(--tinta-3)", marginBottom: 24 }}>
               Carregando avaliações...
             </p>
           )
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(320px, 100%), 1fr))", gap: 20, marginBottom: 24 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(320px, 100%), 1fr))", gap: "32px 40px", marginBottom: 32 }}>
           {avaliacoes.map((av) => (
-            <div key={av.id} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 16, padding: "20px 22px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-                <div style={{ width: 42, height: 42, borderRadius: "50%", overflow: "hidden", background: "linear-gradient(135deg,#d1fae5,#a7f3d0)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            <figure key={av.id} style={{ borderTop: "1px solid var(--linha)", paddingTop: 20 }}>
+              <Estrelas valor={av.nota} tamanho={14} />
+              <blockquote style={{ fontSize: 17, color: "var(--tinta)", lineHeight: 1.55, overflowWrap: "anywhere", margin: "10px 0 16px" }}>{av.comentario}</blockquote>
+              <figcaption style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{ width: 32, height: 32, borderRadius: "50%", overflow: "hidden", background: "var(--mata-clara)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                   {av.photoURL ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={av.photoURL} alt="" referrerPolicy="no-referrer" loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={(e) => (e.currentTarget.style.display = "none")} />
                   ) : (
-                    <span style={{ fontSize: 16, fontWeight: 700, color: "#16a34a" }}>{av.nome.charAt(0).toUpperCase()}</span>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "var(--mata)" }}>{av.nome.charAt(0).toUpperCase()}</span>
                   )}
                 </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: "#111" }}>{av.nome}</div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                    <Estrelas valor={av.nota} />
-                    <span style={{ fontSize: 12, color: "#9ca3af" }}>{tempoRelativo(av.criadoEm)}</span>
-                  </div>
-                </div>
-              </div>
-              <p style={{ fontSize: 14, color: "#374151", lineHeight: 1.6, overflowWrap: "anywhere" }}>{av.comentario}</p>
-            </div>
+                <span style={{ fontSize: 15, color: "var(--tinta-2)" }}>
+                  {av.nome} <span style={{ color: "var(--tinta-3)" }}>· {tempoRelativo(av.criadoEm)}</span>
+                </span>
+              </figcaption>
+            </figure>
           ))}
         </div>
 
         {(restantes > 0 || limite > POR_PAGINA) && resumo.total > POR_PAGINA && (
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <div style={{ marginBottom: 56, textAlign: "center" }}>
             <button
               type="button"
               // De 12 em 12, até acabar. Antes "Mostrar mais" trazia no máximo 100 e
               // anunciava as que passassem disso como restantes, sem chegar nelas.
               onClick={() => setLimite((l) => (restantes > 0 ? l + A_MAIS : POR_PAGINA))}
-              style={{ background: "none", border: "1px solid #16a34a", color: "#16a34a", borderRadius: 10, padding: "10px 28px", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "background 0.2s" }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = "#f0fdf4")}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "none")}
+              className="link"
+              style={{ padding: 0 }}
             >
               {restantes > 0 ? `Mostrar mais (${restantes} restantes)` : "Mostrar menos"}
             </button>
           </div>
         )}
 
-        <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 20, padding: "32px", maxWidth: 600, margin: "0 auto", boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: "#111", marginBottom: 20 }}>{usuario ? "Deixe sua avaliação" : "Faça login para avaliar"}</h3>
+        <div style={{ background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: "28px", maxWidth: 560, margin: "0 auto" }}>
+          <h3 style={{ fontSize: 22, marginBottom: 20 }}>{usuario ? "Deixe sua avaliação" : "Faça login para avaliar"}</h3>
 
           {sucesso && (
-            <div role="status" style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#16a34a", fontWeight: 600 }}>
-              ✓ {sucesso}
+            <div role="status" style={{ background: "var(--mata-clara)", borderRadius: "var(--raio)", padding: "10px 14px", marginBottom: 16, fontSize: 15, color: "var(--mata-escura)" }}>
+              {sucesso}
             </div>
           )}
           {erro && (
-            <div role="alert" style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 8, padding: "10px 14px", marginBottom: 16, fontSize: 13, color: "#dc2626" }}>
+            <div role="alert" style={{ background: "var(--terra-clara)", borderRadius: "var(--raio)", padding: "10px 14px", marginBottom: 16, fontSize: 15, color: "var(--terra)" }}>
               {erro}
             </div>
           )}
 
           <div style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 8 }}>Sua nota:</p>
+            <p style={{ fontSize: 15, color: "var(--tinta-2)", marginBottom: 6 }}>Sua nota</p>
             <Estrelas valor={nota} aoMudar={setNota} tamanho={28} />
           </div>
 
@@ -303,14 +298,15 @@ export function Avaliacoes() {
             disabled={!usuario}
             maxLength={MAX_COMENTARIO}
             rows={4}
-            style={{ width: "100%", padding: "12px 14px", border: "1.5px solid #e5e7eb", borderRadius: 10, fontSize: 14, resize: "vertical", outline: "none", boxSizing: "border-box", background: usuario ? "#fff" : "#f9fafb", color: "#374151", marginBottom: 14, fontFamily: "inherit" }}
+            style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 16, resize: "vertical", boxSizing: "border-box", background: usuario ? "var(--branco)" : "var(--papel-2)", color: "var(--tinta)", marginBottom: 14, fontFamily: "inherit" }}
           />
 
           <button
             type="button"
             onClick={enviar}
             disabled={enviando}
-            style={{ width: "100%", padding: "12px", background: enviando ? "#86efac" : "#16a34a", color: "#fff", border: "none", borderRadius: 10, fontSize: 15, fontWeight: 700, cursor: enviando ? "not-allowed" : "pointer", transition: "background 0.2s" }}
+            className="botao botao-cheio"
+            style={{ width: "100%" }}
           >
             {!usuario ? "Entrar para avaliar" : enviando ? "Enviando..." : "Enviar avaliação"}
           </button>

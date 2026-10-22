@@ -1,7 +1,9 @@
 // Os seis biomas terrestres. Os contornos são o limite oficial do IBGE
 // (`biomasContornos.ts`, gerado por `scripts/biomas/gerar.mjs`); área, percentual e
 // descrição continuam sendo os valores de referência herdados do `biomesData` da
-// Mapa.jsx. No GeoJSON a ordem é [longitude, latitude].
+// Mapa.jsx. No GeoJSON a ordem é [longitude, latitude]. As cores eram as do React
+// (azul royal, laranja e verde-limão); viraram tons de terra e de mata, mais perto da
+// paisagem de cada bioma, e o Pantanal ficou azulado por ser a planície alagada.
 
 import { contornos } from "./biomasContornos";
 
@@ -12,7 +14,6 @@ export type Bioma = {
   chave: string;
   nome: string;
   cor: string;
-  icone: string;
   desmatamento: string;
   areaKm2: number;
   descricao: string;
@@ -27,8 +28,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "amazonia",
     nome: "Amazônia",
-    cor: "#0d5016",
-    icone: "fa-tree",
+    cor: "#2f5a32",
     desmatamento: "78%",
     areaKm2: 5500000,
     descricao: "Maior floresta tropical do mundo",
@@ -36,8 +36,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "cerrado",
     nome: "Cerrado",
-    cor: "#d4a017",
-    icone: "fa-sun",
+    cor: "#c49a3a",
     desmatamento: "45%",
     areaKm2: 2036448,
     descricao: "Savana tropical com grande biodiversidade",
@@ -45,8 +44,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "caatinga",
     nome: "Caatinga",
-    cor: "#ff6b35",
-    icone: "fa-water",
+    cor: "#b8653a",
     desmatamento: "15%",
     areaKm2: 844453,
     descricao: "Vegetação seca adaptada ao semiárido",
@@ -54,8 +52,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "mata-atlantica",
     nome: "Mata Atlântica",
-    cor: "#4169e1",
-    icone: "fa-leaf",
+    cor: "#6f9a5c",
     desmatamento: "32%",
     areaKm2: 1110182,
     descricao: "Floresta costeira altamente ameaçada",
@@ -63,8 +60,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "pantanal",
     nome: "Pantanal",
-    cor: "#8b4513",
-    icone: "fa-frog",
+    cor: "#4f8299",
     desmatamento: "12%",
     areaKm2: 150355,
     descricao: "Maior planície alagada do mundo",
@@ -72,13 +68,19 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "pampa",
     nome: "Pampa",
-    cor: "#32cd32",
-    icone: "fa-seedling",
+    cor: "#a7a35a",
     desmatamento: "25%",
     areaKm2: 176496,
     descricao: "Campos nativos do Sul do Brasil",
   },
 ];
+
+/**
+ * Vermelho dos alertas do DETER-B, no mapa e na legenda. Mais fechado que os tons dos
+ * biomas, para não se confundir com a Caatinga. Mora aqui, e não no MapaLeaflet, para
+ * a legenda não puxar o Leaflet para fora do carregamento preguiçoso.
+ */
+export const COR_ALERTA = "#b4232a";
 
 export const biomas: Bioma[] = referencia.map((b) => ({ ...b, poligonos: contornos[b.chave] ?? [] }));
 

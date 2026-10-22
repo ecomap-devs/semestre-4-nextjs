@@ -5,7 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useRef } from "react";
 
-import { biomaMaisEspecifico, biomas, type Bioma } from "@/dados/biomas";
+import { biomaMaisEspecifico, biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
 
 // O Leaflet toca `window` no import: este arquivo só é carregado no navegador, por
 // `dynamic(..., { ssr: false })` em Mapa.tsx.
@@ -64,21 +64,21 @@ function estiloDoBioma(b: Bioma, ativo: boolean): L.PathOptions {
 
 function htmlDoBioma(b: Bioma): string {
   return `
-    <div style="font-family:'Segoe UI',sans-serif;min-width:200px;padding:4px">
+    <div style="font-family:var(--fonte-texto),sans-serif;min-width:200px;padding:4px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div style="width:12px;height:12px;border-radius:3px;background:${b.cor};flex-shrink:0"></div>
-        <h3 style="margin:0;font-size:15px;color:#1a1a1a">${b.nome}</h3>
+        <div style="width:12px;height:12px;border-radius:2px;background:${b.cor};flex-shrink:0"></div>
+        <h3 style="margin:0;font-size:19px;font-weight:500;font-family:var(--fonte-titulo),serif;color:var(--tinta)">${b.nome}</h3>
       </div>
-      <div style="display:flex;flex-direction:column;gap:5px;font-size:12px;color:#444">
+      <div style="display:flex;flex-direction:column;gap:5px;font-size:14px;color:var(--tinta-2)">
         <div style="display:flex;justify-content:space-between;gap:12px">
-          <span style="color:#888">Área total</span>
-          <strong>${formatoArea.format(b.areaKm2)} km²</strong>
+          <span style="color:var(--tinta-3)">Área total</span>
+          <span>${formatoArea.format(b.areaKm2)} km²</span>
         </div>
         <div style="display:flex;justify-content:space-between;gap:12px">
-          <span style="color:#888">Desmatamento</span>
-          <strong style="color:#dc2626">${b.desmatamento}</strong>
+          <span style="color:var(--tinta-3)">Desmatamento</span>
+          <strong style="color:var(--terra)">${b.desmatamento}</strong>
         </div>
-        <div style="margin-top:4px;padding-top:8px;border-top:1px solid #eee;color:#555;font-style:italic">${b.descricao}</div>
+        <div style="margin-top:4px;padding-top:8px;border-top:1px solid var(--linha)">${b.descricao}</div>
       </div>
     </div>`;
 }
@@ -190,9 +190,9 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, ao
         // continua aparecendo como ponto de longe). Polygon e MultiPolygon são lidos
         // os dois: os 25% de área que o parser do Flutter perdia não se perdem aqui.
         L.polygon(partesDosAlertas(dados), {
-          color: "#ef4444",
+          color: COR_ALERTA,
           weight: 2,
-          fillColor: "#ef4444",
+          fillColor: COR_ALERTA,
           fillOpacity: 0.45,
           interactive: false,
           // De longe o detalhe do contorno nem aparece; simplificar mais alivia o zoom.

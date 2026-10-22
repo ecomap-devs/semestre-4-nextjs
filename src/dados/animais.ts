@@ -5,11 +5,20 @@ const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/ob
 
 export type StatusConservacao = "Criticamente ameaçada" | "Em perigo" | "Vulnerável" | "Extinta na natureza";
 
+/**
+ * Cor do texto do status, do mais grave ao menos grave. Antes cada espécie trazia o
+ * próprio par de cores (fundo e texto do selo), copiado à mão em cada uma.
+ */
+export const corDoStatus: Record<StatusConservacao, string> = {
+  "Extinta na natureza": "var(--tinta)",
+  "Criticamente ameaçada": "var(--terra)",
+  "Em perigo": "var(--ocre)",
+  Vulnerável: "var(--tinta-3)",
+};
+
 export type Animal = {
   nome: string;
   status: StatusConservacao;
-  fundoStatus: string;
-  corStatus: string;
   bioma: string;
   regiao: string;
   populacao: number;
@@ -27,8 +36,6 @@ export const animais: Animal[] = [
   {
     nome: "Onça-pintada",
     status: "Criticamente ameaçada",
-    fundoStatus: "#fee2e2",
-    corStatus: "#991b1b",
     bioma: "Mata Atlântica",
     regiao: "Sudeste",
     populacao: 300,
@@ -41,8 +48,6 @@ export const animais: Animal[] = [
   {
     nome: "Arara-azul",
     status: "Em perigo",
-    fundoStatus: "#fef3c7",
-    corStatus: "#92400e",
     bioma: "Pantanal",
     regiao: "Centro-Oeste",
     populacao: 6500,
@@ -55,8 +60,6 @@ export const animais: Animal[] = [
   {
     nome: "Mico-leão-dourado",
     status: "Criticamente ameaçada",
-    fundoStatus: "#fee2e2",
-    corStatus: "#991b1b",
     bioma: "Mata Atlântica",
     regiao: "Sudeste",
     populacao: 2500,
@@ -69,8 +72,6 @@ export const animais: Animal[] = [
   {
     nome: "Lobo-guará",
     status: "Vulnerável",
-    fundoStatus: "#fef9c3",
-    corStatus: "#854d0e",
     bioma: "Cerrado",
     regiao: "Centro-Oeste",
     populacao: 23000,
@@ -83,8 +84,6 @@ export const animais: Animal[] = [
   {
     nome: "Tucano-de-bico-preto",
     status: "Em perigo",
-    fundoStatus: "#fef3c7",
-    corStatus: "#92400e",
     bioma: "Amazônia",
     regiao: "Norte",
     populacao: 4200,
@@ -97,8 +96,6 @@ export const animais: Animal[] = [
   {
     nome: "Perereca-verde-da-mata",
     status: "Criticamente ameaçada",
-    fundoStatus: "#fee2e2",
-    corStatus: "#991b1b",
     bioma: "Mata Atlântica",
     regiao: "Sudeste",
     populacao: 180,
@@ -111,8 +108,6 @@ export const animais: Animal[] = [
   {
     nome: "Tamanduá-bandeira",
     status: "Vulnerável",
-    fundoStatus: "#fef9c3",
-    corStatus: "#854d0e",
     bioma: "Cerrado",
     regiao: "Centro-Oeste",
     populacao: 5000,
@@ -125,8 +120,6 @@ export const animais: Animal[] = [
   {
     nome: "Boto-cor-de-rosa",
     status: "Em perigo",
-    fundoStatus: "#fef3c7",
-    corStatus: "#92400e",
     bioma: "Amazônia",
     regiao: "Norte",
     populacao: 12000,
@@ -139,8 +132,6 @@ export const animais: Animal[] = [
   {
     nome: "Ararinha-azul",
     status: "Extinta na natureza",
-    fundoStatus: "#f3f4f6",
-    corStatus: "#374151",
     bioma: "Caatinga",
     regiao: "Nordeste",
     populacao: 0,
