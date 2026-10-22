@@ -24,17 +24,17 @@ export function CabecalhoInterno({
   const Titulo = tituloDaPagina ? "h1" : "p";
   return (
     <header style={{ position: "sticky", top: 0, zIndex: 1200, background: "var(--papel)", borderBottom: "1px solid var(--linha)", flexShrink: 0 }}>
-      <style>{`
-        .marca-interna { color: var(--tinta); text-decoration: none; }
-        .marca-interna:hover span { color: var(--mata); }
-      `}</style>
-      <div style={{ maxWidth: larguraTotal ? "none" : 1120, margin: "0 auto", padding: ehMobile ? "0 16px" : "0 24px", height: alturaCabecalhoInterno(ehMobile), display: "flex", alignItems: "center", gap: 16 }}>
-        {/* O logo leva ao início: substitui o botão "Voltar", que fazia o mesmo. */}
-        <Link href="/" className="marca-interna" aria-label="EcoMapBrasil, voltar ao início" style={{ display: "flex", alignItems: "center", gap: 8, minHeight: 44, flexShrink: 0 }}>
+      <div style={{ maxWidth: larguraTotal ? "none" : 1120, margin: "0 auto", padding: ehMobile ? "0 16px" : "0 24px", height: alturaCabecalhoInterno(ehMobile), display: "flex", alignItems: "center", gap: ehMobile ? 12 : 16 }}>
+        {/* O grupo pediu o "Voltar" de volta: só o logo como link não deixava claro como sair. */}
+        <Link href="/" className="botao botao-contorno" aria-label="Voltar ao início" style={{ padding: ehMobile ? "0 12px" : "0 14px", minHeight: 40, fontSize: 15, flexShrink: 0 }}>
+          <i className="fas fa-arrow-left" aria-hidden="true" style={{ fontSize: 13 }} />
+          {!ehMobile && "Voltar"}
+        </Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.png" alt="" style={{ height: 30, width: "auto" }} />
-          {!ehMobile && <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 19, transition: "color 0.15s" }}>EcoMapBrasil</span>}
-        </Link>
+          {!ehMobile && <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 19, color: "var(--tinta)" }}>EcoMapBrasil</span>}
+        </div>
         <span aria-hidden="true" style={{ width: 1, height: 20, background: "var(--linha)", flexShrink: 0 }} />
         <Titulo style={{ margin: 0, fontFamily: "var(--fonte-titulo)", fontWeight: 500, color: "var(--tinta)", fontSize: ehMobile ? 17 : 19, flex: 1, minWidth: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{titulo}</Titulo>
         {extra}

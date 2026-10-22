@@ -257,7 +257,7 @@ export function Avaliacoes() {
         </div>
 
         {(restantes > 0 || limite > POR_PAGINA) && resumo.total > POR_PAGINA && (
-          <div style={{ marginBottom: 56 }}>
+          <div style={{ marginBottom: 56, textAlign: "center" }}>
             <button
               type="button"
               // De 12 em 12, até acabar. Antes "Mostrar mais" trazia no máximo 100 e
@@ -271,7 +271,7 @@ export function Avaliacoes() {
           </div>
         )}
 
-        <div style={{ background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: "28px", maxWidth: 560 }}>
+        <div style={{ background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: "28px", maxWidth: 560, margin: "0 auto" }}>
           <h3 style={{ fontSize: 22, marginBottom: 20 }}>{usuario ? "Deixe sua avaliação" : "Faça login para avaliar"}</h3>
 
           {sucesso && (
