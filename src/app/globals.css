@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* Cores do site. Tons de papel, mata e terra em vez da paleta pronta do Tailwind
+   (o verde #4ade80 e os cinzas azulados do React). Use sempre a variável, nunca o
+   hexadecimal solto, para que um ajuste aqui valha no site todo. */
+:root {
+  --papel: #f6f3ec; /* fundo das páginas */
+  --papel-2: #ece7db; /* seção alternada, campo desabilitado */
+  --branco: #fffdf8; /* cartão sobre o papel */
+  --linha: #ddd6c6; /* bordas e divisórias */
+
+  --tinta: #1d2620; /* títulos */
+  --tinta-2: #4a5249; /* texto corrido */
+  --tinta-3: #7a8075; /* legenda, data, texto de apoio */
+
+  --mata: #2f5233; /* cor principal: botão, link, destaque */
+  --mata-escura: #1f3a24; /* rodapé, faixa escura, hover */
+  --mata-clara: #e3eadb; /* fundo de aviso de sucesso, seleção */
+
+  --terra: #a4472a; /* perda, alerta, erro */
+  --terra-clara: #f3e1d8;
+  --ocre: #b8862b; /* estrelas, atenção */
+  --ocre-clara: #f4e9cf;
+
+  --raio: 6px;
+}
+
 /* Base herdada do App.css do React. Fica em @layer base para que um utilitário do
    Tailwind, se usado, ainda vença. */
 @layer base {
@@ -15,13 +40,9 @@
     scroll-padding-top: 64px;
   }
 
-  /* Tipografia do index.css do React (vinha do modelo do Vite e valia em todo o site:
-     texto base de 18px, entrelinha de 145%). As cores de modo escuro do mesmo arquivo
-     ficaram de fora: escureciam só parte da página e os campos de formulário. */
   :root {
-    font: 18px/145% system-ui, "Segoe UI", Roboto, sans-serif;
-    letter-spacing: 0.18px;
-    color: #6b6375;
+    font: 17px/1.55 var(--fonte-texto), system-ui, sans-serif;
+    color: var(--tinta-2);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -35,26 +56,28 @@
   }
 
   body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-    background-color: #f9fafb;
+    background-color: var(--papel);
   }
 
+  /* Títulos em serifa, com peso médio: o 800 em tudo era o que mais dava cara de
+     modelo pronto. */
   h1,
-  h2 {
+  h2,
+  h3 {
+    font-family: var(--fonte-titulo), Georgia, serif;
     font-weight: 500;
-    color: #08060d;
+    color: var(--tinta);
+    letter-spacing: -0.01em;
+    line-height: 1.15;
   }
 
   h1 {
     font-size: 56px;
-    letter-spacing: -1.68px;
     margin: 32px 0;
   }
 
   h2 {
     font-size: 24px;
-    line-height: 118%;
-    letter-spacing: -0.24px;
     margin: 0 0 8px;
   }
 
@@ -68,9 +91,73 @@
     }
   }
 
-  button {
+  button,
+  input,
+  textarea,
+  select {
     font-family: inherit;
   }
+
+  ::selection {
+    background: var(--mata-clara);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--mata);
+    outline-offset: 2px;
+  }
+}
+
+/* Botões e links de ação. Classes globais porque :hover não cabe em estilo inline. */
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 22px;
+  border-radius: var(--raio);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.botao:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.botao-cheio {
+  background: var(--mata);
+  color: var(--branco);
+}
+.botao-cheio:hover:not(:disabled) {
+  background: var(--mata-escura);
+}
+.botao-contorno {
+  background: transparent;
+  color: var(--mata);
+  border-color: var(--mata);
+}
+.botao-contorno:hover:not(:disabled) {
+  background: var(--mata-clara);
+}
+
+/* Link de texto com sublinhado discreto, que firma no hover. */
+.link {
+  color: var(--mata);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  text-underline-offset: 4px;
+  transition: text-decoration-color 0.15s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+}
+.link:hover {
+  text-decoration-color: currentColor;
 }
 
 /* Transição entre páginas (o React fazia um fade de 300ms ao trocar de rota). */

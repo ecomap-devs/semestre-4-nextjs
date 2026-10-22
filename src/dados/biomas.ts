@@ -1,7 +1,9 @@
 // Os seis biomas terrestres. Os contornos são o limite oficial do IBGE
 // (`biomasContornos.ts`, gerado por `scripts/biomas/gerar.mjs`); área, percentual e
 // descrição continuam sendo os valores de referência herdados do `biomesData` da
-// Mapa.jsx. No GeoJSON a ordem é [longitude, latitude].
+// Mapa.jsx. No GeoJSON a ordem é [longitude, latitude]. As cores eram as do React
+// (azul royal, laranja e verde-limão); viraram tons de terra e de mata, mais perto da
+// paisagem de cada bioma, e o Pantanal ficou azulado por ser a planície alagada.
 
 import { contornos } from "./biomasContornos";
 
@@ -27,7 +29,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "amazonia",
     nome: "Amazônia",
-    cor: "#0d5016",
+    cor: "#2f5a32",
     icone: "fa-tree",
     desmatamento: "78%",
     areaKm2: 5500000,
@@ -36,7 +38,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "cerrado",
     nome: "Cerrado",
-    cor: "#d4a017",
+    cor: "#c49a3a",
     icone: "fa-sun",
     desmatamento: "45%",
     areaKm2: 2036448,
@@ -45,7 +47,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "caatinga",
     nome: "Caatinga",
-    cor: "#ff6b35",
+    cor: "#b8653a",
     icone: "fa-water",
     desmatamento: "15%",
     areaKm2: 844453,
@@ -54,7 +56,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "mata-atlantica",
     nome: "Mata Atlântica",
-    cor: "#4169e1",
+    cor: "#6f9a5c",
     icone: "fa-leaf",
     desmatamento: "32%",
     areaKm2: 1110182,
@@ -63,7 +65,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "pantanal",
     nome: "Pantanal",
-    cor: "#8b4513",
+    cor: "#4f8299",
     icone: "fa-frog",
     desmatamento: "12%",
     areaKm2: 150355,
@@ -72,7 +74,7 @@ const referencia: Omit<Bioma, "poligonos">[] = [
   {
     chave: "pampa",
     nome: "Pampa",
-    cor: "#32cd32",
+    cor: "#a7a35a",
     icone: "fa-seedling",
     desmatamento: "25%",
     areaKm2: 176496,
