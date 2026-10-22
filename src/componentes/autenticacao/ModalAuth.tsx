@@ -155,7 +155,7 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
     <Dialogo
       aoFechar={aoFechar}
       idTitulo={`${id}-titulo`}
-      estiloFundo={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
+      estiloFundo={{ position: "fixed", inset: 0, background: "rgba(29,38,32,0.55)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
       estiloCaixa={{ background: "var(--branco)", borderRadius: "var(--raio)", padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 12px 40px rgba(29,38,32,0.2)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
     >
       <style>{`

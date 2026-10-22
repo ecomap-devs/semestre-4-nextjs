@@ -14,7 +14,8 @@
   --tinta-3: #7a8075; /* legenda, data, texto de apoio */
 
   --mata: #2f5233; /* cor principal: botão, link, destaque */
-  --mata-escura: #1f3a24; /* rodapé, faixa escura, hover */
+  --mata-escura: #1f3a24; /* faixa escura, hover */
+  --mata-noite: #16291a; /* rodapé */
   --mata-clara: #e3eadb; /* fundo de aviso de sucesso, seleção */
 
   --terra: #a4472a; /* perda, alerta, erro */

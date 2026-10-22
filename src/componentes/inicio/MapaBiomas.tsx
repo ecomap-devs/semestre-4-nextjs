@@ -24,7 +24,7 @@ export function MapaBiomas() {
       <svg viewBox={`-0.5 -0.5 ${maxX - minX + 1} ${maxY - minY + 1}`} role="img" aria-label="Mapa dos seis biomas brasileiros" style={{ width: "100%", height: "auto", display: "block" }}>
         {desenhos.map((b) => (
           // evenodd deixa os buracos (massas d'água) vazados.
-          <path key={b.chave} d={b.d} fill={b.cor} fillRule="evenodd" stroke="var(--papel)" strokeWidth={0.12} strokeLinejoin="round">
+          <path key={b.chave} d={b.d} fill={b.cor} fillRule="evenodd" strokeWidth={0.12} strokeLinejoin="round" style={{ stroke: "var(--papel)" }}>
             <title>{b.nome}</title>
           </path>
         ))}

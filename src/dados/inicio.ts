@@ -1,6 +1,8 @@
 // Dados da página inicial, portados da Home.jsx. São valores de referência herdados
 // do React, não números oficiais (ver README, "Sobre os dados").
 
+import type { StatusConservacao } from "./animais";
+
 const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/object/public/animals";
 
 export type Membro = { nome: string };
@@ -16,7 +18,7 @@ export const equipe: Membro[] = [
 
 export type AnimalResumo = {
   nome: string;
-  status: "Criticamente ameaçada" | "Em perigo" | "Vulnerável";
+  status: StatusConservacao;
   descricao: string;
   bioma: string;
   populacao: string;

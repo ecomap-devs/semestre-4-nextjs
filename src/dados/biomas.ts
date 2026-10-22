@@ -14,7 +14,6 @@ export type Bioma = {
   chave: string;
   nome: string;
   cor: string;
-  icone: string;
   desmatamento: string;
   areaKm2: number;
   descricao: string;
@@ -30,7 +29,6 @@ const referencia: Omit<Bioma, "poligonos">[] = [
     chave: "amazonia",
     nome: "Amazônia",
     cor: "#2f5a32",
-    icone: "fa-tree",
     desmatamento: "78%",
     areaKm2: 5500000,
     descricao: "Maior floresta tropical do mundo",
@@ -39,7 +37,6 @@ const referencia: Omit<Bioma, "poligonos">[] = [
     chave: "cerrado",
     nome: "Cerrado",
     cor: "#c49a3a",
-    icone: "fa-sun",
     desmatamento: "45%",
     areaKm2: 2036448,
     descricao: "Savana tropical com grande biodiversidade",
@@ -48,7 +45,6 @@ const referencia: Omit<Bioma, "poligonos">[] = [
     chave: "caatinga",
     nome: "Caatinga",
     cor: "#b8653a",
-    icone: "fa-water",
     desmatamento: "15%",
     areaKm2: 844453,
     descricao: "Vegetação seca adaptada ao semiárido",
@@ -57,7 +53,6 @@ const referencia: Omit<Bioma, "poligonos">[] = [
     chave: "mata-atlantica",
     nome: "Mata Atlântica",
     cor: "#6f9a5c",
-    icone: "fa-leaf",
     desmatamento: "32%",
     areaKm2: 1110182,
     descricao: "Floresta costeira altamente ameaçada",
@@ -66,7 +61,6 @@ const referencia: Omit<Bioma, "poligonos">[] = [
     chave: "pantanal",
     nome: "Pantanal",
     cor: "#4f8299",
-    icone: "fa-frog",
     desmatamento: "12%",
     areaKm2: 150355,
     descricao: "Maior planície alagada do mundo",
@@ -75,12 +69,18 @@ const referencia: Omit<Bioma, "poligonos">[] = [
     chave: "pampa",
     nome: "Pampa",
     cor: "#a7a35a",
-    icone: "fa-seedling",
     desmatamento: "25%",
     areaKm2: 176496,
     descricao: "Campos nativos do Sul do Brasil",
   },
 ];
+
+/**
+ * Vermelho dos alertas do DETER-B, no mapa e na legenda. Mais fechado que os tons dos
+ * biomas, para não se confundir com a Caatinga. Mora aqui, e não no MapaLeaflet, para
+ * a legenda não puxar o Leaflet para fora do carregamento preguiçoso.
+ */
+export const COR_ALERTA = "#b4232a";
 
 export const biomas: Bioma[] = referencia.map((b) => ({ ...b, poligonos: contornos[b.chave] ?? [] }));
 

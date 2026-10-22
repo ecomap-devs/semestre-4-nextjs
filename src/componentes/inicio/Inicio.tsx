@@ -7,7 +7,8 @@ import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
 import { Avaliacoes } from "@/componentes/avaliacoes/Avaliacoes";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
-import { animaisDestaque, equipe, linksNavegacao, numeros, slides, solucoes, type AnimalResumo } from "@/dados/inicio";
+import { corDoStatus } from "@/dados/animais";
+import { animaisDestaque, equipe, linksNavegacao, numeros, slides, solucoes } from "@/dados/inicio";
 
 import { BarrasAnimadas, ComparacaoRegional, LinhaDoTempo } from "./Graficos";
 import { MapaBiomas } from "./MapaBiomas";
@@ -58,13 +59,6 @@ const CSS = `
 const larguraMaxima = { maxWidth: 1120, margin: "0 auto" } as const;
 const tituloSecao = { fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 16 } as const;
 const introSecao = { fontSize: 18, color: "var(--tinta-2)", maxWidth: 560 } as const;
-
-// O grau de ameaça vira cor de texto, sem selo: terra no mais grave, ocre no meio.
-const corDoStatus: Record<AnimalResumo["status"], string> = {
-  "Criticamente ameaçada": "var(--terra)",
-  "Em perigo": "var(--ocre)",
-  Vulnerável: "var(--tinta-3)",
-};
 
 function Cabecalho() {
   const { usuario, abrirLogin, sair } = useAuth();
@@ -191,7 +185,7 @@ function Slideshow() {
       {/* Escurece só a base, onde fica o texto; o resto da foto aparece inteiro. */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(16,24,18,0.85) 0%, rgba(16,24,18,0.35) 45%, rgba(16,24,18,0) 70%)" }} />
       <div style={{ position: "relative", zIndex: 2, height: "100%", ...larguraMaxima, padding: "0 24px 72px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
-        <h1 style={{ fontSize: "clamp(34px, 5.5vw, 64px)", color: "#fffdf8", margin: "0 0 16px", maxWidth: 760, fontWeight: 400 }}>O desmatamento no Brasil é maior do que você imagina</h1>
+        <h1 style={{ fontSize: "clamp(34px, 5.5vw, 64px)", color: "var(--branco)", margin: "0 0 16px", maxWidth: 760, fontWeight: 400 }}>O desmatamento no Brasil é maior do que você imagina</h1>
         <p style={{ fontSize: "clamp(17px, 2vw, 20px)", color: "rgba(255,253,248,0.85)", marginBottom: 32, maxWidth: 560 }}>
           Veja onde a floresta está sendo perdida e quais espécies estão ficando sem lugar para viver.
         </p>
@@ -224,7 +218,7 @@ function Slideshow() {
             // A área de toque é o botão inteiro (24×16); o traço visível é o span de dentro.
             style={{ width: 24, height: 16, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}
           >
-            <span style={{ display: "block", width: "100%", height: 2, background: atual === i ? "#fffdf8" : "rgba(255,253,248,0.4)", transition: "background 0.3s" }} />
+            <span style={{ display: "block", width: "100%", height: 2, background: atual === i ? "var(--branco)" : "rgba(255,253,248,0.4)", transition: "background 0.3s" }} />
           </button>
         ))}
       </div>
@@ -401,7 +395,7 @@ export function Inicio() {
         <section className="section-pad" style={{ background: "var(--mata-escura)", padding: "80px 24px" }}>
           <div style={{ ...larguraMaxima, display: "flex", flexWrap: "wrap", gap: 32, alignItems: "flex-end", justifyContent: "space-between" }}>
             <div style={{ maxWidth: 560 }}>
-              <h2 style={{ ...tituloSecao, color: "#fffdf8" }}>Passe adiante</h2>
+              <h2 style={{ ...tituloSecao, color: "var(--branco)" }}>Passe adiante</h2>
               <p style={{ color: "rgba(255,253,248,0.8)", fontSize: 18 }}>Quanto mais gente souber o tamanho do problema, mais difícil fica ignorá-lo.</p>
             </div>
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
@@ -422,17 +416,17 @@ export function Inicio() {
 }
 
 function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
-  const tituloColuna = { fontSize: 14, fontWeight: 600, color: "#fffdf8", marginBottom: 12 } as const;
+  const tituloColuna = { fontSize: 14, fontWeight: 600, color: "var(--branco)", marginBottom: 12 } as const;
   const nomes = equipe.map((m) => m.nome);
   return (
-    <footer id="equipe" style={{ background: "#16291a", color: "rgba(255,253,248,0.7)", padding: "56px 24px 32px", fontSize: 15 }}>
+    <footer id="equipe" style={{ background: "var(--mata-noite)", color: "rgba(255,253,248,0.7)", padding: "56px 24px 32px", fontSize: 15 }}>
       <div style={larguraMaxima}>
         <div className="footer-grid" style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr 1fr 1fr", gap: 40, marginBottom: 48 }}>
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/logo.png" alt="" style={{ height: 28 }} />
-              <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 19, color: "#fffdf8" }}>EcoMapBrasil</span>
+              <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 19, color: "var(--branco)" }}>EcoMapBrasil</span>
             </div>
             {/* A equipe era uma seção com cartões de ícone genérico; o nome de cada um basta. */}
             <p style={{ lineHeight: 1.6, maxWidth: 320 }}>
