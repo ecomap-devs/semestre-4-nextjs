@@ -185,22 +185,26 @@ export function Animais() {
       <CabecalhoInterno titulo="Espécies ameaçadas" ehMobile={ehMobile} />
 
       <main>
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: ehMobile ? "36px 16px 28px" : "64px 24px 40px" }}>
-          <h1 style={{ fontSize: ehMobile ? 32 : 48, margin: "0 0 14px", maxWidth: 720 }}>Espécies que o desmatamento está levando embora</h1>
-          <p style={{ fontSize: ehMobile ? 17 : 19, maxWidth: 600, marginBottom: 28 }}>
-            Cada uma depende de um pedaço de mata que está sumindo. Toque numa espécie para ver como a população dela mudou desde {ANOS_TENDENCIA[0]}.
-          </p>
-          <p style={{ display: "flex", flexWrap: "wrap", gap: "8px 28px", fontSize: 16, color: "var(--tinta-2)" }}>
-            {resumo.map((s) => (
-              <span key={s.rotulo}>
-                <strong style={{ fontFamily: "var(--fonte-titulo)", fontWeight: 500, fontSize: 24, color: "var(--tinta)", marginRight: 6 }}>{s.valor}</strong>
-                {s.rotulo}
-              </span>
-            ))}
-          </p>
+        {/* Abertura sobre a foto da primeira espécie, como a faixa de foto da Home. */}
+        <div style={{ position: "relative", minHeight: ehMobile ? 420 : 520, display: "flex", alignItems: "flex-end", backgroundImage: `url('${animais[0]?.imagem}')`, backgroundSize: "cover", backgroundPosition: "center 35%", backgroundColor: "var(--mata-noite)" }}>
+          <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(16,24,18,0.92) 0%, rgba(16,24,18,0.45) 55%, rgba(16,24,18,0.2) 100%)" }} />
+          <div style={{ position: "relative", width: "100%", maxWidth: 1120, margin: "0 auto", padding: ehMobile ? "48px 16px 32px" : "80px 24px 48px" }}>
+            <h1 style={{ fontSize: ehMobile ? 38 : "clamp(48px, 6vw, 80px)", margin: "0 0 16px", maxWidth: 820, color: "var(--branco)", letterSpacing: "-0.02em", lineHeight: 1.02 }}>Espécies que o desmatamento está levando embora</h1>
+            <p style={{ fontSize: ehMobile ? 17 : 20, maxWidth: 600, marginBottom: 28, color: "rgba(255,253,248,0.85)" }}>
+              Cada uma depende de um pedaço de mata que está sumindo. Toque numa espécie para ver como a população dela mudou desde {ANOS_TENDENCIA[0]}.
+            </p>
+            <p style={{ display: "flex", flexWrap: "wrap", gap: "8px 32px", fontSize: 16, color: "rgba(255,253,248,0.78)" }}>
+              {resumo.map((s) => (
+                <span key={s.rotulo}>
+                  <strong style={{ fontFamily: "var(--fonte-titulo)", fontWeight: 500, fontSize: ehMobile ? 30 : 40, color: "var(--sol)", marginRight: 8 }}>{s.valor}</strong>
+                  {s.rotulo}
+                </span>
+              ))}
+            </p>
+          </div>
         </div>
 
-        <div style={{ background: "var(--papel)", borderTop: "1px solid var(--linha)", borderBottom: "1px solid var(--linha)", padding: ehMobile ? "12px 16px" : "16px 24px", position: "sticky", top: alturaCabecalhoInterno(ehMobile), zIndex: 40 }}>
+        <div style={{ background: "var(--papel)", borderBottom: "1px solid var(--linha)", padding: ehMobile ? "12px 16px" : "16px 24px", position: "sticky", top: alturaCabecalhoInterno(ehMobile), zIndex: 40 }}>
           <div style={{ maxWidth: 1120, margin: "0 auto" }}>
             <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: ehMobile ? 0 : 12 }}>
               <div style={{ position: "relative", flex: 1 }}>

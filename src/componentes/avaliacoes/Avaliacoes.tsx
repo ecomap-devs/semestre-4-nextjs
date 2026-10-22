@@ -203,11 +203,11 @@ export function Avaliacoes() {
   const restantes = resumo.total - avaliacoes.length;
 
   return (
-    <section className="section-pad" style={{ padding: "80px 24px" }}>
+    <section className="section-pad" style={{ padding: "120px 24px" }}>
       <div style={{ maxWidth: 1120, margin: "0 auto" }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", justifyContent: "space-between", gap: 16, marginBottom: 40 }}>
           <div>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 40px)", marginBottom: 8 }}>O que dizem do site</h2>
+            <h2 style={{ fontSize: "clamp(32px, 5vw, 56px)", marginBottom: 12, letterSpacing: "-0.02em", lineHeight: 1.05 }}>O que dizem do site</h2>
             <p style={{ fontSize: 18, color: "var(--tinta-2)" }}>Opiniões de quem passou por aqui.</p>
           </div>
           {resumo.media !== null && resumo.total > 0 && (

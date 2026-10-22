@@ -22,6 +22,7 @@
   --terra-clara: #f3e1d8;
   --ocre: #b8862b; /* estrelas, atenção */
   --ocre-clara: #f4e9cf;
+  --sol: #e3b553; /* destaque sobre fundo escuro: números, numeração */
 
   --raio: 6px;
 }
@@ -159,6 +160,19 @@
 }
 .link:hover {
   text-decoration-color: currentColor;
+}
+
+/* Entrada ao rolar (componente Revelar). */
+.revelar {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 0.8s ease,
+    transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.revelado {
+  opacity: 1;
+  transform: none;
 }
 
 /* Transição entre páginas (o React fazia um fade de 300ms ao trocar de rota). */
