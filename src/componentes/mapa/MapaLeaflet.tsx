@@ -94,18 +94,36 @@ function focar(m: L.Map, bioma: Bioma, onde?: L.LatLng) {
   L.popup().setLatLng(onde ?? limites.getCenter()).setContent(htmlDoBioma(bioma)).openOn(m);
 }
 
+/** Área do anel com sinal, pela fórmula do cadarço: o sinal diz o sentido. */
+function areaComSinal(anel: GeoJSON.Position[]): number {
+  let soma = 0;
+  for (let i = 0, j = anel.length - 1; i < anel.length; j = i++) {
+    const [xi = 0, yi = 0] = anel[i] ?? [];
+    const [xj = 0, yj = 0] = anel[j] ?? [];
+    soma += xj * yi - xi * yj;
+  }
+  return soma;
+}
+
 /**
  * Os anéis de todos os alertas, no formato de multipolígono do Leaflet: uma lista de
  * polígonos, cada um com o contorno e os buracos. Feature sem geometria de área é
  * pulada, não derruba o mapa.
+ *
+ * O contorno sai sempre num sentido e o buraco no outro: com `fillRule: "nonzero"`,
+ * é isso que mantém o buraco vazio sem depender de o GeoJSON vir bem orientado.
  */
 function partesDosAlertas(dados: GeoJSON.FeatureCollection): L.LatLngExpression[][][] {
-  const paraLatLng = (anel: GeoJSON.Position[]) => anel.map(([lng, lat]) => [lat, lng] as L.LatLngTuple);
+  const paraLatLng = (anel: GeoJSON.Position[], contorno: boolean) => {
+    const orientado = (areaComSinal(anel) > 0) === contorno ? anel : [...anel].reverse();
+    return orientado.map(([lng, lat]) => [lat, lng] as L.LatLngTuple);
+  };
+  const poligono = (aneis: GeoJSON.Position[][]) => aneis.map((anel, i) => paraLatLng(anel, i === 0));
   const partes: L.LatLngExpression[][][] = [];
   for (const f of dados.features) {
     const g = f.geometry;
-    if (g?.type === "Polygon") partes.push(g.coordinates.map(paraLatLng));
-    else if (g?.type === "MultiPolygon") for (const p of g.coordinates) partes.push(p.map(paraLatLng));
+    if (g?.type === "Polygon") partes.push(poligono(g.coordinates));
+    else if (g?.type === "MultiPolygon") for (const p of g.coordinates) partes.push(poligono(p));
   }
   return partes;
 }
@@ -194,6 +212,9 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, ao
           weight: 2,
           fillColor: COR_ALERTA,
           fillOpacity: 0.45,
+          // Num caminho só, o `evenodd` padrão do Leaflet apagava o preenchimento onde
+          // dois alertas se cruzam (542 pares, ~1.254 ha, medidos em 28/10/2026).
+          fillRule: "nonzero",
           interactive: false,
           // De longe o detalhe do contorno nem aparece; simplificar mais alivia o zoom.
           smoothFactor: 2,

@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import type { User } from "firebase/auth";
 
-import { mensagemDoStatus, paraIdentificacao, type Identificacao } from "@/tipos/identificacao";
+import { codigoDoErro, mensagemDoStatus, paraIdentificacao, type Identificacao } from "@/tipos/identificacao";
 
 import { supabase } from "./supabase";
 
@@ -68,7 +68,7 @@ export async function identificar(arquivo: File, usuario: User): Promise<Identif
     const status = error instanceof FunctionsHttpError ? (error.context as Response).status : 0;
     const corpo = error instanceof FunctionsHttpError ? await (error.context as Response).text().catch(() => "") : "";
     console.error("Identificação falhou:", status, corpo, error);
-    throw new ErroIdentificacao(mensagemDoStatus(status));
+    throw new ErroIdentificacao(mensagemDoStatus(status, codigoDoErro(corpo)));
   }
 
   const resultado = paraIdentificacao(data);
