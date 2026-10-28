@@ -28,8 +28,6 @@ const CSS = `
   .nav-link:hover { color: var(--mata); }
   .cabecalho-foto .nav-link { color: rgba(255,253,248,0.85); }
   .cabecalho-foto .nav-link:hover { color: var(--branco); }
-  .animal-card img { transition: transform 0.6s ease; }
-  .animal-card:hover img { transform: scale(1.05); }
   .seta-hero { transition: background 0.15s; background: rgba(0,0,0,0.25); }
   .seta-hero:hover { background: rgba(0,0,0,0.5); }
   .botao-claro { background: var(--branco); color: var(--tinta); }
@@ -429,8 +427,8 @@ export function Inicio() {
               {animaisDestaque.map((a, i) => (
                 <Revelar key={a.nome} atraso={(i % 3) * 120}>
                   <article className="animal-card">
-                    <div style={{ position: "relative", aspectRatio: "4 / 5", overflow: "hidden", borderRadius: "var(--raio)", marginBottom: 18, background: "var(--linha)" }}>
-                      <ImagemComReserva src={a.imagem} alt={a.nome} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                    <div style={{ position: "relative", aspectRatio: "4 / 3", overflow: "hidden", borderRadius: "var(--raio)", marginBottom: 18, background: "var(--linha)" }}>
+                      <ImagemComReserva src={a.imagem} alt={a.nome} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                     </div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: corDoStatus[a.status], marginBottom: 4 }}>{a.status}</p>
                     <h3 style={{ fontSize: 26, marginBottom: 8 }}>{a.nome}</h3>
