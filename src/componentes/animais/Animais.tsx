@@ -45,7 +45,7 @@ function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boole
     // Foco preso na ficha, fundo inerte, Esc fecha e o foco volta ao card (Dialogo).
     <Dialogo aoFechar={aoFechar} idTitulo="titulo-ficha" classeFundo="modal-overlay" classeCaixa="modal-content" fechaNoFundo>
       <div style={{ height: ehMobile ? 200 : 300, position: "relative", background: "var(--linha)" }}>
-        <ImagemComReserva src={animal.imagem} alt={animal.nome} loading="eager" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+        <ImagemComReserva src={animal.imagem} alt={animal.nome} loading="eager" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
         <button
           type="button"
           onClick={aoFechar}
@@ -124,8 +124,6 @@ export function Animais() {
   return (
     <div style={{ background: "var(--papel)", minHeight: "100vh" }}>
       <style>{`
-        .animal-card img { transition: transform 0.5s ease; }
-        .animal-card:hover img { transform: scale(1.03); }
         .animal-card:hover .nome-animal { color: var(--mata); }
         .campo-busca:focus { border-color: var(--mata) !important; outline: none; }
         .filtro-btn { transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; }
@@ -254,7 +252,7 @@ export function Animais() {
                 return (
                   <article key={animal.nome} className="animal-card" onClick={() => setSelecionado(animal)} style={{ cursor: "pointer" }}>
                     <div style={{ aspectRatio: "4 / 3", overflow: "hidden", borderRadius: "var(--raio)", marginBottom: 14, background: "var(--linha)" }}>
-                      <ImagemComReserva src={animal.imagem} alt={animal.nome} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+                      <ImagemComReserva src={animal.imagem} alt={animal.nome} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                     </div>
 
                     <p style={{ fontSize: 14, fontWeight: 600, color: corDoStatus[animal.status], marginBottom: 2 }}>{animal.status}</p>
