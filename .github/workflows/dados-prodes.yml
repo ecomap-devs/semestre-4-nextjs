@@ -1,0 +1,83 @@
+name: Dados do PRODES
+
+# Todo dia 1º baixa o PRODES do TerraBrasilis (scripts/prodes/gerar.mjs) e, se algo
+# mudou, abre um PR com o src/dados/prodes.ts novo. O dado nunca vai direto para a
+# main: passa pela revisão como qualquer código, e o site no ar não depende do INPE
+# estar no ar. Também dá para rodar na mão (Actions → Dados do PRODES → Run workflow).
+#
+# PR aberto pelo GITHUB_TOKEN não dispara outros workflows (regra do GitHub), então a
+# CI não roda sozinha nele. Por isso este job roda lint, tipos e build antes de abrir
+# o PR. Para o PR ser aberto, o repositório precisa permitir: Settings → Actions →
+# General → "Allow GitHub Actions to create and approve pull requests".
+on:
+  schedule:
+    - cron: "0 9 1 * *"
+  workflow_dispatch:
+
+# Escrita só aqui, e só para criar a branch e o PR. Nenhum secret é usado: o PRODES é
+# aberto e o build compila sem credenciais.
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: dados-prodes
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    name: Baixar o PRODES e abrir PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Gerar src/dados/prodes.ts
+        run: node scripts/prodes/gerar.mjs
+
+      - name: Ver se mudou
+        id: mudou
+        run: |
+          if git diff --quiet -- src/dados/prodes.ts; then
+            echo "Nada novo no PRODES."
+            echo "sim=false" >> "$GITHUB_OUTPUT"
+          else
+            data=$(grep -o 'prodesAtualizadoEm = "[0-9-]*"' src/dados/prodes.ts | grep -o '[0-9-]\{10\}')
+            echo "sim=true" >> "$GITHUB_OUTPUT"
+            echo "branch=dados/prodes-$data" >> "$GITHUB_OUTPUT"
+            echo "data=$data" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Conferir lint, tipos e build
+        if: steps.mudou.outputs.sim == 'true'
+        run: |
+          npm ci
+          npm run lint
+          npm run typecheck
+          npm run build
+
+      - name: Abrir o PR
+        if: steps.mudou.outputs.sim == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.mudou.outputs.branch }}
+          DATA: ${{ steps.mudou.outputs.data }}
+        run: |
+          # Já existe PR para esta atualização do INPE: nada a fazer.
+          if git ls-remote --exit-code --heads origin "$BRANCH" > /dev/null; then
+            echo "A branch $BRANCH já existe."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add src/dados/prodes.ts
+          git commit -m "Atualizar os dados do PRODES ($DATA)"
+          git push origin "$BRANCH"
+          gh pr create --base main --head "$BRANCH" \
+            --title "Atualizar os dados do PRODES ($DATA)" \
+            --body "O TerraBrasilis publicou dados novos do PRODES em $DATA. Gerado por \`scripts/prodes/gerar.mjs\` no workflow **Dados do PRODES**, que já rodou lint, tipos e build. Confira no diff se os números mudaram o esperado antes do merge."

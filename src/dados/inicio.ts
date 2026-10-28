@@ -1,7 +1,10 @@
-// Dados da página inicial, portados da Home.jsx. São valores de referência herdados
-// do React, não números oficiais (ver README, "Sobre os dados").
+// Dados da página inicial, portados da Home.jsx. Os de desmatamento vêm do PRODES
+// (INPE), e a linha do tempo mora em `linhaDoTempo.ts`. As espécies e o número de
+// espécies ameaçadas ainda são valores de referência herdados do React.
 
 import type { StatusConservacao } from "./animais";
+import { biomas } from "./biomas";
+import { prodes, prodesAtualizadoEm } from "./prodes";
 
 const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/object/public/animals";
 
@@ -52,40 +55,55 @@ export const solucoes = [
   { titulo: "Denuncie", texto: 'Use aplicativos como "Denúncia Ambiente" para reportar atividades ilegais de desmatamento que você identificar.' },
 ];
 
+// ── Desmatamento, calculado do PRODES (prodes.ts) ──
+//
+// Até 28/10/2026 estes números eram de referência, herdados do React ("+30% na última
+// década", Amazônia com 780 mil km² desmatados). Agora saem do que o INPE mediu.
+
+const milhar = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+
+/** "2024–2025" -> "ago/2024 a jul/2025": o ano do PRODES vai de agosto a julho. */
+const periodoPorExtenso = (fim: number) => `ago/${fim - 1} a jul/${fim}`;
+
+/** O desmatamento do bioma no período que termina em `fim`, se já consolidado. */
+function noPeriodo(chave: string, fim: number): number | undefined {
+  return prodes[chave]?.anos.find((p) => p.fim === fim && !p.preliminar)?.km2;
+}
+
+/**
+ * O período mais recente que os seis biomas já têm consolidado. Cada bioma é mapeado
+ * no seu ritmo, e somar anos diferentes daria um total que não existe.
+ */
+const fimComum = Math.max(...(prodes.amazonia?.anos ?? []).map((p) => p.fim).filter((fim) => biomas.every((b) => noPeriodo(b.chave, fim) !== undefined)));
+if (!Number.isFinite(fimComum)) throw new Error("PRODES sem um período comum aos seis biomas: rode scripts/prodes/gerar.mjs");
+
+const totalNoPeriodo = (fim: number) => biomas.reduce((s, b) => s + (noPeriodo(b.chave, fim) ?? 0), 0);
+const totalAtual = totalNoPeriodo(fimComum);
+const temAnterior = biomas.every((b) => noPeriodo(b.chave, fimComum - 1) !== undefined);
+const variacao = temAnterior ? Math.round((totalAtual / totalNoPeriodo(fimComum - 1) - 1) * 100) : null;
+
 export const numeros = [
-  { valor: "+30%", rotulo: "Aumento no desmatamento na última década" },
-  { valor: "1,5 mi ha", rotulo: "Área queimada anualmente no Brasil" },
+  { valor: milhar.format(totalAtual), rotulo: `km² de vegetação nativa desmatados nos seis biomas de ${periodoPorExtenso(fimComum)}` },
+  ...(variacao === null
+    ? []
+    : [{ valor: `${variacao > 0 ? "+" : variacao < 0 ? "−" : ""}${Math.abs(variacao)}%`, rotulo: `no desmatamento dos seis biomas em relação a ${periodoPorExtenso(fimComum - 1)}` }]),
   { valor: "1.173", rotulo: "Espécies animais ameaçadas de extinção" },
   { valor: "6 biomas", rotulo: "Biomas brasileiros afetados pelo desmatamento" },
 ];
 
-/** Área desmatada por bioma, em mil km². */
-export const areaPorBioma = [
-  { nome: "Amazônia", valor: 780 },
-  { nome: "Cerrado", valor: 520 },
-  { nome: "Mata Atlântica", valor: 320 },
-  { nome: "Caatinga", valor: 150 },
-  { nome: "Pantanal", valor: 90 },
-  { nome: "Pampa", valor: 60 },
-];
+/** Área já desmatada em cada bioma, em mil km², da maior para a menor. */
+export const areaPorBioma = biomas
+  .map((b) => ({ nome: b.nome, valor: Math.round((prodes[b.chave]?.acumuladoKm2 ?? 0) / 1000) }))
+  .sort((a, b) => b.valor - a.valor);
 
-export const linhaDoTempo = [
-  { ano: "2005", titulo: "Pampa sofre impactos crescentes", texto: "Expansão agropecuária avança sobre os campos nativos" },
-  { ano: "2010", titulo: "Caatinga afetada", texto: "Caatinga tem 45% de sua área original desmatada" },
-  { ano: "2013", titulo: "Novo Código Florestal", texto: "Brasil aprova novo Código Florestal com impacto nos biomas" },
-  { ano: "2015", titulo: "Queimadas no Pantanal", texto: "Pantanal perde 12% de sua área para queimadas" },
-  { ano: "2018", titulo: "Mata Atlântica reduzida", texto: "Mata Atlântica tem apenas 12,4% de sua cobertura original" },
-  { ano: "2020", titulo: "Perdas no Cerrado", texto: "Cerrado perde 7.340 km² de vegetação nativa" },
-  { ano: "2022", titulo: "Seca no Pantanal", texto: "Pantanal enfrenta pior seca em décadas" },
-  { ano: "2023", titulo: "Recorde de desmatamento", texto: "Recorde de desmatamento na Amazônia: 11.568 km²" },
-];
+/** Quanto cada bioma perdeu no período comum mais recente. */
+export const ultimoPeriodo = {
+  rotulo: periodoPorExtenso(fimComum),
+  biomas: biomas.map((b) => ({ nome: b.nome, km2: noPeriodo(b.chave, fimComum) ?? 0 })).sort((a, b) => b.km2 - a.km2),
+};
 
-export const comparacaoRegional = [
-  { rotulo: "Norte (Amazônia)", pct: 78 },
-  { rotulo: "Centro-Oeste (Cerrado/Pantanal)", pct: 45 },
-  { rotulo: "Nordeste (Caatinga)", pct: 15 },
-  { rotulo: "Sudeste/Sul (Mata Atlântica/Pampa)", pct: 32 },
-];
+/** "16 de outubro de 2026", para a nota de fonte. */
+export const dadosAtualizadosEm = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long", timeZone: "UTC" }).format(new Date(`${prodesAtualizadoEm}T00:00:00Z`));
 
 export const linksNavegacao: [string, string][] = [
   ["mapa", "Mapa"],

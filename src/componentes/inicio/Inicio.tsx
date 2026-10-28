@@ -9,9 +9,9 @@ import { Contador, Revelar } from "@/componentes/comum/efeitos";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
 import { corDoStatus } from "@/dados/animais";
-import { animaisDestaque, equipe, linksNavegacao, numeros, slides, solucoes } from "@/dados/inicio";
+import { animaisDestaque, dadosAtualizadosEm, equipe, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
 
-import { BarrasAnimadas, ComparacaoRegional, LinhaDoTempo } from "./Graficos";
+import { BarrasAnimadas, LinhaDoTempo, UltimoPeriodo } from "./Graficos";
 import { MapaBiomas } from "./MapaBiomas";
 
 // Porte da Home.jsx. Estilos inline como no original; o que precisa de :hover ou de
@@ -467,15 +467,22 @@ export function Inicio() {
               <Revelar>
                 <h3 style={{ fontSize: 24, marginBottom: 24 }}>Área desmatada por bioma</h3>
                 <BarrasAnimadas />
-                <h3 style={{ fontSize: 24, margin: "56px 0 20px" }}>Desmatamento por região</h3>
-                <ComparacaoRegional />
+                <h3 style={{ fontSize: 24, margin: "56px 0 6px" }}>Desmatado no último ano medido</h3>
+                <p style={{ fontSize: 15, color: "var(--tinta-3)", marginBottom: 20 }}>De {ultimoPeriodo.rotulo}</p>
+                <UltimoPeriodo />
               </Revelar>
               <Revelar atraso={150}>
                 <h3 style={{ fontSize: 24, marginBottom: 24 }}>Linha do tempo</h3>
                 <LinhaDoTempo />
               </Revelar>
             </div>
-            <p style={{ fontSize: 14, color: "var(--tinta-3)", marginTop: 40 }}>Fontes: INPE, IBGE e MapBiomas Alerta. Valores aproximados, para fins educativos.</p>
+            <p style={{ fontSize: 14, color: "var(--tinta-3)", marginTop: 40 }}>
+              Desmatamento: PRODES/INPE, pelo{" "}
+              <a href="https://terrabrasilis.dpi.inpe.br/app/dashboard/deforestation/biomes/cerrado/increments" target="_blank" rel="noopener noreferrer" style={{ color: "inherit" }}>
+                TerraBrasilis
+              </a>
+              , atualizado em {dadosAtualizadosEm}. Área dos biomas: IBGE (2019). Na linha do tempo, as taxas são as oficiais da Amazônia Legal.
+            </p>
           </div>
         </section>
 

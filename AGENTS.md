@@ -139,6 +139,13 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   Não edite os contornos à mão. Ao tocar no mapa, `biomaMaisEspecifico()` ainda escolhe o
   menor anel que contém o ponto (a simplificação deixa encostos na fronteira) e ignora os
   buracos, que são massas d'água que o IBGE tira do bioma.
+- **Número de desmatamento vem do PRODES.** Desde 28/10/2026 a área e o percentual
+  desmatado dos biomas e os números de desmatamento da Home saem de `src/dados/prodes.ts`,
+  gerado por `scripts/prodes/gerar.mjs` (o workflow `dados-prodes.yml` abre um PR todo
+  mês quando o INPE publica dado novo). Não edite o arquivo à mão nem volte a escrever
+  esses números soltos no código. Período preliminar do INPE não entra nos totais da Home.
+  A linha do tempo (`src/dados/linhaDoTempo.ts`) também calcula seus números do PRODES;
+  marco escrito à mão ali só com data verificável (lei, acordo) e sem número.
 - **Trocar o fundo é trocar a camada.** Fundo claro ↔ satélite remove as camadas antigas e
   adiciona as novas (`MapaLeaflet.tsx`). No app, trocar só o endereço dentro da mesma
   camada deixava a imagem velha na tela.

@@ -5,7 +5,8 @@ import { useState } from "react";
 
 import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
 import { useLarguraJanela } from "@/componentes/comum/ganchos";
-import { biomas, COR_ALERTA, linhaDoTempoMapa, type Bioma } from "@/dados/biomas";
+import { biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
+import { linhaDoTempoMapa } from "@/dados/linhaDoTempo";
 
 import type { EstadoAlertas, Fundo, ResumoAlertas } from "./MapaLeaflet";
 
@@ -36,7 +37,7 @@ function LinhaDoTempoLista() {
   return (
     <ol style={{ listStyle: "none", borderLeft: "1px solid var(--linha)", marginLeft: 5 }}>
       {linhaDoTempoMapa.map((item) => (
-        <li key={item.ano} style={{ position: "relative", padding: "0 0 16px 18px" }}>
+        <li key={`${item.ano}-${item.titulo}`} style={{ position: "relative", padding: "0 0 16px 18px" }}>
           <span aria-hidden="true" style={{ position: "absolute", left: -5, top: 6, width: 9, height: 9, borderRadius: "50%", background: "var(--papel)", border: "2px solid var(--mata)" }} />
           <div style={{ fontSize: 14, color: "var(--tinta-3)", fontVariantNumeric: "tabular-nums" }}>{item.ano}</div>
           <p style={{ margin: 0, fontSize: 15, color: "var(--tinta-2)", lineHeight: 1.45 }}>{item.texto}</p>
