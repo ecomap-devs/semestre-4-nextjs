@@ -27,8 +27,9 @@ aparece no site.
 > desde 01/10/2026: **[ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app)**.
 > Depois do porte vieram a página **Fotos** (identificação de animal por foto, 02/10), os
 > **biomas pelo limite do IBGE** (02/10), um **visual próprio** (22/10), que substituiu o
-> do React, e os **números de desmatamento do PRODES/INPE** (28/10), no lugar dos valores
-> de referência herdados do React.
+> do React, e os **dados reais** (28/10) no lugar dos valores de referência herdados do
+> React: desmatamento do **PRODES/INPE** e status das espécies na **lista nacional do MMA**
+> e na **Lista Vermelha da IUCN**.
 
 ## 🧭 Onde este repositório entra
 
@@ -51,6 +52,7 @@ flowchart LR
     fn --> gemini["✨ Gemini"]
     regras["📜 firestore.rules<br/>no semestre-4-flutter"] -. protege .-> fs
     inpe["📡 PRODES · INPE<br/>TerraBrasilis"] -. todo mês, por PR .-> web
+    mma["🐆 Lista nacional · MMA<br/>IUCN · GBIF"] -. todo mês, por PR .-> web
 ```
 
 ## 🛠️ Stack
@@ -66,6 +68,7 @@ flowchart LR
 | **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
 | **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
 | **Dados de desmatamento** | PRODES (INPE), gerado em `src/dados/prodes.ts` por `scripts/prodes/gerar.mjs` | Baixado antes do build e revisado por PR: o site não depende do INPE estar no ar, e a CSP não muda |
+| **Status das espécies** | Lista nacional do MMA (dados abertos, CKAN) e IUCN pela API do GBIF, gerado em `src/dados/especies.ts` por `scripts/especies/gerar.mjs` | Mesmo esquema do PRODES. As duas fontes são abertas: a API da própria IUCN exige chave, e chave não entra no código |
 | **Identificação por foto** | Edge Function do Supabase + Gemini | A mesma função do app (o código mora no semestre-4-flutter); a chave do Gemini fica no servidor, e daqui só vai o ID token do Firebase |
 | **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
 
@@ -138,12 +141,16 @@ done
 | Linha do tempo (Home e mapa) | Calculada em `src/dados/linhaDoTempo.ts` a partir da taxa oficial da Amazônia Legal e do acumulado por bioma. Só PPCDAm (2004), Moratória da Soja (2006) e Código Florestal (2012) são escritos à mão, sem número |
 | Alertas no mapa | DETER-B (INPE), em `public/alertas-desmatamento.json` |
 | Contorno dos biomas | IBGE, gerado por `scripts/biomas/gerar.mjs` |
-| Espécies e "1.173 espécies ameaçadas" | **Ainda são valores de referência** herdados do React |
+| "Espécies ameaçadas no Brasil" (Home e Animais) | Lista nacional do MMA: espécies e subespécies da fauna em CR, EN ou VU no CSV mais recente do [portal de dados abertos](https://dados.mma.gov.br/dataset/especies-ameacadas) (a avaliação de 2021, que virou a Portaria MMA nº 148/2022) |
+| Status de cada espécie | "No Brasil": a mesma lista do MMA. "No mundo": a Lista Vermelha da IUCN, pela API do GBIF |
+| População de uma espécie | Só onde há estimativa publicada, com a fonte na ficha (hoje: onça na Mata Atlântica, mico-leão-dourado e arara-azul-de-lear). Escrita à mão em `src/dados/animais.ts` |
+| Descrição e ameaças de cada espécie | Escritas à mão em `src/dados/animais.ts`, sem número que não tenha fonte |
 
-Para atualizar o PRODES na mão:
+Para atualizar na mão:
 
 ```bash
-node scripts/prodes/gerar.mjs
+node scripts/prodes/gerar.mjs     # desmatamento
+node scripts/especies/gerar.mjs   # status das espécies
 ```
 
 <details>
@@ -161,6 +168,13 @@ node scripts/prodes/gerar.mjs
   fora dos totais da Home. Na linha do tempo, aparece como "Estimativa do INPE".
 - **Nem todo bioma é medido todo ano.** Até 2013 alguns eram medidos a cada dois ou quatro
   anos. Esses períodos entram no acumulado, mas não na série anual.
+- **O status no Brasil e no mundo podem ser diferentes.** A lista nacional avalia a espécie
+  só no Brasil; a IUCN, no mundo todo. A onça é vulnerável aqui e quase ameaçada no mundo, e a
+  ararinha-azul, reintroduzida em 2022, já é "criticamente em perigo" na lista nacional e
+  ainda "extinta na natureza" na IUCN.
+- **Não há série de população.** Até 28/10/2026 cada espécie tinha um gráfico de 2000 a 2024
+  sem fonte, que saiu. Espécie nova no catálogo entra também em `ESPECIES` de
+  `scripts/especies/gerar.mjs`, e o build para se ela não estiver na lista nacional.
 
 </details>
 
@@ -172,18 +186,19 @@ node scripts/prodes/gerar.mjs
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 | **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build e abre um PR. Não usa secret |
+| **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, o build falha e o job fica vermelho, sem PR: decidir se ela fica é com o grupo |
 
 > [!IMPORTANT]
-> O **Dados do PRODES** só consegue abrir o PR com *Settings → Actions → General →
+> O **Dados do PRODES** e o **Dados das espécies** só conseguem abrir o PR com *Settings → Actions → General →
 > "Allow GitHub Actions to create and approve pull requests"* ativado. E PR aberto pelo
-> `GITHUB_TOKEN` não dispara a **CI** (regra do GitHub), por isso o próprio workflow roda
+> `GITHUB_TOKEN` não dispara a **CI** (regra do GitHub), por isso cada workflow roda
 > a verificação antes de abrir.
 
 O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secret vazio
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
 As duas guardas foram testadas nos dois sentidos.
 
-Os workflows têm token só de leitura (menos o **Dados do PRODES**, que precisa criar a
+Os workflows têm token só de leitura (menos os dois de dados, que precisam criar a
 branch e o PR) e as actions são fixadas por SHA. O preview usa o
 `firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
 

@@ -80,7 +80,7 @@ npm run build      # gera out/, sem precisar de credencial
 src/
 ├── app/          rotas: uma pasta por página (page.tsx), layout.tsx e template.tsx na raiz
 ├── componentes/  uma pasta por tela (inicio, mapa, animais, fotos) + autenticacao, avaliacoes, comum
-├── dados/        dados de referência herdados do React (biomas, espécies, números da Home)
+├── dados/        dados do site: PRODES e status das espécies gerados por scripts/, o resto à mão
 ├── lib/          env, firebase, supabase: a ponte com o mundo de fora
 └── tipos/        tipos de domínio + a função que valida o dado que chega
 
@@ -146,6 +146,11 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   esses números soltos no código. Período preliminar do INPE não entra nos totais da Home.
   A linha do tempo (`src/dados/linhaDoTempo.ts`) também calcula seus números do PRODES;
   marco escrito à mão ali só com data verificável (lei, acordo) e sem número.
+- **Status de espécie vem da lista nacional e da IUCN.** Desde 28/10/2026 o status e o
+  total de espécies ameaçadas saem de `src/dados/especies.ts`, gerado por
+  `scripts/especies/gerar.mjs` (MMA pelo CKAN, IUCN pelo GBIF; workflow
+  `dados-especies.yml`). Não edite o arquivo à mão. População só com estimativa publicada
+  e a fonte (`populacao` em `animais.ts`); nada de série ou percentual sem origem.
 - **Trocar o fundo é trocar a camada.** Fundo claro ↔ satélite remove as camadas antigas e
   adiciona as novas (`MapaLeaflet.tsx`). No app, trocar só o endereço dentro da mesma
   camada deixava a imagem velha na tela.

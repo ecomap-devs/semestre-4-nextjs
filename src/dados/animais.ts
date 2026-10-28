@@ -1,147 +1,173 @@
-// Catálogo de espécies, portado do `allAnimals` da Animais.jsx. São valores de
-// referência herdados do React, não números oficiais (ver README, "Sobre os dados").
+// Catálogo de espécies, portado do `allAnimals` da Animais.jsx. O status vem da lista
+// nacional do MMA e da Lista Vermelha da IUCN (`especies.ts`, gerado). A população só
+// aparece onde há estimativa publicada, com a fonte (ver README, "Sobre os dados").
+//
+// Até 28/10/2026 cada espécie trazia população e uma série de 2000 a 2024 sem fonte, e
+// o catálogo tinha o tucano-de-bico-preto (não ameaçado), uma "perereca-verde-da-mata"
+// que não corresponde a espécie conhecida, e a "arara-azul" com foto da arara-azul-de-lear.
+
+import { statusEspecies, type CategoriaIUCN, type CategoriaNacional } from "./especies";
 
 const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/object/public/animals";
 
-export type StatusConservacao = "Criticamente ameaçada" | "Em perigo" | "Vulnerável" | "Extinta na natureza";
+/** Status na lista nacional, pelo nome usado no site. */
+export type StatusConservacao = "Extinta" | "Extinta na natureza" | "Regionalmente extinta" | "Criticamente em perigo" | "Em perigo" | "Vulnerável";
+
+const NOME_NACIONAL: Record<CategoriaNacional, StatusConservacao> = {
+  EX: "Extinta",
+  EW: "Extinta na natureza",
+  RE: "Regionalmente extinta",
+  CR: "Criticamente em perigo",
+  EN: "Em perigo",
+  VU: "Vulnerável",
+};
+
+/** Nome das categorias da IUCN em português, como o ICMBio as traduz. */
+export const NOME_IUCN: Record<CategoriaIUCN, string> = {
+  EX: "Extinta",
+  EW: "Extinta na natureza",
+  CR: "Criticamente em perigo",
+  EN: "Em perigo",
+  VU: "Vulnerável",
+  NT: "Quase ameaçada",
+  LC: "Menos preocupante",
+  DD: "Dados insuficientes",
+};
 
 /**
  * Cor do texto do status, do mais grave ao menos grave. Antes cada espécie trazia o
  * próprio par de cores (fundo e texto do selo), copiado à mão em cada uma.
  */
 export const corDoStatus: Record<StatusConservacao, string> = {
+  Extinta: "var(--tinta)",
   "Extinta na natureza": "var(--tinta)",
-  "Criticamente ameaçada": "var(--terra)",
+  "Regionalmente extinta": "var(--tinta)",
+  "Criticamente em perigo": "var(--terra)",
   "Em perigo": "var(--ocre)",
   Vulnerável: "var(--tinta-3)",
 };
 
-export type Animal = {
+/** Estimativa publicada, sempre com quem a fez. */
+export type Populacao = { texto: string; fonte: string; link: string };
+
+type Especie = {
   nome: string;
-  status: StatusConservacao;
+  /** Chave em `statusEspecies` e em `ESPECIES` de scripts/especies/gerar.mjs. */
+  cientifico: string;
   bioma: string;
   regiao: string;
-  populacao: number;
-  /** Uma medida por ano de `ANOS_TENDENCIA`. */
-  tendencia: number[];
   descricao: string;
   ameacas: string[];
   imagem: string;
+  populacao?: Populacao;
 };
 
-/** Os anos da série populacional — iguais para todas as espécies. */
-export const ANOS_TENDENCIA = ["2000", "2005", "2010", "2015", "2020", "2024"];
+export type Animal = Especie & {
+  status: StatusConservacao;
+  /** Categoria global; `null` quando a IUCN não avaliou. */
+  iucn: string | null;
+};
 
-export const animais: Animal[] = [
+const catalogo: Especie[] = [
   {
     nome: "Onça-pintada",
-    status: "Criticamente ameaçada",
+    cientifico: "Panthera onca",
     bioma: "Mata Atlântica",
     regiao: "Sudeste",
-    populacao: 300,
-    tendencia: [1200, 950, 700, 520, 380, 300],
     descricao:
-      "O maior felino das Américas perdeu mais de 50% de seu habitat na Mata Atlântica nos últimos 15 anos. A fragmentação florestal impede a migração entre populações.",
-    ameacas: ["Desmatamento","Caça ilegal","Fragmentação de habitat"],
+      "O maior felino das Américas. Na Mata Atlântica, que já perdeu cerca de 85% do habitat da espécie, restam provavelmente menos de 300 onças, em grupos pequenos e isolados entre si.",
+    ameacas: ["Perda de habitat", "Fragmentação florestal", "Morte causada por pessoas"],
     imagem: `${SUPABASE_ANIMAIS}/onca-pintada.png`,
+    populacao: {
+      texto: "menos de 300 na Mata Atlântica",
+      fonte: "Paviolo et al., Scientific Reports (2016)",
+      link: "https://doi.org/10.1038/srep37147",
+    },
   },
   {
-    nome: "Arara-azul",
-    status: "Em perigo",
-    bioma: "Pantanal",
-    regiao: "Centro-Oeste",
-    populacao: 6500,
-    tendencia: [10000, 8500, 7200, 6800, 6600, 6500],
+    nome: "Arara-azul-de-lear",
+    cientifico: "Anodorhynchus leari",
+    bioma: "Caatinga",
+    regiao: "Nordeste",
     descricao:
-      "Com apenas 6.500 indivíduos restantes, a arara-azul depende da preservação das matas ciliares e árvores nativas para nidificação no Pantanal.",
-    ameacas: ["Tráfico de animais","Perda de habitat","Queimadas"],
+      "Só existe no norte da Bahia, onde faz ninho em paredões de arenito e se alimenta sobretudo do coquinho do licuri. A população cresce com a proteção dos dormitórios e do licurizal, mas o tráfico continua.",
+    ameacas: ["Tráfico de animais", "Perda do licuri", "Perda de habitat"],
     imagem: `${SUPABASE_ANIMAIS}/arara-azul-de-lear_01_0.png`,
+    populacao: {
+      texto: "2.548 aves (censo de 2024)",
+      fonte: "Censo do CEMAVE/ICMBio, via Fundação Biodiversitas",
+      link: "https://biodiversitas.org.br/wp-content/uploads/2024/10/Araras_23102024.pdf",
+    },
   },
   {
     nome: "Mico-leão-dourado",
-    status: "Criticamente ameaçada",
+    cientifico: "Leontopithecus rosalia",
     bioma: "Mata Atlântica",
     regiao: "Sudeste",
-    populacao: 2500,
-    tendencia: [400, 800, 1200, 1800, 2200, 2500],
     descricao:
-      "Símbolo da conservação brasileira, o mico-leão-dourado é um caso de sucesso parcial: programas de reintrodução elevaram sua população, mas a espécie permanece vulnerável.",
-    ameacas: ["Fragmentação florestal","Doenças","Baixa diversidade genética"],
+      "Só existe na Mata Atlântica do Rio de Janeiro. Reintroduções e corredores florestais tiraram a espécie da beira da extinção; o surto de febre amarela de 2016 a 2018 derrubou a população de cerca de 3.700 para 2.500, que voltou a crescer.",
+    ameacas: ["Fragmentação florestal", "Febre amarela", "Baixa diversidade genética"],
     imagem: `${SUPABASE_ANIMAIS}/micoleao-cke.png`,
+    populacao: {
+      texto: "cerca de 4.800 (censo de 2023)",
+      fonte: "Associação Mico-Leão-Dourado",
+      link: "https://micoleao.org.br/wp-content/uploads/2023/08/Texto-tecnico-censo-2023-MLD.pdf",
+    },
   },
   {
     nome: "Lobo-guará",
-    status: "Vulnerável",
+    cientifico: "Chrysocyon brachyurus",
     bioma: "Cerrado",
     regiao: "Centro-Oeste",
-    populacao: 23000,
-    tendencia: [35000, 31000, 28000, 26000, 24000, 23000],
     descricao:
-      "O maior canídeo sul-americano habita as vastas savanas do Cerrado. A expansão agrícola e as rodovias são as principais causas de mortalidade da espécie.",
-    ameacas: ["Expansão agrícola","Atropelamentos","Perda de habitat"],
+      "O maior canídeo da América do Sul vive nos campos e savanas do Cerrado. A expansão agrícola toma o seu habitat, e os atropelamentos estão entre as principais causas de morte da espécie.",
+    ameacas: ["Expansão agrícola", "Atropelamentos", "Perda de habitat"],
     imagem: `${SUPABASE_ANIMAIS}/lobo-guara.png`,
   },
   {
-    nome: "Tucano-de-bico-preto",
-    status: "Em perigo",
-    bioma: "Amazônia",
-    regiao: "Norte",
-    populacao: 4200,
-    tendencia: [8000, 7000, 6200, 5400, 4700, 4200],
-    descricao:
-      "Dispersor de sementes essencial para a regeneração da Amazônia, o tucano-de-bico-preto sofre com a fragmentação florestal que isola populações.",
-    ameacas: ["Desmatamento","Tráfico de animais","Fragmentação"],
-    imagem: `${SUPABASE_ANIMAIS}/large-6.jpg`,
-  },
-  {
-    nome: "Perereca-verde-da-mata",
-    status: "Criticamente ameaçada",
-    bioma: "Mata Atlântica",
-    regiao: "Sudeste",
-    populacao: 180,
-    tendencia: [900, 650, 450, 320, 230, 180],
-    descricao:
-      "Endêmica de fragmentos florestais da Mata Atlântica, esta perereca é altamente sensível a alterações microclimáticas causadas pelo desmatamento.",
-    ameacas: ["Desmatamento","Mudanças climáticas","Fungos patogênicos"],
-    imagem: `${SUPABASE_ANIMAIS}/figura_1.jpg`,
-  },
-  {
     nome: "Tamanduá-bandeira",
-    status: "Vulnerável",
+    cientifico: "Myrmecophaga tridactyla",
     bioma: "Cerrado",
     regiao: "Centro-Oeste",
-    populacao: 5000,
-    tendencia: [9000, 8000, 7000, 6200, 5500, 5000],
     descricao:
-      "O maior mirmecófago do mundo, o tamanduá-bandeira tem baixíssima taxa reprodutiva, tornando-o extremamente vulnerável à pressão humana sobre o Cerrado.",
-    ameacas: ["Queimadas","Atropelamentos","Perda de habitat"],
+      "Come formigas e cupins e tem um filhote por vez, depois de cerca de seis meses de gestação, por isso a população demora a se recuperar. Queimadas, atropelamentos e a perda de habitat no Cerrado são as maiores ameaças.",
+    ameacas: ["Queimadas", "Atropelamentos", "Perda de habitat"],
     imagem: `${SUPABASE_ANIMAIS}/tamandua-bandeira-2.png`,
   },
   {
     nome: "Boto-cor-de-rosa",
-    status: "Em perigo",
+    cientifico: "Inia geoffrensis",
     bioma: "Amazônia",
     regiao: "Norte",
-    populacao: 12000,
-    tendencia: [25000, 21000, 17000, 15000, 13000, 12000],
     descricao:
-      "O maior golfinho de água doce do mundo enfrenta ameaças crescentes pela poluição dos rios amazônicos, pesca acidental e construção de hidrelétricas.",
-    ameacas: ["Poluição hídrica","Pesca acidental","Hidrelétricas"],
+      "O maior golfinho de rio do mundo vive nos rios da Amazônia. É morto para servir de isca na pesca da piracatinga, se enrosca em redes de pesca e perde rios livres para as hidrelétricas, que isolam as populações.",
+    ameacas: ["Captura para isca de pesca", "Pesca acidental", "Hidrelétricas"],
     imagem: `${SUPABASE_ANIMAIS}/banner_blog_novo_24.png`,
   },
   {
     nome: "Ararinha-azul",
-    status: "Extinta na natureza",
+    cientifico: "Cyanopsitta spixii",
     bioma: "Caatinga",
     regiao: "Nordeste",
-    populacao: 0,
-    tendencia: [200, 80, 20, 5, 1, 0],
     descricao:
-      "Considerada extinta na natureza desde 2000, a ararinha-azul sobrevive apenas em cativeiro. Programas de reintrodução tentam devolvê-la à Caatinga baiana.",
-    ameacas: ["Desmatamento total","Captura para cativeiro","Ausência de habitat"],
+      "Desapareceu da natureza em 2000 e sobreviveu só em cativeiro. Em 2022, as primeiras aves criadas em cativeiro foram soltas em Curaçá, na Caatinga da Bahia; a lista nacional a classifica como criticamente em perigo, e a IUCN ainda como extinta na natureza.",
+    ameacas: ["Captura para o tráfico", "Perda das matas de caraibeira", "População muito pequena"],
     imagem: `${SUPABASE_ANIMAIS}/ARARINHA_AZUL-795.jpg`,
   },
 ];
 
-export const filtrosBioma = ["Todos", "Amazônia", "Cerrado", "Mata Atlântica", "Pantanal", "Caatinga"];
-export const filtrosStatus = ["Todos", "Criticamente ameaçada", "Em perigo", "Vulnerável", "Extinta na natureza"];
+// Espécie sem status gerado, ou fora da lista nacional, para o build: o catálogo é de
+// espécies ameaçadas no Brasil, e o status não pode virar um valor escrito à mão.
+export const animais: Animal[] = catalogo.map((e) => {
+  const status = statusEspecies[e.cientifico];
+  if (!status) throw new Error(`${e.cientifico} não está em especies.ts: inclua em scripts/especies/gerar.mjs`);
+  if (!status.nacional) throw new Error(`${e.cientifico} saiu da lista nacional de espécies ameaçadas`);
+  return { ...e, status: NOME_NACIONAL[status.nacional], iucn: status.iucn ? NOME_IUCN[status.iucn] : null };
+});
+
+const ORDEM_STATUS = Object.keys(corDoStatus) as StatusConservacao[];
+const ORDEM_BIOMAS = ["Amazônia", "Cerrado", "Mata Atlântica", "Caatinga", "Pantanal", "Pampa"];
+
+// Só os filtros que têm espécie: um botão "Pantanal" que sempre dá lista vazia não ajuda.
+export const filtrosBioma = ["Todos", ...ORDEM_BIOMAS.filter((b) => animais.some((a) => a.bioma === b))];
+export const filtrosStatus = ["Todos", ...ORDEM_STATUS.filter((s) => animais.some((a) => a.status === s))];

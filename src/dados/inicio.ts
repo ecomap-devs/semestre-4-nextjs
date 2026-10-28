@@ -1,9 +1,10 @@
 // Dados da página inicial, portados da Home.jsx. Os de desmatamento vêm do PRODES
 // (INPE), e a linha do tempo mora em `linhaDoTempo.ts`. As espécies e o número de
-// espécies ameaçadas ainda são valores de referência herdados do React.
+// espécies ameaçadas vêm da lista nacional do MMA (`especies.ts`).
 
-import type { StatusConservacao } from "./animais";
+import { animais } from "./animais";
 import { biomas } from "./biomas";
+import { listaNacional } from "./especies";
 import { prodes, prodesAtualizadoEm } from "./prodes";
 
 const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/object/public/animals";
@@ -19,29 +20,13 @@ export const equipe: Membro[] = [
   { nome: "João Gabriel" },
 ];
 
-export type AnimalResumo = {
-  nome: string;
-  status: StatusConservacao;
-  descricao: string;
-  bioma: string;
-  populacao: string;
-  imagem: string;
-};
-
-// Links diretos para sites de terceiros, como no React. Se algum sair do ar, o card
-// mostra a imagem reserva em vez do ícone de imagem quebrada.
-export const animaisDestaque: AnimalResumo[] = [
-  { nome: "Onça-pintada", status: "Criticamente ameaçada", descricao: "Perdeu 50% de seu habitat na Mata Atlântica nos últimos 15 anos.", bioma: "Mata Atlântica", populacao: "-60%", imagem: "https://static.biologianet.com/2020/05/onca-pintada.jpg" },
-  { nome: "Arara-azul", status: "Em perigo", descricao: "Apenas 6.500 indivíduos restantes devido à perda de habitat no Pantanal.", bioma: "Pantanal", populacao: "-40%", imagem: "https://imagens.ebc.com.br/7mrmO9tFuEk0CPiJHKLEqTCk9R4=/1170x700/smart/https://agenciabrasil.ebc.com.br/sites/default/files/thumbnails/image/2024/09/18/arara-azul-de-lear_01_0.jpg?itok=wDa3CBCI" },
-  { nome: "Mico-leão-dourado", status: "Criticamente ameaçada", descricao: "Restam apenas 2.500 indivíduos na natureza devido ao desmatamento.", bioma: "Mata Atlântica", populacao: "-70%", imagem: "https://static.todamateria.com.br/upload/mi/co/micoleao-cke.jpg" },
-  { nome: "Lobo-guará", status: "Vulnerável", descricao: "Perdeu 30% de seu habitat no Cerrado nos últimos 20 anos.", bioma: "Cerrado", populacao: "-35%", imagem: "https://s3.static.brasilescola.uol.com.br/be/2020/08/lobo-guara.jpg" },
-  { nome: "Tucano-de-bico-preto", status: "Em perigo", descricao: "População em declínio devido à fragmentação florestal.", bioma: "Amazônia", populacao: "-25%", imagem: "https://www.parquedasaves.com.br/wp-content/uploads/2019/08/large-6.jpg" },
-  { nome: "Perereca-verde-da-mata", status: "Criticamente ameaçada", descricao: "Endêmica de pequenas áreas ameaçadas pelo desmatamento.", bioma: "Mata Atlântica", populacao: "-80%", imagem: "https://portal.pcs.ifsuldeminas.edu.br/images/campus_pocos_caldas/noticias/2020/junho/20200630/perereca-folhagem/figura_1.jpg" },
-];
+// As seis primeiras do catálogo. Até 28/10/2026 a Home tinha a própria lista, com
+// fotos de sites de terceiros e uma "queda da população" sem fonte em cada card.
+export const animaisDestaque = animais.slice(0, 6);
 
 export const slides = [
   { url: `${SUPABASE_ANIMAIS}/onca-pintada.png`, rotulo: "Onça-pintada" },
-  { url: `${SUPABASE_ANIMAIS}/arara-azul-de-lear_01_0.png`, rotulo: "Arara-azul" },
+  { url: `${SUPABASE_ANIMAIS}/arara-azul-de-lear_01_0.png`, rotulo: "Arara-azul-de-lear" },
   { url: `${SUPABASE_ANIMAIS}/lobo-guara.png`, rotulo: "Lobo-guará" },
   { url: `${SUPABASE_ANIMAIS}/micoleao-cke.png`, rotulo: "Mico-leão-dourado" },
 ];
@@ -87,7 +72,7 @@ export const numeros = [
   ...(variacao === null
     ? []
     : [{ valor: `${variacao > 0 ? "+" : variacao < 0 ? "−" : ""}${Math.abs(variacao)}%`, rotulo: `no desmatamento dos seis biomas em relação a ${periodoPorExtenso(fimComum - 1)}` }]),
-  { valor: "1.173", rotulo: "Espécies animais ameaçadas de extinção" },
+  { valor: milhar.format(listaNacional.ameacadas), rotulo: "Espécies da fauna ameaçadas de extinção no Brasil, segundo a lista nacional do MMA" },
   { valor: "6 biomas", rotulo: "Biomas brasileiros afetados pelo desmatamento" },
 ];
 
