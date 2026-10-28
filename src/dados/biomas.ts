@@ -1,11 +1,13 @@
 // Os seis biomas terrestres. Os contornos são o limite oficial do IBGE
-// (`biomasContornos.ts`, gerado por `scripts/biomas/gerar.mjs`); área, percentual e
-// descrição continuam sendo os valores de referência herdados do `biomesData` da
-// Mapa.jsx. No GeoJSON a ordem é [longitude, latitude]. As cores eram as do React
+// (`biomasContornos.ts`, gerado por `scripts/biomas/gerar.mjs`); área e percentual
+// desmatado vêm do PRODES (`prodes.ts`, gerado por `scripts/prodes/gerar.mjs`). Até
+// 28/10/2026 eram valores de referência herdados do React, e a Amazônia aparecia 78%
+// desmatada. A descrição ainda é a do `biomesData` da Mapa.jsx. No GeoJSON a ordem é [longitude, latitude]. As cores eram as do React
 // (azul royal, laranja e verde-limão); viraram tons de terra e de mata, mais perto da
 // paisagem de cada bioma, e o Pantanal ficou azulado por ser a planície alagada.
 
 import { contornos } from "./biomasContornos";
+import { prodes } from "./prodes";
 
 export type Posicao = [number, number];
 export type Anel = Posicao[];
@@ -14,7 +16,9 @@ export type Bioma = {
   chave: string;
   nome: string;
   cor: string;
+  /** Parte do bioma que o PRODES já mapeou como desmatada, ex.: "20%". */
   desmatamento: string;
+  /** Área do bioma segundo o IBGE (2019). */
   areaKm2: number;
   descricao: string;
   /**
@@ -24,53 +28,41 @@ export type Bioma = {
   poligonos: Anel[][];
 };
 
-const referencia: Omit<Bioma, "poligonos">[] = [
+const referencia: Omit<Bioma, "poligonos" | "desmatamento" | "areaKm2">[] = [
   {
     chave: "amazonia",
     nome: "Amazônia",
     cor: "#2f5a32",
-    desmatamento: "78%",
-    areaKm2: 5500000,
     descricao: "Maior floresta tropical do mundo",
   },
   {
     chave: "cerrado",
     nome: "Cerrado",
     cor: "#c49a3a",
-    desmatamento: "45%",
-    areaKm2: 2036448,
     descricao: "Savana tropical com grande biodiversidade",
   },
   {
     chave: "caatinga",
     nome: "Caatinga",
     cor: "#b8653a",
-    desmatamento: "15%",
-    areaKm2: 844453,
     descricao: "Vegetação seca adaptada ao semiárido",
   },
   {
     chave: "mata-atlantica",
     nome: "Mata Atlântica",
     cor: "#6f9a5c",
-    desmatamento: "32%",
-    areaKm2: 1110182,
     descricao: "Floresta costeira altamente ameaçada",
   },
   {
     chave: "pantanal",
     nome: "Pantanal",
     cor: "#4f8299",
-    desmatamento: "12%",
-    areaKm2: 150355,
     descricao: "Maior planície alagada do mundo",
   },
   {
     chave: "pampa",
     nome: "Pampa",
     cor: "#a7a35a",
-    desmatamento: "25%",
-    areaKm2: 176496,
     descricao: "Campos nativos do Sul do Brasil",
   },
 ];
@@ -82,15 +74,17 @@ const referencia: Omit<Bioma, "poligonos">[] = [
  */
 export const COR_ALERTA = "#b4232a";
 
-export const biomas: Bioma[] = referencia.map((b) => ({ ...b, poligonos: contornos[b.chave] ?? [] }));
-
-export const linhaDoTempoMapa = [
-  { ano: "2023", texto: "Recorde de desmatamento na Amazônia: 11.568 km²" },
-  { ano: "2020", texto: "Cerrado perde 7.340 km² de vegetação nativa" },
-  { ano: "2018", texto: "Mata Atlântica tem apenas 12,4% de sua cobertura original" },
-  { ano: "2015", texto: "Pantanal perde 12% de sua área para queimadas" },
-  { ano: "2010", texto: "Caatinga tem 45% de sua área original desmatada" },
-];
+export const biomas: Bioma[] = referencia.map((b) => {
+  const medido = prodes[b.chave];
+  // Bioma sem dado é erro de geração, não algo para mostrar como "0%".
+  if (!medido) throw new Error(`Sem dados do PRODES para "${b.chave}": rode scripts/prodes/gerar.mjs`);
+  return {
+    ...b,
+    desmatamento: `${Math.round((medido.acumuladoKm2 / medido.areaKm2) * 100)}%`,
+    areaKm2: medido.areaKm2,
+    poligonos: contornos[b.chave] ?? [],
+  };
+});
 
 function contem(anel: Anel, [x, y]: Posicao): boolean {
   let dentro = false;

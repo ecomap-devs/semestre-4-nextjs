@@ -1,7 +1,8 @@
 "use client";
 
 import { useApareceu } from "@/componentes/comum/ganchos";
-import { areaPorBioma, comparacaoRegional, linhaDoTempo } from "@/dados/inicio";
+import { areaPorBioma, ultimoPeriodo } from "@/dados/inicio";
+import { linhaDoTempo } from "@/dados/linhaDoTempo";
 
 // Gráficos da Home, em HTML e CSS escritos à mão. O React mostrava a mesma série
 // (área por bioma) em quatro gráficos: barras, rosca, linha e radar. Ficaram só as
@@ -37,13 +38,21 @@ export function BarrasAnimadas() {
   );
 }
 
-export function ComparacaoRegional() {
+const milhar = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+
+/**
+ * O desmatamento de cada bioma no período mais recente do PRODES. Substituiu a
+ * "comparação por região" do React, cujos percentuais não vinham de fonte nenhuma.
+ */
+export function UltimoPeriodo() {
   return (
-    <dl style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px 32px" }}>
-      {comparacaoRegional.map((r) => (
-        <div key={r.rotulo} style={{ borderTop: "1px solid var(--linha)", paddingTop: 12, display: "flex", flexDirection: "column-reverse", justifyContent: "flex-end" }}>
-          <dt style={{ fontSize: 14, color: "var(--tinta-3)", marginTop: 4 }}>{r.rotulo}</dt>
-          <dd style={{ fontFamily: "var(--fonte-titulo)", fontSize: 32, color: "var(--tinta)", lineHeight: 1.1 }}>{r.pct}%</dd>
+    <dl style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "16px 32px" }}>
+      {ultimoPeriodo.biomas.map((b) => (
+        <div key={b.nome} style={{ borderTop: "1px solid var(--linha)", paddingTop: 12, display: "flex", flexDirection: "column-reverse", justifyContent: "flex-end" }}>
+          <dt style={{ fontSize: 14, color: "var(--tinta-3)", marginTop: 4 }}>{b.nome}</dt>
+          <dd style={{ fontFamily: "var(--fonte-titulo)", fontSize: 32, color: "var(--tinta)", lineHeight: 1.1, fontVariantNumeric: "tabular-nums" }}>
+            {milhar.format(b.km2)} <span style={{ fontSize: 18, color: "var(--tinta-2)" }}>km²</span>
+          </dd>
         </div>
       ))}
     </dl>
@@ -54,7 +63,8 @@ export function LinhaDoTempo() {
   return (
     <ol style={{ listStyle: "none", borderLeft: "1px solid var(--linha)", marginLeft: 6 }}>
       {linhaDoTempo.map((item) => (
-        <li key={item.ano} style={{ position: "relative", padding: "0 0 22px 24px" }}>
+        // Dois marcos podem cair no mesmo ano (a lei e a taxa de 2012).
+        <li key={`${item.ano}-${item.titulo}`} style={{ position: "relative", padding: "0 0 22px 24px" }}>
           <span aria-hidden="true" style={{ position: "absolute", left: -5, top: 7, width: 9, height: 9, borderRadius: "50%", background: "var(--papel)", border: "2px solid var(--mata)" }} />
           <div style={{ fontSize: 14, color: "var(--tinta-3)", fontVariantNumeric: "tabular-nums" }}>{item.ano}</div>
           <div style={{ fontSize: 16, fontWeight: 600, color: "var(--tinta)" }}>{item.titulo}</div>
