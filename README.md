@@ -26,8 +26,9 @@ aparece no site.
 > avaliações), com os defeitos conhecidos corrigidos, e o site está no endereço principal
 > desde 01/10/2026: **[ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app)**.
 > Depois do porte vieram a página **Fotos** (identificação de animal por foto, 02/10), os
-> **biomas pelo limite do IBGE** (02/10) e um **visual próprio** (22/10), que substituiu o
-> do React.
+> **biomas pelo limite do IBGE** (02/10), um **visual próprio** (22/10), que substituiu o
+> do React, e os **números de desmatamento do PRODES/INPE** (28/10), no lugar dos valores
+> de referência herdados do React.
 
 ## 🧭 Onde este repositório entra
 
@@ -49,6 +50,7 @@ flowchart LR
     app --> auth & fs & sb & fn
     fn --> gemini["✨ Gemini"]
     regras["📜 firestore.rules<br/>no semestre-4-flutter"] -. protege .-> fs
+    inpe["📡 PRODES · INPE<br/>TerraBrasilis"] -. todo mês, por PR .-> web
 ```
 
 ## 🛠️ Stack
@@ -63,6 +65,7 @@ flowchart LR
 | **Mapa** | `leaflet` | O mesmo Leaflet do React, agora pelo npm e com versão fixa (o React baixava do unpkg sem versão) |
 | **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
 | **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
+| **Dados de desmatamento** | PRODES (INPE), gerado em `src/dados/prodes.ts` por `scripts/prodes/gerar.mjs` | Baixado antes do build e revisado por PR: o site não depende do INPE estar no ar, e a CSP não muda |
 | **Identificação por foto** | Edge Function do Supabase + Gemini | A mesma função do app (o código mora no semestre-4-flutter); a chave do Gemini fica no servidor, e daqui só vai o ID token do Firebase |
 | **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
 
@@ -125,6 +128,42 @@ done
 
 </details>
 
+## 📊 Sobre os dados
+
+| No site | De onde vem |
+|---|---|
+| Percentual desmatado de cada bioma (Home e mapa) | PRODES: tudo o que o INPE já mapeou como desmatado ÷ área do bioma no IBGE (2019) |
+| "Área desmatada por bioma" e "Desmatado no último ano medido" | PRODES, por bioma. Na Amazônia, floresta e vegetação não florestal somadas |
+| Os dois primeiros números da Home | PRODES: total dos seis biomas no período mais recente que todos já têm consolidado, e a variação sobre o anterior |
+| Linha do tempo (Home e mapa) | Calculada em `src/dados/linhaDoTempo.ts` a partir da taxa oficial da Amazônia Legal e do acumulado por bioma. Só PPCDAm (2004), Moratória da Soja (2006) e Código Florestal (2012) são escritos à mão, sem número |
+| Alertas no mapa | DETER-B (INPE), em `public/alertas-desmatamento.json` |
+| Contorno dos biomas | IBGE, gerado por `scripts/biomas/gerar.mjs` |
+| Espécies e "1.173 espécies ameaçadas" | **Ainda são valores de referência** herdados do React |
+
+Para atualizar o PRODES na mão:
+
+```bash
+node scripts/prodes/gerar.mjs
+```
+
+<details>
+<summary>Detalhes que mudam a leitura dos números</summary>
+
+- **Não é uma API documentada.** O script baixa os mesmos JSON que o
+  [painel do TerraBrasilis](https://terrabrasilis.dpi.inpe.br/app/dashboard/deforestation/biomes/cerrado/increments)
+  carrega (o endereço vem do código dele, em `terrabrasilis/deforestation_dashboard`).
+  Se o formato mudar, o script para com erro em vez de gravar número errado.
+- **O ano do PRODES vai de agosto a julho**: "2025" é ago/2024 a jul/2025.
+- **Taxa e incremento são contas diferentes.** A taxa da Amazônia Legal (linha do tempo) é a
+  estimativa oficial para a região, só de floresta. O incremento por bioma (gráficos) é o
+  que foi mapeado dentro do bioma. Por isso os dois números da Amazônia não batem.
+- **Dado preliminar** (o período que termina no ano da última atualização do INPE) fica
+  fora dos totais da Home. Na linha do tempo, aparece como "Estimativa do INPE".
+- **Nem todo bioma é medido todo ano.** Até 2013 alguns eram medidos a cada dois ou quatro
+  anos. Esses períodos entram no acumulado, mas não na série anual.
+
+</details>
+
 ## 🔄 CI e deploy
 
 | Workflow | Quando | O que faz |
@@ -132,12 +171,20 @@ done
 | **CI** | Push ou PR na `main` | Lint, tipos, build e confere que cada rota virou HTML. Não usa secret |
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
+| **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build e abre um PR. Não usa secret |
+
+> [!IMPORTANT]
+> O **Dados do PRODES** só consegue abrir o PR com *Settings → Actions → General →
+> "Allow GitHub Actions to create and approve pull requests"* ativado. E PR aberto pelo
+> `GITHUB_TOKEN` não dispara a **CI** (regra do GitHub), por isso o próprio workflow roda
+> a verificação antes de abrir.
 
 O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secret vazio
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
 As duas guardas foram testadas nos dois sentidos.
 
-Os workflows têm token só de leitura e as actions são fixadas por SHA. O preview usa o
+Os workflows têm token só de leitura (menos o **Dados do PRODES**, que precisa criar a
+branch e o PR) e as actions são fixadas por SHA. O preview usa o
 `firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
 
 ## 🛡️ Segurança
