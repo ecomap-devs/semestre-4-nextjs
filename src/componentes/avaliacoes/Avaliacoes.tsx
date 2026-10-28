@@ -96,6 +96,10 @@ export function Avaliacoes() {
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [resumo, setResumo] = useState<Resumo>({ total: 0, media: null });
   const [limite, setLimite] = useState(POR_PAGINA);
+  // Veio menos que o limite: não há mais o que buscar. O total da agregação não
+  // decide isto sozinho, porque conta também o que a lista não mostra (documento
+  // que `paraAvaliacao` recusa, ou sem `criadoEm`, que o `orderBy` deixa de fora).
+  const [acabou, setAcabou] = useState(false);
   const [nota, setNota] = useState(0);
   const [comentario, setComentario] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -135,6 +139,7 @@ export function Avaliacoes() {
       (snap) => {
         setFalhaAoCarregar(false);
         if (!snap.metadata.fromCache) setDoServidor(true);
+        setAcabou(snap.size < limite);
         setAvaliacoes(
           snap.docs
             .map((d) => paraAvaliacao(d.id, d.data({ serverTimestamps: "estimate" })))
@@ -201,6 +206,9 @@ export function Avaliacoes() {
   }
 
   const restantes = resumo.total - avaliacoes.length;
+  // Antes valia só `restantes > 0`: com um documento recusado na coleção, a conta
+  // nunca zerava, e "Mostrar mais (1 restantes)" ficava na tela sem trazer nada.
+  const temMais = !acabou && restantes > 0;
 
   return (
     <section className="section-pad" style={{ padding: "120px 24px" }}>
@@ -256,17 +264,17 @@ export function Avaliacoes() {
           ))}
         </div>
 
-        {(restantes > 0 || limite > POR_PAGINA) && resumo.total > POR_PAGINA && (
+        {(temMais || limite > POR_PAGINA) && resumo.total > POR_PAGINA && (
           <div style={{ marginBottom: 56, textAlign: "center" }}>
             <button
               type="button"
               // De 12 em 12, até acabar. Antes "Mostrar mais" trazia no máximo 100 e
               // anunciava as que passassem disso como restantes, sem chegar nelas.
-              onClick={() => setLimite((l) => (restantes > 0 ? l + A_MAIS : POR_PAGINA))}
+              onClick={() => setLimite((l) => (temMais ? l + A_MAIS : POR_PAGINA))}
               className="link"
               style={{ padding: 0 }}
             >
-              {restantes > 0 ? `Mostrar mais (${restantes} restantes)` : "Mostrar menos"}
+              {temMais ? `Mostrar mais (${restantes} ${restantes === 1 ? "restante" : "restantes"})` : "Mostrar menos"}
             </button>
           </div>
         )}
