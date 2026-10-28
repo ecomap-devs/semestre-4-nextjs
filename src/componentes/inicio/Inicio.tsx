@@ -412,9 +412,9 @@ export function Inicio() {
         <FaixaDeFoto foto={mico.url} posicao="center 30%">
           <Revelar>
             <p style={{ fontFamily: "var(--fonte-titulo)", fontSize: "clamp(34px, 5.5vw, 72px)", lineHeight: 1.05, letterSpacing: "-0.02em", color: "var(--branco)", maxWidth: 900 }}>
-              Restam cerca de <span style={{ color: "var(--sol)" }}>2.500</span> micos-leões-dourados na natureza.
+              Restam cerca de <span style={{ color: "var(--sol)" }}>4.800</span> micos-leões-dourados na natureza.
             </p>
-            <p style={{ fontSize: 18, color: textoClaro, marginTop: 20 }}>Mico-leão-dourado, Mata Atlântica</p>
+            <p style={{ fontSize: 18, color: textoClaro, marginTop: 20 }}>Mico-leão-dourado, Mata Atlântica · censo de 2023 da Associação Mico-Leão-Dourado</p>
           </Revelar>
         </FaixaDeFoto>
 
@@ -423,7 +423,7 @@ export function Inicio() {
           <div style={larguraMaxima}>
             <Revelar>
               <h2 style={tituloSecao}>Espécies ameaçadas</h2>
-              <p style={{ ...introSecao, marginBottom: 56 }}>Seis animais que estão perdendo o lugar onde vivem, e quanto a população de cada um já caiu.</p>
+              <p style={{ ...introSecao, marginBottom: 56 }}>Seis espécies da lista nacional de fauna ameaçada e o que está acontecendo com cada uma.</p>
             </Revelar>
             <div className="animals-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "56px 32px" }}>
               {animaisDestaque.map((a, i) => (
@@ -431,16 +431,13 @@ export function Inicio() {
                   <article className="animal-card">
                     <div style={{ position: "relative", aspectRatio: "4 / 5", overflow: "hidden", borderRadius: "var(--raio)", marginBottom: 18, background: "var(--linha)" }}>
                       <ImagemComReserva src={a.imagem} alt={a.nome} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-                      {/* A queda da população em destaque, sobre a própria foto. */}
-                      <div style={{ position: "absolute", inset: "auto 0 0 0", padding: "48px 18px 16px", background: "linear-gradient(to top, rgba(16,24,18,0.85), rgba(16,24,18,0))", display: "flex", alignItems: "baseline", gap: 8 }}>
-                        <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 44, lineHeight: 1, color: "var(--branco)" }}>{a.populacao.replace("-", "−")}</span>
-                        <span style={{ fontSize: 15, color: textoClaro }}>da população</span>
-                      </div>
                     </div>
                     <p style={{ fontSize: 14, fontWeight: 600, color: corDoStatus[a.status], marginBottom: 4 }}>{a.status}</p>
                     <h3 style={{ fontSize: 26, marginBottom: 8 }}>{a.nome}</h3>
-                    <p style={{ fontSize: 16, color: "var(--tinta-2)", marginBottom: 8 }}>{a.descricao}</p>
-                    <p style={{ fontSize: 14, color: "var(--tinta-3)" }}>{a.bioma}</p>
+                    <p style={{ fontSize: 16, color: "var(--tinta-2)", marginBottom: 8, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{a.descricao}</p>
+                    <p style={{ fontSize: 14, color: "var(--tinta-3)" }}>
+                      {a.bioma} · no mundo (IUCN): {a.iucn ?? "não avaliada"}
+                    </p>
                   </article>
                 </Revelar>
               ))}
