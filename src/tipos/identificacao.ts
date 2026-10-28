@@ -58,8 +58,24 @@ export function paraIdentificacao(d: unknown): Identificacao | null {
   };
 }
 
-/** Traduz o status HTTP da Edge Function para a mensagem que o usuário lê. */
-export function mensagemDoStatus(status: number): string {
+/** O campo `erro` do corpo de erro da Edge Function, se o corpo for JSON. */
+export function codigoDoErro(corpo: string): string | null {
+  try {
+    const erro: unknown = (JSON.parse(corpo) as { erro?: unknown } | null)?.erro;
+    return typeof erro === "string" ? erro : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Traduz o status HTTP da Edge Function para a mensagem que o usuário lê. O 429 tem
+ * três causas, separadas pelo `erro` do corpo: o limite da pessoa por minuto, o
+ * limite dela no dia, e a cota do Gemini (`cota`).
+ */
+export function mensagemDoStatus(status: number, codigo: string | null = null): string {
+  if (status === 429 && codigo === "limite-minuto") return "Você enviou muitas fotos seguidas. Aguarde um minuto e tente de novo.";
+  if (status === 429 && codigo === "limite-dia") return "Você chegou ao limite de identificações de hoje. Tente de novo amanhã.";
   switch (status) {
     case 0:
       return "Sem conexão. Verifique sua internet.";
