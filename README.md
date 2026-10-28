@@ -269,7 +269,7 @@ porte mudou foi de propósito:
 | Início e rodapé | Cinza sobre verde-escuro quase ilegível; contato e redes com texto de exemplo e links `#` | Contraste corrigido; só o que é real |
 | Animais | Busca exigia acento ("onca" não achava a onça) | Sem acento e sem caixa |
 | Animais | Cards piscavam ao entrar; ficha sem Esc e com o fundo rolando | Corrigido |
-| Animais | Foto do card e da ficha recortada para preencher o quadro, cortando o animal | Foto inteira (`object-fit: contain`), sem o zoom no hover |
+| Animais | Foto do card e da ficha recortada para preencher o quadro, cortando o animal | Foto inteira (`object-fit: contain`), sem o zoom no hover; na Home também, com o quadro em 4:3 como na página de Animais |
 | Imagens | Foto que não carregava virava ícone quebrado | Imagem reserva |
 | Geral | A página ficava em branco até o Firebase responder | A página aparece na hora; só o botão de login espera |
 
