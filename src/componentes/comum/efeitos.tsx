@@ -21,7 +21,9 @@ const DURACAO_CONTAGEM = 1600;
 
 /**
  * Conta de zero até o número dentro do texto quando aparece na tela, mantendo o
- * resto: "+30%", "1,5 mi ha", "1.173". O leitor de tela recebe o valor final.
+ * resto: "+30%", "1,5 mi ha", "1.173". O leitor de tela recebe o valor final, num
+ * texto fora da vista: `aria-label` num `<span>` sem papel é proibido pela ARIA e
+ * os leitores o ignoram (revisão de 28/10/2026, conferida no Chrome e no axe).
  */
 export function Contador({ valor }: { valor: string }) {
   const [ref, apareceu] = useApareceu<HTMLSpanElement>(0.5);
@@ -53,7 +55,8 @@ export function Contador({ valor }: { valor: string }) {
   const texto = valor.slice(0, achado.index) + formato.format(alvo * progresso) + valor.slice(achado.index + numero.length);
 
   return (
-    <span ref={ref} aria-label={valor}>
+    <span ref={ref}>
+      <span className="sr-only">{valor}</span>
       <span aria-hidden="true">{texto}</span>
     </span>
   );
