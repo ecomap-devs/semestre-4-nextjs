@@ -79,7 +79,7 @@ npm run build      # gera out/, sem precisar de credencial
 ```
 src/
 ├── app/          rotas: uma pasta por página (page.tsx), layout.tsx e template.tsx na raiz
-├── componentes/  uma pasta por tela (inicio, mapa, animais) + autenticacao, avaliacoes, comum
+├── componentes/  uma pasta por tela (inicio, mapa, animais, fotos) + autenticacao, avaliacoes, comum
 ├── dados/        dados de referência herdados do React (biomas, espécies, números da Home)
 ├── lib/          env, firebase, supabase: a ponte com o mundo de fora
 └── tipos/        tipos de domínio + a função que valida o dado que chega
@@ -89,6 +89,13 @@ public/alertas-desmatamento.json   GeoJSON do DETER-B, o mesmo arquivo do app Fl
 
 As páginas em `app/` são finas: só metadados e o componente da tela. A tela mora em
 `componentes/` e é `'use client'`.
+
+### Cores e fontes
+As cores são variáveis CSS no `src/app/globals.css` (`--papel`, `--mata`, `--terra`,
+`--ocre`…). **Use sempre a variável, nunca o hexadecimal solto**, para que um ajuste ali
+valha no site todo. As fontes (Fraunces nos títulos, Source Sans 3 no texto) entram pelo
+`next/font` no `layout.tsx` e saem do próprio site: não as carregue de CDN, que a CSP
+bloqueia.
 
 ### O que a exportação estática proíbe
 Não há servidor. Não use route handlers, `proxy.ts`, server actions, `cookies()`, ISR,

@@ -23,8 +23,11 @@ aparece no site.
 
 > [!NOTE]
 > **As três telas do React estão portadas** (Início, Mapa e Animais, com login e
-> avaliações), com a mesma interface e os defeitos conhecidos corrigidos, e o site está
-> no endereço principal desde 01/10/2026: **[ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app)**.
+> avaliações), com os defeitos conhecidos corrigidos, e o site está no endereço principal
+> desde 01/10/2026: **[ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app)**.
+> Depois do porte vieram a página **Fotos** (identificação de animal por foto, 02/10), os
+> **biomas pelo limite do IBGE** (02/10) e um **visual próprio** (22/10), que substituiu o
+> do React.
 
 ## 🧭 Onde este repositório entra
 
@@ -40,9 +43,11 @@ flowchart LR
         auth[🔐 Firebase Auth]
         fs[(🗄️ Firestore)]
         sb[(🖼️ Supabase Storage)]
+        fn["⚡ Edge Function<br/>identificar-animal"]
     end
-    web --> auth & fs & sb
-    app --> auth & fs & sb
+    web --> auth & fs & sb & fn
+    app --> auth & fs & sb & fn
+    fn --> gemini["✨ Gemini"]
     regras["📜 firestore.rules<br/>no semestre-4-flutter"] -. protege .-> fs
 ```
 
@@ -52,11 +57,13 @@ flowchart LR
 |---|---|---|
 | **Framework** | Next.js 16 (App Router) · React 19 | Cada página sai como HTML pronto no build, e não como uma `div` vazia montada por JS |
 | **Linguagem** | TypeScript `strict` | Decidido em 30/09/2026, no início do porte, que é quando trocar custa menos |
-| **Estilo** | Estilo inline, como no React · Tailwind 4 só como base | O porte manteve o visual idêntico; o Tailwind entra pelo reset de estilos |
+| **Estilo** | Estilo inline, como no React, com as cores em variáveis CSS (`globals.css`) · Tailwind 4 só como base | Um ajuste de cor no `globals.css` vale no site todo; o Tailwind entra pelo reset de estilos |
+| **Fontes** | Fraunces nos títulos e Source Sans 3 no texto, pelo `next/font` | Baixadas no build e servidas do próprio site, então a CSP não muda. O app usa as mesmas |
 | **Ícones** | Font Awesome 6, pelo npm | O React carregava de um CDN |
 | **Mapa** | `leaflet` | O mesmo Leaflet do React, agora pelo npm e com versão fixa (o React baixava do unpkg sem versão) |
 | **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
 | **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
+| **Identificação por foto** | Edge Function do Supabase + Gemini | A mesma função do app (o código mora no semestre-4-flutter); a chave do Gemini fica no servidor, e daqui só vai o ID token do Firebase |
 | **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
 
 ## 🚀 Como rodar
@@ -176,8 +183,9 @@ Os mesmos nomes do semestre-4-flutter, para quem já configurou um configurar o 
 
 ## 🔁 O que o porte corrigiu
 
-A interface é a mesma do React, conferida lado a lado em capturas de tela no desktop e no
-celular. O que mudou foi de propósito:
+No porte (01/10/2026) a interface ficou a mesma do React, conferida lado a lado em
+capturas de tela no desktop e no celular; o visual próprio veio depois, no PR #6. O que o
+porte mudou foi de propósito:
 
 <details>
 <summary>Defeitos do React corrigidos</summary>
