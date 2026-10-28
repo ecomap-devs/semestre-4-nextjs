@@ -142,9 +142,10 @@ done
 | Alertas no mapa | DETER-B (INPE), em `public/alertas-desmatamento.json` |
 | Contorno dos biomas | IBGE, gerado por `scripts/biomas/gerar.mjs` |
 | "Espécies ameaçadas no Brasil" (Home e Animais) | Lista nacional do MMA: espécies e subespécies da fauna em CR, EN ou VU no CSV mais recente do [portal de dados abertos](https://dados.mma.gov.br/dataset/especies-ameacadas) (a avaliação de 2021, que virou a Portaria MMA nº 148/2022) |
-| Status de cada espécie | "No Brasil": a mesma lista do MMA. "No mundo": a Lista Vermelha da IUCN, pela API do GBIF |
+| Status de cada espécie | "No Brasil": a mesma lista do MMA; fora dela, "Não ameaçada". "No mundo": a Lista Vermelha da IUCN, pela API do GBIF |
 | População de uma espécie | Só onde há estimativa publicada, com a fonte na ficha (hoje: onça na Mata Atlântica, mico-leão-dourado e arara-azul-de-lear). Escrita à mão em `src/dados/animais.ts` |
 | Descrição e ameaças de cada espécie | Escritas à mão em `src/dados/animais.ts`, sem número que não tenha fonte |
+| Fotos das espécies | As sete primeiras, no bucket `animals` do Supabase. As outras, do [Wikimedia Commons](https://commons.wikimedia.org), com autor, licença e link na ficha (`credito` em `src/dados/animais.ts`), como as licenças Creative Commons exigem |
 
 Para atualizar na mão:
 
@@ -174,7 +175,10 @@ node scripts/especies/gerar.mjs   # status das espécies
   ainda "extinta na natureza" na IUCN.
 - **Não há série de população.** Até 28/10/2026 cada espécie tinha um gráfico de 2000 a 2024
   sem fonte, que saiu. Espécie nova no catálogo entra também em `ESPECIES` de
-  `scripts/especies/gerar.mjs`, e o build para se ela não estiver na lista nacional.
+  `scripts/especies/gerar.mjs`, e o build para se ela faltar ali.
+- **O catálogo não é só de espécies ameaçadas.** Desde 28/10/2026 tem também espécies fora
+  da lista nacional, como a capivara e o quero-quero, com o status "Não ameaçada". O filtro
+  "Só ameaçadas" mostra apenas as da lista, e a Home só destaca ameaçadas.
 
 </details>
 
@@ -186,7 +190,7 @@ node scripts/especies/gerar.mjs   # status das espécies
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 | **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build e abre um PR. Não usa secret |
-| **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, o build falha e o job fica vermelho, sem PR: decidir se ela fica é com o grupo |
+| **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, ela passa a aparecer como "Não ameaçada" no PR |
 
 > [!IMPORTANT]
 > O **Dados do PRODES** e o **Dados das espécies** só conseguem abrir o PR com *Settings → Actions → General →
