@@ -6,7 +6,7 @@ import { CabecalhoInterno, alturaCabecalhoInterno } from "@/componentes/comum/Ca
 import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { Dialogo } from "@/componentes/comum/Dialogo";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
-import { animais, corDoStatus, filtrosBioma, filtrosStatus, type Animal } from "@/dados/animais";
+import { animais, corDoStatus, ehAmeacada, filtrosBioma, filtrosStatus, passaNoFiltroStatus, type Animal } from "@/dados/animais";
 import { listaNacional } from "@/dados/especies";
 
 // Porte da Animais.jsx. Cores e fontes vêm das variáveis do globals.css.
@@ -56,6 +56,15 @@ function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boole
           <i className="fas fa-times" />
         </button>
       </div>
+      {animal.credito && (
+        <p style={{ fontSize: 13, color: "var(--tinta-3)", padding: ehMobile ? "6px 18px 0" : "6px 32px 0" }}>
+          Foto:{" "}
+          <a href={animal.credito.link} target="_blank" rel="noopener noreferrer" className="link">
+            {animal.credito.autor}
+          </a>{" "}
+          · {animal.credito.licenca} · Wikimedia Commons
+        </p>
+      )}
 
       <div style={{ padding: ehMobile ? "20px 18px 28px" : "28px 32px 36px" }}>
         <h2 id="titulo-ficha" style={{ fontSize: ehMobile ? 26 : 32, margin: "0 0 2px" }}>
@@ -109,7 +118,7 @@ export function Animais() {
   const filtrados = animais.filter(
     (a) =>
       (filtroBioma === "Todos" || a.bioma === filtroBioma) &&
-      (filtroStatus === "Todos" || a.status === filtroStatus) &&
+      passaNoFiltroStatus(a, filtroStatus) &&
       (normalizar(a.nome).includes(termo) || normalizar(a.bioma).includes(termo)),
   );
 
@@ -118,7 +127,8 @@ export function Animais() {
   const contador = `${filtrados.length} espécie${filtrados.length !== 1 ? "s" : ""}`;
   const resumo = [
     { valor: numero.format(listaNacional.ameacadas), rotulo: "espécies da fauna ameaçadas no Brasil" },
-    { valor: numero.format(animais.length), rotulo: "delas neste catálogo" },
+    { valor: numero.format(animais.filter(ehAmeacada).length), rotulo: "delas neste catálogo" },
+    { valor: numero.format(animais.length), rotulo: "espécies no catálogo, ameaçadas ou não" },
   ];
 
   return (
@@ -133,7 +143,7 @@ export function Animais() {
         .biome-scroll::-webkit-scrollbar { display: none; }
       `}</style>
 
-      <CabecalhoInterno titulo="Espécies ameaçadas" ehMobile={ehMobile} />
+      <CabecalhoInterno titulo="Animais" ehMobile={ehMobile} />
 
       <main>
         {/* Abertura sobre a foto da primeira espécie, como a faixa de foto da Home. */}
@@ -142,7 +152,7 @@ export function Animais() {
           <div style={{ position: "relative", width: "100%", maxWidth: 1120, margin: "0 auto", padding: ehMobile ? "48px 16px 32px" : "80px 24px 48px" }}>
             <h1 style={{ fontSize: ehMobile ? 38 : "clamp(48px, 6vw, 80px)", margin: "0 0 16px", maxWidth: 820, color: "var(--branco)", letterSpacing: "-0.02em", lineHeight: 1.02 }}>Espécies que o desmatamento está levando embora</h1>
             <p style={{ fontSize: ehMobile ? 17 : 20, maxWidth: 600, marginBottom: 28, color: "rgba(255,253,248,0.85)" }}>
-              Cada uma depende de um pedaço de mata que está sumindo. Toque numa espécie para ver o status dela no Brasil e no mundo, e quantas restam, onde alguém contou.
+              Ameaçada ou não, cada uma depende de um pedaço de mata que está sumindo. Toque numa espécie para ver o status dela no Brasil e no mundo, e quantas restam, onde alguém contou.
             </p>
             <p style={{ display: "flex", flexWrap: "wrap", gap: "8px 32px", fontSize: 16, color: "rgba(255,253,248,0.78)" }}>
               {resumo.map((s) => (
@@ -287,7 +297,7 @@ export function Animais() {
           <a href={listaNacional.fonte} target="_blank" rel="noopener noreferrer" className="link">
             MMA
           </a>{" "}
-          (avaliação de {listaNacional.ano}). No mundo: Lista Vermelha da IUCN, pelo GBIF. População: a fonte de cada estimativa está na ficha.</div>
+          (avaliação de {listaNacional.ano}). No mundo: Lista Vermelha da IUCN, pelo GBIF. População: a fonte de cada estimativa está na ficha. Fotos do Wikimedia Commons: autor e licença na ficha.</div>
       </footer>
     </div>
   );

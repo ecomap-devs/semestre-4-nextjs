@@ -2,7 +2,7 @@
 // (INPE), e a linha do tempo mora em `linhaDoTempo.ts`. As espécies e o número de
 // espécies ameaçadas vêm da lista nacional do MMA (`especies.ts`).
 
-import { animais } from "./animais";
+import { animais, ehAmeacada } from "./animais";
 import { biomas } from "./biomas";
 import { listaNacional } from "./especies";
 import { prodes, prodesAtualizadoEm } from "./prodes";
@@ -20,9 +20,10 @@ export const equipe: Membro[] = [
   { nome: "João Gabriel" },
 ];
 
-// As seis primeiras do catálogo. Até 28/10/2026 a Home tinha a própria lista, com
-// fotos de sites de terceiros e uma "queda da população" sem fonte em cada card.
-export const animaisDestaque = animais.slice(0, 6);
+// As seis primeiras ameaçadas do catálogo (a seção é "Espécies ameaçadas"). Até
+// 28/10/2026 a Home tinha a própria lista, com fotos de sites de terceiros e uma
+// "queda da população" sem fonte em cada card.
+export const animaisDestaque = animais.filter(ehAmeacada).slice(0, 6);
 
 export const slides = [
   { url: `${SUPABASE_ANIMAIS}/onca-pintada.png`, rotulo: "Onça-pintada" },
