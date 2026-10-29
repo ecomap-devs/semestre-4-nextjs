@@ -9,6 +9,7 @@ import { Contador, Revelar } from "@/componentes/comum/efeitos";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
 import { corDoStatus } from "@/dados/animais";
+import { canaisDenuncia, fonteDenuncia, oQueInformar, sobreAnonimato } from "@/dados/denuncia";
 import { animaisDestaque, dadosAtualizadosEm, equipe, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
 
 import { BarrasAnimadas, LinhaDoTempo, UltimoPeriodo } from "./Graficos";
@@ -395,7 +396,7 @@ export function Inicio() {
             <Revelar>
               <h2 style={tituloSecao}>Seis biomas, seis histórias de perda</h2>
               <p style={{ ...introSecao, marginBottom: 16 }}>
-                O mapa interativo junta os alertas de desmatamento do DETER-B ao limite oficial de cada bioma, do IBGE.
+                O mapa interativo junta os alertas de desmatamento do DETER (INPE) do último ano ao limite oficial de cada bioma, do IBGE.
               </p>
               <p style={{ ...introSecao, marginBottom: 32 }}>Escolha um bioma na lista para ir até ele e ver quanto já foi desmatado.</p>
               <Link href="/mapa" className="botao botao-cheio botao-grande">
@@ -499,6 +500,58 @@ export function Inicio() {
                 </li>
               ))}
             </ol>
+            <p style={{ marginTop: 64, display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px 20px" }}>
+              <Link href="/quiz" className="botao botao-claro botao-grande">
+                Fazer o quiz
+              </Link>
+              <span style={{ fontSize: 16, color: textoClaro }}>Oito perguntas, com as respostas tiradas dos dados do site.</span>
+            </p>
+          </div>
+        </section>
+
+        {/* ── COMO DENUNCIAR ── */}
+        {/* Até 29/10/2026 o site mandava usar um aplicativo que não aparece em canal
+            oficial nenhum. Os canais e o texto vêm de `dados/denuncia.ts`, com a fonte. */}
+        <section id="denuncie" className="section-pad" style={{ padding: "120px 24px" }}>
+          <div style={larguraMaxima}>
+            <Revelar>
+              <h2 style={tituloSecao}>Como denunciar</h2>
+              <p style={{ ...introSecao, marginBottom: 56 }}>Viu desmatamento, caça, tráfico de animais ou queimada ilegal? O Ibama recebe a denúncia pela internet ou por telefone, e dá para não se identificar.</p>
+            </Revelar>
+            <ul className="solutions-grid" style={{ listStyle: "none", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "40px 48px", marginBottom: 64 }}>
+              {canaisDenuncia.map((c, i) => (
+                <li key={c.titulo}>
+                  <Revelar atraso={i * 120} style={{ borderTop: "2px solid var(--terra)", paddingTop: 18 }}>
+                    <h3 style={{ fontSize: 16, fontFamily: "var(--fonte-texto)", fontWeight: 600, color: "var(--tinta-3)", margin: "0 0 6px" }}>{c.titulo}</h3>
+                    <a href={c.link} {...(c.link.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})} className="link" style={{ display: "inline-block", fontFamily: "var(--fonte-titulo)", fontSize: 36, lineHeight: 1.1, marginBottom: 10, fontVariantNumeric: "tabular-nums" }}>
+                      {c.contato}
+                    </a>
+                    <p style={{ fontSize: 16, color: "var(--tinta-2)" }}>{c.texto}</p>
+                  </Revelar>
+                </li>
+              ))}
+            </ul>
+            <div className="duas-colunas" style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr", gap: 72 }}>
+              <Revelar>
+                <h3 style={{ fontSize: 24, marginBottom: 14 }}>O que contar na denúncia</h3>
+                <ul style={{ listStyle: "disc", paddingLeft: 20, color: "var(--tinta-2)", fontSize: 17, display: "flex", flexDirection: "column", gap: 6 }}>
+                  {oQueInformar.map((t) => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
+              </Revelar>
+              <Revelar>
+                <h3 style={{ fontSize: 24, marginBottom: 14 }}>Sem se identificar</h3>
+                <p style={{ fontSize: 17, color: "var(--tinta-2)", marginBottom: 16 }}>{sobreAnonimato}</p>
+                <p style={{ fontSize: 14, color: "var(--tinta-3)" }}>
+                  Fonte:{" "}
+                  <a href={fonteDenuncia.link} target="_blank" rel="noopener noreferrer" className="link">
+                    {fonteDenuncia.rotulo}
+                  </a>
+                  , conferido em {fonteDenuncia.conferidoEm}.
+                </p>
+              </Revelar>
+            </div>
           </div>
         </section>
 
@@ -515,7 +568,7 @@ export function Inicio() {
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
               <BotaoCompartilhar />
               {/* No React o link apontava para um .zip que não existia no site. */}
-              <a href="/alertas-desmatamento.json" download="alertas-desmatamento-deter-b.json" className="botao botao-vazado botao-grande">
+              <a href="/alertas-desmatamento.json" download="alertas-desmatamento-deter.json" className="botao botao-vazado botao-grande">
                 <i className="fas fa-download" aria-hidden="true" /> Baixar os dados
               </a>
             </div>
@@ -554,11 +607,15 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
               ["animais", "Espécies ameaçadas"],
               ["dados", "Dados"],
               ["solucoes", "Como ajudar"],
+              ["denuncie", "Como denunciar"],
             ].map(([id, rotulo]) => (
               <button key={id} type="button" className="link-rodape" onClick={() => aoIrPara(id)} style={{ display: "block", background: "none", border: "none", fontSize: 15, padding: "4px 0", cursor: "pointer", textAlign: "left" }}>
                 {rotulo}
               </button>
             ))}
+            <Link href="/quiz" className="link-rodape" style={{ display: "block", fontSize: 15, padding: "4px 0", textDecoration: "none" }}>
+              Quiz
+            </Link>
           </div>
           <div>
             <h3 style={tituloColuna}>Para ler mais</h3>
@@ -582,7 +639,7 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
         </div>
         <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,253,248,0.12)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13 }}>
           <span>© 2025 EcoMapBrasil</span>
-          <span>Dados de fontes públicas: INPE, IBGE e MapBiomas Alerta.</span>
+          <span>Dados de fontes públicas: INPE, IBGE, MMA e IUCN.</span>
         </div>
       </div>
     </footer>

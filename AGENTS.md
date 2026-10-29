@@ -72,7 +72,7 @@ npm run build      # gera out/, sem precisar de credencial
 - **Código em português**: componentes, funções, variáveis, tipos (`Avaliacao`,
   `paraAvaliacao`, `percentualDesmatado`), como no app Flutter.
 - **Exceção**: o que vem de fora mantém o nome de lá (`uid`, `photoURL`, `Timestamp`,
-  as chaves do GeoJSON como `AREAHA`).
+  as chaves do GeoJSON como `view_date`).
 - Comentários e documentação em português.
 
 ### Estrutura
@@ -84,7 +84,7 @@ src/
 ├── lib/          env, firebase, supabase: a ponte com o mundo de fora
 └── tipos/        tipos de domínio + a função que valida o dado que chega
 
-public/alertas-desmatamento.json   GeoJSON do DETER-B, o mesmo arquivo do app Flutter
+public/alertas-desmatamento.json   alertas do DETER dos últimos 12 meses, gerado por scripts/deter/gerar.mjs
 ```
 
 As páginas em `app/` são finas: só metadados e o componente da tela. A tela mora em
@@ -151,6 +151,13 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   `scripts/especies/gerar.mjs` (MMA pelo CKAN, IUCN pelo GBIF; workflow
   `dados-especies.yml`). Não edite o arquivo à mão. População só com estimativa publicada
   e a fonte (`populacao` em `animais.ts`); nada de série ou percentual sem origem.
+- **Alertas do mapa vêm do DETER.** Desde 29/10/2026 `public/alertas-desmatamento.json` é
+  gerado por `scripts/deter/gerar.mjs` (WFS do TerraBrasilis; workflow `dados-deter.yml`):
+  12 meses de desmatamento e mineração, só Amazônia Legal e Cerrado. O arquivo antigo era
+  fixo (2019 a 2023) e parecia ser do MapBiomas Alerta. Não edite à mão.
+- **Quiz e denúncia sem número solto.** As perguntas de `src/dados/quiz.ts` saem dos dados
+  do site; as respostas não são escritas à mão. Telefone e site de denúncia só em
+  `src/dados/denuncia.ts`, com a página oficial e a data em que foram conferidos.
 - **Trocar o fundo é trocar a camada.** Fundo claro ↔ satélite remove as camadas antigas e
   adiciona as novas (`MapaLeaflet.tsx`). No app, trocar só o endereço dentro da mesma
   camada deixava a imagem velha na tela.

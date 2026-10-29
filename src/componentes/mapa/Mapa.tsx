@@ -8,9 +8,21 @@ import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
 import { linhaDoTempoMapa } from "@/dados/linhaDoTempo";
 
-import type { EstadoAlertas, Fundo, ResumoAlertas } from "./MapaLeaflet";
+import type { EstadoAlertas, Fundo, PeriodoAlertas, ResumoAlertas } from "./MapaLeaflet";
 
 const milhar = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
+
+const PERIODOS: { meses: PeriodoAlertas; rotulo: string }[] = [
+  { meses: 1, rotulo: "1 mês" },
+  { meses: 3, rotulo: "3 meses" },
+  { meses: 12, rotulo: "12 meses" },
+];
+
+/** "2026-10-16" -> "16/10/2026". */
+function dataCurta(iso: string): string {
+  const [ano, mes, dia] = iso.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
 const umaCasa = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
 
 /** "1,2 mi ha" ou "845.320 ha". */
@@ -78,6 +90,7 @@ export function Mapa() {
   const [alertas, setAlertas] = useState<EstadoAlertas>("carregando");
   const [resumo, setResumo] = useState<ResumoAlertas | null>(null);
   const [fundo, setFundo] = useState<Fundo>("claro");
+  const [periodo, setPeriodo] = useState<PeriodoAlertas>(12);
 
   const focarBioma = (b: Bioma) => {
     setBiomaAtivo(b.chave);
@@ -95,6 +108,7 @@ export function Mapa() {
         .bioma-item { transition: background 0.15s, border-color 0.15s; }
         .bioma-item[aria-pressed="false"]:hover { background: var(--papel-2) !important; }
         .botao-fundo:hover { background: var(--papel-2) !important; }
+        .botao-periodo[aria-pressed="false"]:hover { border-color: var(--tinta-3) !important; }
         .leaflet-container { font-family: var(--fonte-texto), system-ui, sans-serif; background: var(--papel-2); }
         .leaflet-popup-content-wrapper { border-radius: var(--raio); }
         /* No celular o zoom é por pinça, e o +/− ficava escondido atrás do botão Biomas. */
@@ -108,7 +122,7 @@ export function Mapa() {
         ehMobile={ehMobile}
         tituloDaPagina
         larguraTotal
-        extra={!ehMobile && <span style={{ fontSize: 14, color: "var(--tinta-3)", flexShrink: 0 }}>Dados: INPE, IBGE e MapBiomas</span>}
+        extra={!ehMobile && <span style={{ fontSize: 14, color: "var(--tinta-3)", flexShrink: 0 }}>Dados: INPE e IBGE</span>}
       />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
@@ -117,6 +131,7 @@ export function Mapa() {
           selecionado={biomaAtivo}
           fundo={fundo}
           versaoLayout={versaoLayout}
+          periodo={periodo}
           aoSelecionarBioma={setBiomaAtivo}
           aoMudarAlertas={setAlertas}
           aoResumirAlertas={setResumo}
@@ -166,17 +181,35 @@ export function Mapa() {
             <div>
               <span style={{ fontSize: 15, color: "var(--tinta)" }}>Alertas de desmatamento</span>
               <div style={{ fontSize: 13, color: "var(--tinta-3)" }}>
-                DETER-B / INPE
-                {resumo && (
+                DETER / INPE · Amazônia Legal e Cerrado
+                {resumo && resumo.fim && (
                   <>
-                    {" · "}
-                    {resumo.anoMin !== null && (resumo.anoMin === resumo.anoMax ? `${resumo.anoMin} · ` : `${resumo.anoMin}–${resumo.anoMax} · `)}
-                    {milhar.format(resumo.total)} alertas · {hectares(resumo.areaHa)}
+                    <br />
+                    {dataCurta(resumo.inicio)} a {dataCurta(resumo.fim)} · {milhar.format(resumo.total)} alertas · {hectares(resumo.areaHa)}
                   </>
                 )}
               </div>
             </div>
           </div>
+          {/* O fim é o alerta mais recente publicado pelo INPE, não o dia de hoje. */}
+          <div role="group" aria-label="Período dos alertas" style={{ display: "flex", gap: 6, margin: "10px 0 0" }}>
+            {PERIODOS.map((p) => {
+              const ativo = periodo === p.meses;
+              return (
+                <button
+                  key={p.meses}
+                  type="button"
+                  className="botao-periodo"
+                  aria-pressed={ativo}
+                  onClick={() => setPeriodo(p.meses)}
+                  style={{ padding: "4px 10px", borderRadius: 999, fontSize: 14, cursor: "pointer", background: ativo ? "var(--mata)" : "transparent", color: ativo ? "var(--branco)" : "var(--tinta-2)", border: `1px solid ${ativo ? "var(--mata)" : "var(--linha)"}`, minHeight: 32 }}
+                >
+                  {p.rotulo}
+                </button>
+              );
+            })}
+          </div>
+          <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--tinta-3)" }}>Mata Atlântica, Caatinga, Pantanal e Pampa não têm alerta do DETER.</p>
           <p style={{ margin: "10px 0 4px", fontSize: 13, color: "var(--tinta-3)" }}>Biomas, pelo limite do IBGE</p>
           <div style={{ display: "flex", flexWrap: "wrap", gap: "2px 12px" }}>
             {biomas.map((b) => (
