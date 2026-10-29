@@ -53,6 +53,7 @@ flowchart LR
     regras["📜 firestore.rules<br/>no semestre-4-flutter"] -. protege .-> fs
     inpe["📡 PRODES · INPE<br/>TerraBrasilis"] -. todo mês, por PR .-> web
     mma["🐆 Lista nacional · MMA<br/>IUCN · GBIF"] -. todo mês, por PR .-> web
+    deter["🛰️ Alertas DETER · INPE<br/>GeoServer do TerraBrasilis"] -. todo mês, por PR .-> web
 ```
 
 ## 🛠️ Stack
@@ -139,7 +140,9 @@ done
 | "Área desmatada por bioma" e "Desmatado no último ano medido" | PRODES, por bioma. Na Amazônia, floresta e vegetação não florestal somadas |
 | Os dois primeiros números da Home | PRODES: total dos seis biomas no período mais recente que todos já têm consolidado, e a variação sobre o anterior |
 | Linha do tempo (Home e mapa) | Calculada em `src/dados/linhaDoTempo.ts` a partir da taxa oficial da Amazônia Legal e do acumulado por bioma. Só PPCDAm (2004), Moratória da Soja (2006) e Código Florestal (2012) são escritos à mão, sem número |
-| Alertas no mapa | DETER-B (INPE), em `public/alertas-desmatamento.json` |
+| Alertas no mapa | DETER (INPE): os alertas de desmatamento, mineração incluída, dos 12 meses que terminam no alerta mais recente publicado. Gerado em `public/alertas-desmatamento.json` por `scripts/deter/gerar.mjs`, pelo WFS do TerraBrasilis. Só Amazônia Legal e Cerrado: o DETER não cobre os outros biomas |
+| Quiz | Montado em `src/dados/quiz.ts` a partir dos dados acima. Nenhuma resposta é escrita à mão, menos a cobertura do DETER e os telefones, que vêm de `src/dados/denuncia.ts` |
+| Como denunciar | `src/dados/denuncia.ts`, conferido na página [Apresentar denúncia ambiental](https://www.gov.br/pt-br/servicos/apresentar-denuncia-ambiental) do gov.br, com a data da conferência |
 | Contorno dos biomas | IBGE, gerado por `scripts/biomas/gerar.mjs` |
 | "Espécies ameaçadas no Brasil" (Home e Animais) | Lista nacional do MMA: espécies e subespécies da fauna em CR, EN ou VU no CSV mais recente do [portal de dados abertos](https://dados.mma.gov.br/dataset/especies-ameacadas) (a avaliação de 2021, que virou a Portaria MMA nº 148/2022) |
 | Status de cada espécie | "No Brasil": a mesma lista do MMA; fora dela, "Não ameaçada". "No mundo": a Lista Vermelha da IUCN, pela API do GBIF |
@@ -152,6 +155,7 @@ Para atualizar na mão:
 ```bash
 node scripts/prodes/gerar.mjs     # desmatamento
 node scripts/especies/gerar.mjs   # status das espécies
+node scripts/deter/gerar.mjs      # alertas do DETER (leva ~30 s)
 ```
 
 <details>
@@ -190,10 +194,11 @@ node scripts/especies/gerar.mjs   # status das espécies
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 | **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build e abre um PR. Não usa secret |
+| **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~14 MB, ~2 MB comprimido) |
 | **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, ela passa a aparecer como "Não ameaçada" no PR |
 
 > [!IMPORTANT]
-> O **Dados do PRODES** e o **Dados das espécies** só conseguem abrir o PR com *Settings → Actions → General →
+> Os três workflows de dados (**PRODES**, **DETER** e **espécies**) só conseguem abrir o PR com *Settings → Actions → General →
 > "Allow GitHub Actions to create and approve pull requests"* ativado. E PR aberto pelo
 > `GITHUB_TOKEN` não dispara a **CI** (regra do GitHub), por isso cada workflow roda
 > a verificação antes de abrir.
@@ -202,7 +207,7 @@ O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secr
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
 As duas guardas foram testadas nos dois sentidos.
 
-Os workflows têm token só de leitura (menos os dois de dados, que precisam criar a
+Os workflows têm token só de leitura (menos os três de dados, que precisam criar a
 branch e o PR) e as actions são fixadas por SHA. O preview usa o
 `firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
 

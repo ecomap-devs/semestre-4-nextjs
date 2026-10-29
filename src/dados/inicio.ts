@@ -38,7 +38,7 @@ export const solucoes = [
   { titulo: "Engajamento político", texto: "Apoie políticas públicas e candidatos comprometidos com a preservação ambiental e o desenvolvimento sustentável." },
   { titulo: "Reflorestamento", texto: "Participe de iniciativas de plantio de árvores nativas e recuperação de áreas degradadas em sua região." },
   { titulo: "Educação ambiental", texto: "Divulgue informações sobre a importância da preservação e os impactos do desmatamento em sua comunidade." },
-  { titulo: "Denuncie", texto: 'Use aplicativos como "Denúncia Ambiente" para reportar atividades ilegais de desmatamento que você identificar.' },
+  { titulo: "Denuncie", texto: "Viu desmatamento, caça ou queimada ilegal? O Ibama recebe a denúncia pela internet ou por telefone, e dá para não se identificar. Os canais estão logo abaixo." },
 ];
 
 // ── Desmatamento, calculado do PRODES (prodes.ts) ──
