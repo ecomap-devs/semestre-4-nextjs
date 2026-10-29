@@ -25,7 +25,7 @@ import { MapaBiomas } from "./MapaBiomas";
 const DURACAO_SLIDE = 6000;
 
 const CSS = `
-  .nav-link { background: none; border: none; cursor: pointer; color: var(--tinta-2); font-size: 15px; padding: 6px 0; transition: color 0.15s; }
+  .nav-link { background: none; border: none; cursor: pointer; color: var(--tinta-2); font-size: 15px; padding: 6px 0; transition: color 0.15s; text-decoration: none; }
   .nav-link:hover { color: var(--mata); }
   .cabecalho-foto .nav-link { color: rgba(255,253,248,0.85); }
   .cabecalho-foto .nav-link:hover { color: var(--branco); }
@@ -42,6 +42,8 @@ const CSS = `
   .voltar-topo:hover { background: var(--papel-2); }
   .hidden-mobile { display: flex; }
   .show-mobile { display: none !important; }
+  .menu-topo { display: flex; }
+  .botao-menu { display: none !important; }
 
   @keyframes encher { from { transform: scaleX(0); } to { transform: scaleX(1); } }
   @keyframes descer { 0%, 100% { transform: translateY(0); opacity: 0.6; } 50% { transform: translateY(6px); opacity: 1; } }
@@ -51,6 +53,13 @@ const CSS = `
   .foto-fixa { background-attachment: scroll; }
   @media (hover: hover) and (min-width: 861px) {
     .foto-fixa { background-attachment: fixed; }
+  }
+
+  /* Com oito links e o "Entrar", o menu do topo não cabe abaixo de 1024px: ali já
+     entra o botão de menu, antes do resto da página virar layout de celular. */
+  @media (max-width: 1023px) {
+    .menu-topo { display: none !important; }
+    .botao-menu { display: block !important; }
   }
 
   @media (max-width: 860px) {
@@ -121,12 +130,15 @@ function Cabecalho() {
           <img src="/logo.png" alt="" style={{ height: 34, width: "auto" }} />
           <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 20, color: sobreFoto ? "var(--branco)" : "var(--tinta)", transition: "color 0.3s" }}>EcoMapBrasil</span>
         </div>
-        <nav aria-label="Seções da página" style={{ gap: 28, alignItems: "center" }} className="hidden-mobile">
+        <nav aria-label="Seções da página" style={{ gap: 28, alignItems: "center" }} className="menu-topo">
           {linksNavegacao.map(([id, rotulo]) => (
             <button key={id} type="button" className="nav-link" onClick={() => irPara(id)}>
               {rotulo}
             </button>
           ))}
+          <Link href="/quiz" className="nav-link">
+            Quiz
+          </Link>
           {/* Enquanto o Firebase não responde, o espaço fica vazio em vez de piscar "Entrar". */}
           {usuario === undefined ? null : usuario ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 20, borderLeft: `1px solid ${sobreFoto ? "rgba(255,253,248,0.3)" : "var(--linha)"}` }}>
@@ -151,7 +163,7 @@ function Cabecalho() {
           aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
           aria-expanded={menuAberto}
           style={{ background: "none", border: "none", color: sobreFoto ? "var(--branco)" : "var(--tinta)", fontSize: 20, cursor: "pointer", minWidth: 44, minHeight: 44 }}
-          className="show-mobile"
+          className="botao-menu"
         >
           <i className={`fas ${menuAberto ? "fa-times" : "fa-bars"}`} />
         </button>
@@ -163,6 +175,9 @@ function Cabecalho() {
               {rotulo}
             </button>
           ))}
+          <Link href="/quiz" style={itemMenuMobile}>
+            Quiz
+          </Link>
           {usuario === undefined ? null : usuario ? (
             <button
               type="button"

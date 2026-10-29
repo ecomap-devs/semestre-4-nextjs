@@ -96,6 +96,7 @@ export const linksNavegacao: [string, string][] = [
   ["animais", "Animais"],
   ["dados", "Dados"],
   ["solucoes", "Soluções"],
+  ["denuncie", "Denunciar"],
   ["equipe", "Equipe"],
   ["avaliacoes", "Avaliações"],
 ];
