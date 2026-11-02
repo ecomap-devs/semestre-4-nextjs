@@ -79,7 +79,7 @@ npm run build      # gera out/, sem precisar de credencial
 ```
 src/
 ├── app/          rotas: uma pasta por página (page.tsx), layout.tsx e template.tsx na raiz
-├── componentes/  uma pasta por tela (inicio, mapa, animais, fotos, quiz) + autenticacao, avaliacoes, comum
+├── componentes/  uma pasta por tela (inicio, mapa, animais, fotos, quiz, legal) + autenticacao, avaliacoes, comum
 ├── dados/        dados do site: PRODES e status das espécies gerados por scripts/, o resto à mão
 ├── lib/          env, firebase, supabase: a ponte com o mundo de fora
 └── tipos/        tipos de domínio + a função que valida o dado que chega
@@ -159,6 +159,11 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   gerado por `scripts/deter/gerar.mjs` (WFS do TerraBrasilis; workflow `dados-deter.yml`):
   12 meses de desmatamento e mineração, só Amazônia Legal e Cerrado. O arquivo antigo era
   fixo (2019 a 2023) e parecia ser do MapBiomas Alerta. Não edite à mão.
+- **Privacidade e termos andam com o código.** `/privacidade` e `/termos` saem de
+  `src/dados/legal.ts`. Coleta nova, serviço novo que recebe dado (domínio novo na CSP é o
+  sinal), campo novo no Firestore ou mudança no que é público: o texto muda no mesmo PR,
+  com a data nova em `ATUALIZADO_EM`. Afirmação ali só depois de conferir no código ou nas
+  regras, nunca de memória.
 - **Quiz e denúncia sem número solto.** As perguntas de `src/dados/quiz.ts` saem dos dados
   do site; as respostas não são escritas à mão. Telefone e site de denúncia só em
   `src/dados/denuncia.ts`, com a página oficial e a data em que foram conferidos.
@@ -200,7 +205,7 @@ testar login num preview, adicione o endereço exato dele à chave. Não mexa na
 - PR de dado (PRODES, DETER, espécies) é aberto por uma pessoa, pelo link da issue que o
   workflow abre: PR do `GITHUB_TOKEN` não dispara a CI, e a `main` exige o check dela.
 - **O app tem cópia de parte dos dados** (`prodes_data.dart`, `especies_data.dart`,
-  `denuncia_data.dart` e o arquivo dos alertas). Mudou um deles aqui? Abra o PR gêmeo no
+  `denuncia_data.dart`, `legal_data.dart` e o arquivo dos alertas). Mudou um deles aqui? Abra o PR gêmeo no
   semestre-4-flutter, ou diga no PR por que não precisa.
 - Actions dos workflows fixadas por SHA, com a versão no comentário. Para atualizar,
   troque o SHA pelo da tag nova (`gh api repos/<dono>/<action>/commits/<tag> --jq .sha`).

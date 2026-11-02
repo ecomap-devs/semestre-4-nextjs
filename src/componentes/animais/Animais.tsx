@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 import { CabecalhoInterno, alturaCabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
@@ -297,7 +298,15 @@ export function Animais() {
           <a href={listaNacional.fonte} target="_blank" rel="noopener noreferrer" className="link">
             MMA
           </a>{" "}
-          (avaliação de {listaNacional.ano}). No mundo: Lista Vermelha da IUCN, pelo GBIF. População: a fonte de cada estimativa está na ficha. Fotos do Wikimedia Commons: autor e licença na ficha.</div>
+          (avaliação de {listaNacional.ano}). No mundo: Lista Vermelha da IUCN, pelo GBIF. População: a fonte de cada estimativa está na ficha. Fotos do Wikimedia Commons: autor e licença na ficha.{" "}
+          <Link href="/privacidade" className="link">
+            Política de privacidade
+          </Link>{" "}
+          ·{" "}
+          <Link href="/termos" className="link">
+            Termos de uso
+          </Link>
+        </div>
       </footer>
     </div>
   );

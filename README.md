@@ -31,6 +31,8 @@ aparece no site.
 > React: desmatamento do **PRODES/INPE** e status das espécies na **lista nacional do MMA**
 > e na **Lista Vermelha da IUCN**. Em 29/10 vieram os **alertas do DETER** dos últimos 12
 > meses no mapa, o **quiz** e a seção **Como denunciar**, com os canais oficiais do Ibama.
+> Em 02/11, a **[política de privacidade](https://ecomapbrasil-17756.web.app/privacidade)** e os
+> **[termos de uso](https://ecomapbrasil-17756.web.app/termos)**, que valem também para o app.
 
 ## 🧭 Onde este repositório entra
 
@@ -219,6 +221,25 @@ Os workflows têm token só de leitura (menos os três de dados, que precisam cr
 branch e a issue; neles o checkout não grava o token, e ele só aparece no último passo,
 depois do `npm ci` e do build) e as actions são fixadas por SHA. O preview usa o
 `firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
+
+## 🔏 Privacidade e termos
+
+As páginas `/privacidade` e `/termos` (desde 02/11/2026) valem para o site e para o app.
+O texto mora em [`src/dados/legal.ts`](src/dados/legal.ts), como dado, e o app copia o
+mesmo arquivo para `lib/data/legal_data.dart`. Cada afirmação foi conferida no código e nas
+regras: o que fica no Firebase e no Supabase, quem vê, até quando, os serviços de fora que
+recebem algo (Firebase, Supabase, Gemini, Esri, Wikimedia, GitHub) e as licenças dos dados.
+
+| Ponto | Como ficou |
+|---|---|
+| Pedidos sobre dados (LGPD, art. 18) | Por issue pública, com o modelo `.github/ISSUE_TEMPLATE/pedido-de-dados.md`, que avisa para não escrever dado pessoal. Apagar conta, avaliação e foto de perfil ainda é feito pela equipe: o site e o app não têm esse botão |
+| Identificação por foto | Só a partir de 18 anos: os [termos do Gemini](https://ai.google.dev/gemini-api/terms) proíbem usar a API em serviço provável de ser acessado por menores. O aviso está na página Fotos |
+| Cadastro | O modal avisa que criar a conta é concordar com os termos e a política, e que nome e foto aparecem nas avaliações |
+| Rodapé | Links nas duas páginas no rodapé da Home e no da página Animais |
+
+> [!IMPORTANT]
+> Mudou o que o site ou o app guardam, enviam ou para quem? `legal.ts` muda no **mesmo PR**,
+> com a data nova em `ATUALIZADO_EM`, e o app recebe a cópia.
 
 ## 🛡️ Segurança
 
