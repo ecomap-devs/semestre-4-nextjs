@@ -16,11 +16,11 @@ export type PeriodoPRODES = {
 export type DesmatamentoBioma = {
   /** Área do bioma segundo o IBGE. */
   areaKm2: number;
-  /** Tudo o que o PRODES já mapeou como desmatado, do início da série até hoje. */
+  /** Tudo o que o PRODES já mapeou como desmatado, do início da série ao último período consolidado. */
   acumuladoKm2: number;
   /** Desmatamento a cada período de um ano, do mais antigo ao mais recente. */
   anos: PeriodoPRODES[];
-  /** Total já desmatado ao fim de cada período (`fim`), desde o início da série. */
+  /** Total já desmatado ao fim de cada período consolidado (`fim`), desde o início da série. */
   acumulado: { fim: number; km2: number }[];
 };
 
@@ -30,7 +30,7 @@ export const prodesAtualizadoEm = "2026-10-16";
 export const prodes: Record<string, DesmatamentoBioma> = {
   "amazonia": {
     areaKm2: 4212742,
-    acumuladoKm2: 827184.1,
+    acumuladoKm2: 823821.2,
     anos: [
       { inicio: 2013, fim: 2014, km2: 5513.2, preliminar: false },
       { inicio: 2018, fim: 2019, km2: 11380.2, preliminar: false },
@@ -65,12 +65,11 @@ export const prodes: Record<string, DesmatamentoBioma> = {
       { fim: 2023, km2: 811631.5 },
       { fim: 2024, km2: 818256.4 },
       { fim: 2025, km2: 823821.2 },
-      { fim: 2026, km2: 827184.1 },
     ],
   },
   "cerrado": {
     areaKm2: 1983017,
-    acumuladoKm2: 1041097.3,
+    acumuladoKm2: 1035580.6,
     anos: [
       { inicio: 2012, fim: 2013, km2: 13481.6, preliminar: false },
       { inicio: 2013, fim: 2014, km2: 10904.4, preliminar: false },
@@ -108,7 +107,6 @@ export const prodes: Record<string, DesmatamentoBioma> = {
       { fim: 2023, km2: 1020171.2 },
       { fim: 2024, km2: 1028345.4 },
       { fim: 2025, km2: 1035580.6 },
-      { fim: 2026, km2: 1041097.3 },
     ],
   },
   "caatinga": {

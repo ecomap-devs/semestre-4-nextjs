@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/arte/banner.svg" alt="EcoMapBrasil — os alertas de desmatamento do DETER-B desenhados como mapa, ao lado do título" width="100%">
+  <img src=".github/arte/banner.svg" alt="EcoMapBrasil — alertas de desmatamento desenhados como mapa, ao lado do título" width="100%">
 </p>
 
 <p align="center">
@@ -29,7 +29,8 @@ aparece no site.
 > **biomas pelo limite do IBGE** (02/10), um **visual próprio** (22/10), que substituiu o
 > do React, e os **dados reais** (28/10) no lugar dos valores de referência herdados do
 > React: desmatamento do **PRODES/INPE** e status das espécies na **lista nacional do MMA**
-> e na **Lista Vermelha da IUCN**.
+> e na **Lista Vermelha da IUCN**. Em 29/10 vieram os **alertas do DETER** dos últimos 12
+> meses no mapa, o **quiz** e a seção **Como denunciar**, com os canais oficiais do Ibama.
 
 ## 🧭 Onde este repositório entra
 
@@ -69,6 +70,7 @@ flowchart LR
 | **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
 | **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
 | **Dados de desmatamento** | PRODES (INPE), gerado em `src/dados/prodes.ts` por `scripts/prodes/gerar.mjs` | Baixado antes do build e revisado por PR: o site não depende do INPE estar no ar, e a CSP não muda |
+| **Alertas do mapa** | DETER (INPE), pelo WFS do GeoServer do TerraBrasilis, gerado em `public/alertas-desmatamento.json` por `scripts/deter/gerar.mjs` | Mesmo esquema do PRODES; o arquivo é servido pelo próprio site |
 | **Status das espécies** | Lista nacional do MMA (dados abertos, CKAN) e IUCN pela API do GBIF, gerado em `src/dados/especies.ts` por `scripts/especies/gerar.mjs` | Mesmo esquema do PRODES. As duas fontes são abertas: a API da própria IUCN exige chave, e chave não entra no código |
 | **Identificação por foto** | Edge Function do Supabase + Gemini | A mesma função do app (o código mora no semestre-4-flutter); a chave do Gemini fica no servidor, e daqui só vai o ID token do Firebase |
 | **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
@@ -137,7 +139,7 @@ done
 | No site | De onde vem |
 |---|---|
 | Percentual desmatado de cada bioma (Home e mapa) | PRODES: tudo o que o INPE já mapeou como desmatado ÷ área do bioma no IBGE (2019) |
-| "Área desmatada por bioma" e "Desmatado no último ano medido" | PRODES, por bioma. Na Amazônia, floresta e vegetação não florestal somadas |
+| "Área desmatada por bioma" e "Desmatado no último ano medido" | PRODES, por bioma, só períodos consolidados. Na Amazônia, floresta e vegetação não florestal somadas |
 | Os dois primeiros números da Home | PRODES: total dos seis biomas no período mais recente que todos já têm consolidado, e a variação sobre o anterior |
 | Linha do tempo (Home e mapa) | Calculada em `src/dados/linhaDoTempo.ts` a partir da taxa oficial da Amazônia Legal e do acumulado por bioma. Só PPCDAm (2004), Moratória da Soja (2006) e Código Florestal (2012) são escritos à mão, sem número |
 | Alertas no mapa | DETER (INPE): os alertas de desmatamento, mineração incluída, dos 12 meses que terminam no alerta mais recente publicado. Gerado em `public/alertas-desmatamento.json` por `scripts/deter/gerar.mjs`, pelo WFS do TerraBrasilis. Só Amazônia Legal e Cerrado: o DETER não cobre os outros biomas |
@@ -145,7 +147,7 @@ done
 | Como denunciar | `src/dados/denuncia.ts`, conferido na página [Apresentar denúncia ambiental](https://www.gov.br/pt-br/servicos/apresentar-denuncia-ambiental) do gov.br, com a data da conferência |
 | Contorno dos biomas | IBGE, gerado por `scripts/biomas/gerar.mjs` |
 | "Espécies ameaçadas no Brasil" (Home e Animais) | Lista nacional do MMA: espécies e subespécies da fauna em CR, EN ou VU no CSV mais recente do [portal de dados abertos](https://dados.mma.gov.br/dataset/especies-ameacadas) (a avaliação de 2021, que virou a Portaria MMA nº 148/2022) |
-| Status de cada espécie | "No Brasil": a mesma lista do MMA; fora dela, "Não ameaçada". "No mundo": a Lista Vermelha da IUCN, pela API do GBIF |
+| Status de cada espécie | "No Brasil": a mesma lista do MMA; fora dela, "Não ameaçada". "No mundo": a Lista Vermelha da IUCN, pela API do GBIF, pelo nome que o GBIF aceita e, quando o GBIF não liga a espécie à IUCN, direto no checklist da IUCN publicado lá |
 | População de uma espécie | Só onde há estimativa publicada, com a fonte na ficha (hoje: onça na Mata Atlântica, mico-leão-dourado e arara-azul-de-lear). Escrita à mão em `src/dados/animais.ts` |
 | Descrição e ameaças de cada espécie | Escritas à mão em `src/dados/animais.ts`, sem número que não tenha fonte |
 | Fotos das espécies | As sete primeiras, no bucket `animals` do Supabase. As outras, do [Wikimedia Commons](https://commons.wikimedia.org), com autor, licença e link na ficha (`credito` em `src/dados/animais.ts`), como as licenças Creative Commons exigem |
@@ -170,7 +172,9 @@ node scripts/deter/gerar.mjs      # alertas do DETER (leva ~30 s)
   estimativa oficial para a região, só de floresta. O incremento por bioma (gráficos) é o
   que foi mapeado dentro do bioma. Por isso os dois números da Amazônia não batem.
 - **Dado preliminar** (o período que termina no ano da última atualização do INPE) fica
-  fora dos totais da Home. Na linha do tempo, aparece como "Estimativa do INPE".
+  fora dos totais da Home e do percentual desmatado de cada bioma (até 02/11/2026 entrava
+  no percentual, e o Cerrado aparecia com 53% em vez de 52%). Na linha do tempo, aparece
+  como "Estimativa do INPE".
 - **Nem todo bioma é medido todo ano.** Até 2013 alguns eram medidos a cada dois ou quatro
   anos. Esses períodos entram no acumulado, mas não na série anual.
 - **O status no Brasil e no mundo podem ser diferentes.** A lista nacional avalia a espécie
@@ -193,22 +197,27 @@ node scripts/deter/gerar.mjs      # alertas do DETER (leva ~30 s)
 | **CI** | Push ou PR na `main` | Lint, tipos, build e confere que cada rota virou HTML. Não usa secret |
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
-| **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build e abre um PR. Não usa secret |
+| **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build, sobe uma branch `dados/…` e abre uma **issue** com o link do PR preenchido. Não usa secret |
 | **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~14 MB, ~2 MB comprimido) |
 | **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, ela passa a aparecer como "Não ameaçada" no PR |
 
 > [!IMPORTANT]
-> Os três workflows de dados (**PRODES**, **DETER** e **espécies**) só conseguem abrir o PR com *Settings → Actions → General →
-> "Allow GitHub Actions to create and approve pull requests"* ativado. E PR aberto pelo
-> `GITHUB_TOKEN` não dispara a **CI** (regra do GitHub), por isso cada workflow roda
-> a verificação antes de abrir.
+> Os três workflows de dados (**PRODES**, **DETER** e **espécies**) **não abrem o PR**:
+> abrem uma issue, e alguém do grupo abre o PR pelo link dela. PR aberto pelo
+> `GITHUB_TOKEN` não dispara a **CI** nem o preview (regra do GitHub), e a `main` exige
+> o check da CI, então ele ficaria preso. Abrir PR pelo workflow também exigiria ligar
+> *"Allow GitHub Actions to create and approve pull requests"*, que deixa um workflow
+> **aprovar** PR. Até 01/11/2026 os workflows tentavam abrir o PR, e o do DETER falhou
+> assim. O dado também vale para o app, que tem cópia de `prodes.ts` e `especies.ts`:
+> depois do merge, abra o PR gêmeo no semestre-4-flutter.
 
 O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secret vazio
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
 As duas guardas foram testadas nos dois sentidos.
 
 Os workflows têm token só de leitura (menos os três de dados, que precisam criar a
-branch e o PR) e as actions são fixadas por SHA. O preview usa o
+branch e a issue; neles o checkout não grava o token, e ele só aparece no último passo,
+depois do `npm ci` e do build) e as actions são fixadas por SHA. O preview usa o
 `firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
 
 ## 🛡️ Segurança
