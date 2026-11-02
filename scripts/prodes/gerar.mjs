@@ -88,9 +88,12 @@ for (const [chave, produtos] of Object.entries(PRODUTOS)) {
   for (const produto of produtos) lidos.push(lerProduto(produto, await baixar(`data/prodes_${produto}.json`)));
 
   // O primeiro período de cada produto é o acumulado até o início da série
-  // ("1500-2000", ou "1500-2007" na floresta amazônica).
+  // ("1500-2000", ou "1500-2007" na floresta amazônica). A estimativa preliminar fica
+  // de fora, como nos totais da Home: até 02/11/2026 ela entrava, e o Cerrado aparecia
+  // com 53% desmatado em vez dos 52% consolidados.
+  const consolidado = (p) => p.fim < anoPreliminar;
   let acumuladoKm2 = 0;
-  for (const periodos of lidos) for (const p of periodos.values()) acumuladoKm2 += p.km2;
+  for (const periodos of lidos) for (const p of periodos.values()) if (consolidado(p)) acumuladoKm2 += p.km2;
 
   // Série anual: só períodos de um ano (até 2013 alguns biomas eram medidos a cada
   // dois ou quatro anos) e que TODOS os produtos do bioma têm, para um ano não
@@ -104,9 +107,9 @@ for (const [chave, produtos] of Object.entries(PRODUTOS)) {
     }))
     .sort((a, b) => a.inicio - b.inicio);
 
-  // Acumulado ao fim de cada período: tudo o que terminou até aquele ano, somando os
-  // produtos. Aqui entram também os períodos de dois ou quatro anos.
-  const fins = [...new Set(lidos.flatMap((periodos) => [...periodos.values()].map((p) => p.fim)))].sort((a, b) => a - b);
+  // Acumulado ao fim de cada período consolidado: tudo o que terminou até aquele ano,
+  // somando os produtos. Aqui entram também os períodos de dois ou quatro anos.
+  const fins = [...new Set(lidos.flatMap((periodos) => [...periodos.values()].filter(consolidado).map((p) => p.fim)))].sort((a, b) => a - b);
   const acumulado = fins.map((fim) => ({
     fim,
     km2: lidos.reduce((s, periodos) => s + [...periodos.values()].filter((p) => p.fim <= fim).reduce((t, p) => t + p.km2, 0), 0),
@@ -154,11 +157,11 @@ export type PeriodoPRODES = {
 export type DesmatamentoBioma = {
   /** Área do bioma segundo o IBGE. */
   areaKm2: number;
-  /** Tudo o que o PRODES já mapeou como desmatado, do início da série até hoje. */
+  /** Tudo o que o PRODES já mapeou como desmatado, do início da série ao último período consolidado. */
   acumuladoKm2: number;
   /** Desmatamento a cada período de um ano, do mais antigo ao mais recente. */
   anos: PeriodoPRODES[];
-  /** Total já desmatado ao fim de cada período (\`fim\`), desde o início da série. */
+  /** Total já desmatado ao fim de cada período consolidado (\`fim\`), desde o início da série. */
   acumulado: { fim: number; km2: number }[];
 };
 
