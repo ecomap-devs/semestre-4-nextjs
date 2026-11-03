@@ -2,14 +2,17 @@
 # Último passo dos workflows de dados (dados-prodes, dados-deter, dados-especies): sobe
 # a branch com o arquivo regerado e abre uma issue com o link do PR já preenchido.
 #
-# Uso: abrir-issue-de-dados.sh <arquivo regerado>
+# Uso: abrir-issue-de-dados.sh <arquivo regerado>...
 # Ambiente: GH_TOKEN, BRANCH, TITULO, TEXTO_DO_PR (e os GITHUB_* do Actions).
 #
 # Por que não abrir o PR daqui: PR aberto pelo GITHUB_TOKEN não dispara a CI nem o
 # preview, e a `main` exige o check da CI. Aberto por uma pessoa pelo link, o PR roda tudo.
 set -euo pipefail
 
-arquivo="$1"
+if [ "$#" -eq 0 ]; then
+  echo "::error::nenhum arquivo para subir"
+  exit 1
+fi
 for v in GH_TOKEN BRANCH TITULO TEXTO_DO_PR GITHUB_REPOSITORY; do
   if [ -z "${!v:-}" ]; then
     echo "::error::$v vazio"
@@ -30,7 +33,7 @@ fi
 git config user.name "github-actions[bot]"
 git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 git switch -c "$BRANCH"
-git add -- "$arquivo"
+git add -- "$@"
 git commit -m "$TITULO"
 git push "$remoto" "$BRANCH"
 

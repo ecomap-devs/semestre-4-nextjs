@@ -72,14 +72,14 @@ flowchart LR
 | **Conta e dados** | `firebase` (Auth, Firestore) | Login e avaliações em tempo real |
 | **Imagens** | `@supabase/supabase-js` | Fotos das espécies e avatares |
 | **Dados de desmatamento** | PRODES (INPE), gerado em `src/dados/prodes.ts` por `scripts/prodes/gerar.mjs` | Baixado antes do build e revisado por PR: o site não depende do INPE estar no ar, e a CSP não muda |
-| **Alertas do mapa** | DETER (INPE), pelo WFS do GeoServer do TerraBrasilis, gerado em `public/alertas-desmatamento.json` por `scripts/deter/gerar.mjs` | Mesmo esquema do PRODES; o arquivo é servido pelo próprio site |
+| **Alertas do mapa** | DETER (INPE), pelo WFS do GeoServer do TerraBrasilis, gerado por `scripts/deter/gerar.py` com **GeoPandas** (pandas, Shapely, pyproj): `public/alertas-desmatamento.json` para baixar e `public/alertas/` para desenhar | Mesmo esquema do PRODES; os arquivos são servidos pelo próprio site. O Python corrige a topologia, mede a área numa projeção de área igual e dissolve os alertas de cada período |
 | **Status das espécies** | Lista nacional do MMA (dados abertos, CKAN) e IUCN pela API do GBIF, gerado em `src/dados/especies.ts` por `scripts/especies/gerar.mjs` | Mesmo esquema do PRODES. As duas fontes são abertas: a API da própria IUCN exige chave, e chave não entra no código |
 | **Identificação por foto** | Edge Function do Supabase + Gemini | A mesma função do app (o código mora no semestre-4-flutter); a chave do Gemini fica no servidor, e daqui só vai o ID token do Firebase |
 | **Hospedagem** | Firebase Hosting, exportação estática | Plano gratuito, e é o único que serve o endereço `web.app` |
 
 ## 🚀 Como rodar
 
-> Pré-requisito: Node.js 24.
+> Pré-requisito: Node.js 24. Python 3.14 só para regerar os alertas do DETER.
 
 ```bash
 git clone https://github.com/ecomap-devs/semestre-4-nextjs.git
@@ -144,7 +144,7 @@ done
 | "Área desmatada por bioma" e "Desmatado no último ano medido" | PRODES, por bioma, só períodos consolidados. Na Amazônia, floresta e vegetação não florestal somadas |
 | Os dois primeiros números da Home | PRODES: total dos seis biomas no período mais recente que todos já têm consolidado, e a variação sobre o anterior |
 | Linha do tempo (Home e mapa) | Calculada em `src/dados/linhaDoTempo.ts` a partir da taxa oficial da Amazônia Legal e do acumulado por bioma. Só PPCDAm (2004), Moratória da Soja (2006) e Código Florestal (2012) são escritos à mão, sem número |
-| Alertas no mapa | DETER (INPE): os alertas de desmatamento, mineração incluída, dos 12 meses que terminam no alerta mais recente publicado. Gerado em `public/alertas-desmatamento.json` por `scripts/deter/gerar.mjs`, pelo WFS do TerraBrasilis. Só Amazônia Legal e Cerrado: o DETER não cobre os outros biomas |
+| Alertas no mapa | DETER (INPE): os alertas de desmatamento, mineração incluída, dos 12 meses que terminam no alerta mais recente publicado, pelo WFS do TerraBrasilis. `scripts/deter/gerar.py` grava `public/alertas-desmatamento.json` (um alerta por feature, o arquivo do botão de download e do app) e um arquivo por período em `public/alertas/` (1, 3 e 12 meses), com os alertas dissolvidos num só multipolígono e o resumo da legenda pronto. Só Amazônia Legal e Cerrado: o DETER não cobre os outros biomas |
 | Quiz | Montado em `src/dados/quiz.ts` a partir dos dados acima. Nenhuma resposta é escrita à mão, menos a cobertura do DETER e os telefones, que vêm de `src/dados/denuncia.ts` |
 | Como denunciar | `src/dados/denuncia.ts`, conferido na página [Apresentar denúncia ambiental](https://www.gov.br/pt-br/servicos/apresentar-denuncia-ambiental) do gov.br, com a data da conferência |
 | Contorno dos biomas | IBGE, gerado por `scripts/biomas/gerar.mjs` |
@@ -159,8 +159,21 @@ Para atualizar na mão:
 ```bash
 node scripts/prodes/gerar.mjs     # desmatamento
 node scripts/especies/gerar.mjs   # status das espécies
-node scripts/deter/gerar.mjs      # alertas do DETER (leva ~30 s)
 ```
+
+Os alertas do DETER precisam de Python e de um ambiente virtual (`.venv`, fora do git):
+
+```bash
+python -m venv .venv                                 # no Windows: py -3.14 -m venv .venv
+source .venv/bin/activate                            # no Windows: .venv\Scripts\activate
+pip install -r scripts/deter/requirements.txt
+python scripts/deter/gerar.py --baixar               # baixa do INPE (~1 min) e regera
+python scripts/deter/gerar.py                        # regera a partir do cache, sem acessar o INPE
+```
+
+As respostas do WFS ficam em `.cache/deter/` (fora do git), para não sobrecarregar o
+GeoServer do INPE enquanto se mexe no script: sem `--baixar`, o script lê do cache e
+avisa a data do download. Na CI (`CI=true`) ele ignora o cache e baixa sempre.
 
 <details>
 <summary>Detalhes que mudam a leitura dos números</summary>
@@ -186,6 +199,18 @@ node scripts/deter/gerar.mjs      # alertas do DETER (leva ~30 s)
 - **Não há série de população.** Até 28/10/2026 cada espécie tinha um gráfico de 2000 a 2024
   sem fonte, que saiu. Espécie nova no catálogo entra também em `ESPECIES` de
   `scripts/especies/gerar.mjs`, e o build para se ela faltar ali.
+- **A área dos alertas é a do INPE.** A legenda soma o `areaha` de cada alerta (a
+  `areamunkm` do DETER em hectares). O `gerar.py` recalcula a área pela geometria numa
+  projeção cônica de Albers sobre SIRGAS 2000 (de área igual) e mostra a diferença no
+  log: na geometria crua, menos de 0,01% no total. Alertas que se sobrepõem entram duas
+  vezes nessa soma; os arquivos de `public/alertas/` trazem também a área sem
+  sobreposição (`areaSemSobreposicaoHa`), que hoje não aparece no site.
+- **Alerta sem área não é desenhado.** O INPE publica alguns alertas com `areaha` 0 e
+  geometria inválida, que depois da correção vira linha ou ponto (29 nos 12 meses até
+  23/10/2026). No arquivo de download eles saem com `"geometry": null` e as propriedades
+  do INPE; no mapa, não aparecem, mas contam na legenda. O app pula alerta sem geometria,
+  então a legenda dele mostra esses 29 a menos. Alerta pequeno demais para a grade de
+  0,0001° (~11 m) sai com 0,000001°, para não sumir.
 - **O catálogo não é só de espécies ameaçadas.** Desde 28/10/2026 tem também espécies fora
   da lista nacional, como a capivara e o quero-quero, com o status "Não ameaçada". O filtro
   "Só ameaçadas" mostra apenas as da lista, e a Home só destaca ameaçadas.
@@ -200,7 +225,7 @@ node scripts/deter/gerar.mjs      # alertas do DETER (leva ~30 s)
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 | **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build, sobe uma branch `dados/…` e abre uma **issue** com o link do PR preenchido. Não usa secret |
-| **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~14 MB, ~2 MB comprimido) |
+| **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~15 MB, ~2 MB comprimido) e `public/alertas/` (o de 12 meses tem ~5 MB, ~1,2 MB comprimido), gerados em Python |
 | **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, ela passa a aparecer como "Não ameaçada" no PR |
 
 > [!IMPORTANT]
