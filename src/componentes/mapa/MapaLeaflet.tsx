@@ -141,12 +141,16 @@ function dataDoAlerta(f: GeoJSON.Feature): string {
   return typeof data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : "";
 }
 
-/** "2026-10-16", 3 meses -> "2026-07-17": o primeiro dia dos N meses que terminam no fim. */
+/**
+ * "2026-10-16", 3 meses -> "2026-07-17": o primeiro dia dos N meses que terminam no fim.
+ * O dia é preso ao último do mês de destino: até 02/11/2026, 31/03 menos um mês caía em
+ * "31/02", que o `Date` vira 03/03, e "1 mês" começava em 04/03. Mesma conta de
+ * scripts/deter/gerar.mjs.
+ */
 function inicioDoPeriodo(fim: string, meses: number): string {
-  const d = new Date(`${fim}T00:00:00Z`);
-  d.setUTCMonth(d.getUTCMonth() - meses);
-  d.setUTCDate(d.getUTCDate() + 1);
-  return d.toISOString().slice(0, 10);
+  const [ano = 0, mes = 1, dia = 1] = fim.split("-").map(Number);
+  const ultimoDiaDoMes = new Date(Date.UTC(ano, mes - meses, 0)).getUTCDate();
+  return new Date(Date.UTC(ano, mes - 1 - meses, Math.min(dia, ultimoDiaDoMes) + 1)).toISOString().slice(0, 10);
 }
 
 /**

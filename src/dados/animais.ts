@@ -67,7 +67,13 @@ type Especie = {
   descricao: string;
   ameacas: string[];
   imagem: string;
-  /** Só nas fotos de terceiros; as do bucket `animals` são do projeto. */
+  /**
+   * Autor e licença, nas fotos do Wikimedia Commons. As sete do bucket `animals` vieram
+   * dos semestres anteriores sem crédito registrado, e pelo nome dos arquivos várias são
+   * cópia das imagens de terceiros que o React usava (Biologia Net, Toda Matéria, Brasil
+   * Escola, Agência Brasil). A origem está em revisão; os termos de uso dizem isso e
+   * oferecem crédito ou remoção (02/11/2026).
+   */
   credito?: Credito;
   populacao?: Populacao;
 };

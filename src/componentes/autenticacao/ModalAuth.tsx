@@ -258,6 +258,21 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
           {textoBotao}
         </button>
 
+        {/* Em nova aba: sair do modal no meio do cadastro perderia o que foi digitado. */}
+        {modo === "cadastro" && (
+          <p style={{ fontSize: 14, color: "var(--tinta-3)", textAlign: "center", marginBottom: 12 }}>
+            Ao criar a conta, você concorda com os{" "}
+            <a href="/termos" target="_blank" rel="noopener" className="link">
+              termos de uso
+            </a>{" "}
+            e a{" "}
+            <a href="/privacidade" target="_blank" rel="noopener" className="link">
+              política de privacidade
+            </a>
+            . Seu nome e sua foto aparecem junto das suas avaliações.
+          </p>
+        )}
+
         {!pendente && (
           <button
             type="button"

@@ -653,7 +653,16 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
           </div>
         </div>
         <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,253,248,0.12)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13 }}>
-          <span>© 2025 EcoMapBrasil</span>
+          <span>
+            © 2025 EcoMapBrasil ·{" "}
+            <Link href="/privacidade" className="link-rodape" style={{ textDecoration: "underline" }}>
+              Política de privacidade
+            </Link>{" "}
+            ·{" "}
+            <Link href="/termos" className="link-rodape" style={{ textDecoration: "underline" }}>
+              Termos de uso
+            </Link>
+          </span>
           <span>Dados de fontes públicas: INPE, IBGE, MMA e IUCN.</span>
         </div>
       </div>

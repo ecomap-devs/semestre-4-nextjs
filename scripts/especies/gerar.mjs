@@ -127,24 +127,78 @@ const ameacadas = porCategoria.CR + porCategoria.EN + porCategoria.VU;
 // A lista tem mais de mil espécies; um número muito menor é sinal de CSV quebrado.
 if (ameacadas < 500) throw new Error(`CSV do MMA: só ${ameacadas} espécies ameaçadas`);
 const publicadaEm = String(recurso.last_modified).slice(0, 10);
+if (!/^\d{4}-\d{2}-\d{2}$/.test(publicadaEm)) throw new Error(`CKAN do MMA: data fora do formato (${publicadaEm})`);
 console.log(`lista nacional (${categoria.ano}, publicada em ${publicadaEm}): ${ameacadas} ameaçadas`, porCategoria);
 
 // ── Lista Vermelha da IUCN, pelo GBIF ──
 
 const SIGLAS_IUCN = ["EX", "EW", "CR", "EN", "VU", "NT", "LC", "DD"];
 
+// O checklist da Lista Vermelha que a IUCN publica no GBIF, e o nome das categorias lá.
+const CHECKLIST_IUCN = "19491596-35ae-4a91-9a98-85cf505f1bd3";
+const SIGLA_DO_CHECKLIST = {
+  EXTINCT: "EX",
+  EXTINCT_IN_THE_WILD: "EW",
+  CRITICALLY_ENDANGERED: "CR",
+  ENDANGERED: "EN",
+  VULNERABLE: "VU",
+  NEAR_THREATENED: "NT",
+  LEAST_CONCERN: "LC",
+  DATA_DEFICIENT: "DD",
+};
+
+// Espécie ameaçada no Brasil que a IUCN de fato não avaliou. Só entra aqui depois de
+// conferir no site da IUCN: o mais comum é o nome não casar, não a falta de avaliação.
+const SEM_AVALIACAO_IUCN = new Set([]);
+
+/** A categoria pela chave do backbone do GBIF. `NE` e 204 (sem avaliação) -> null. */
+async function categoriaPeloBackbone(chave) {
+  const resposta = await fetch(`${GBIF}/species/${chave}/iucnRedListCategory`);
+  if (!resposta.ok) throw new Error(`chave ${chave}: HTTP ${resposta.status} no GBIF`);
+  const corpo = resposta.status === 204 ? null : await resposta.json();
+  return SIGLAS_IUCN.includes(corpo?.code) ? corpo.code : null;
+}
+
+/**
+ * A categoria direto no checklist da IUCN, pelo nome. Serve quando o backbone do GBIF não
+ * liga a espécie ao checklist: a ariranha está lá como "Gmelin, 1788" e no backbone como
+ * "Zimmermann, 1780", e o backbone respondia "não avaliada" para uma espécie em perigo.
+ */
+async function categoriaNoChecklist(nome) {
+  const busca = await baixar(`${GBIF}/species/search?datasetKey=${CHECKLIST_IUCN}&rank=SPECIES&limit=20&q=${encodeURIComponent(nome)}`);
+  const siglas = new Set(
+    (busca?.results ?? [])
+      .filter((r) => r.canonicalName === nome)
+      .flatMap((r) => (r.threatStatuses ?? []).map((s) => SIGLA_DO_CHECKLIST[s]))
+      .filter(Boolean),
+  );
+  if (siglas.size > 1) throw new Error(`${nome}: mais de uma categoria no checklist da IUCN (${[...siglas]})`);
+  return siglas.size === 1 ? [...siglas][0] : null;
+}
+
 const status = {};
 for (const especie of ESPECIES) {
   const casamento = await baixar(`${GBIF}/species/match?strict=true&kingdom=Animalia&name=${encodeURIComponent(especie)}`);
   if (casamento?.matchType !== "EXACT" || !casamento.usageKey) throw new Error(`GBIF não achou "${especie}" (${casamento?.matchType})`);
-  // Sem avaliação, o GBIF responde 204 sem corpo.
-  const resposta = await fetch(`${GBIF}/species/${casamento.usageKey}/iucnRedListCategory`);
-  if (!resposta.ok) throw new Error(`${especie}: HTTP ${resposta.status} no GBIF`);
-  const corpo = resposta.status === 204 ? null : await resposta.json();
-  const iucn = SIGLAS_IUCN.includes(corpo?.code) ? corpo.code : null;
+  // Nome que o GBIF trata como sinônimo: a categoria está no nome aceito. Até 02/11/2026
+  // o script consultava o sinônimo, e a jacutinga (Pipile jacutinga no GBIF) saía como
+  // "não avaliada", sendo EN.
+  const chave = casamento.acceptedUsageKey ?? casamento.usageKey;
+  const aceito = typeof casamento.species === "string" ? casamento.species : especie;
 
-  status[especie] = { nacional: nacional.get(especie) ?? null, iucn };
-  console.log(`${especie}: nacional ${status[especie].nacional ?? "fora da lista"}, IUCN ${iucn ?? "sem avaliação"}`);
+  let iucn = await categoriaPeloBackbone(chave);
+  for (const nome of new Set([especie, aceito])) iucn ??= await categoriaNoChecklist(nome);
+
+  const nacionalSigla = nacional.get(especie) ?? null;
+  // Ameaçada no Brasil e sem categoria global é quase sempre nome que não casou. Melhor
+  // parar do que mostrar "não avaliada" para uma espécie em perigo.
+  if (nacionalSigla && !iucn && !SEM_AVALIACAO_IUCN.has(especie)) {
+    throw new Error(`${especie}: ameaçada na lista nacional e sem categoria da IUCN. Confira o nome no GBIF e no site da IUCN; se a IUCN de fato não avaliou, inclua em SEM_AVALIACAO_IUCN.`);
+  }
+
+  status[especie] = { nacional: nacionalSigla, iucn };
+  const via = aceito === especie ? "" : ` (no GBIF: ${aceito})`;
+  console.log(`${especie}${via}: nacional ${nacionalSigla ?? "fora da lista"}, IUCN ${iucn ?? "sem avaliação"}`);
 }
 
 const texto = (v) => (v === null ? "null" : `"${v}"`);

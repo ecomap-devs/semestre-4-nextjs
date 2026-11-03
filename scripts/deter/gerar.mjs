@@ -121,10 +121,12 @@ for (const { camada } of CAMADAS) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(data ?? "")) throw new Error(`${camada}: sem view_date`);
   if (data > fim) fim = data;
 }
-const inicioData = new Date(`${fim}T00:00:00Z`);
-inicioData.setUTCMonth(inicioData.getUTCMonth() - MESES);
-inicioData.setUTCDate(inicioData.getUTCDate() + 1);
-const inicio = inicioData.toISOString().slice(0, 10);
+// O dia seguinte ao mesmo dia, MESES antes, preso ao último dia do mês de destino (senão
+// 29/02 menos 12 meses virava 01/03, e o período perdia um dia). Mesma conta do
+// `inicioDoPeriodo` de MapaLeaflet.tsx.
+const [anoFim, mesFim, diaFim] = fim.split("-").map(Number);
+const ultimoDiaDoMes = new Date(Date.UTC(anoFim, mesFim - MESES, 0)).getUTCDate();
+const inicio = new Date(Date.UTC(anoFim, mesFim - 1 - MESES, Math.min(diaFim, ultimoDiaDoMes) + 1)).toISOString().slice(0, 10);
 console.log(`período: ${inicio} a ${fim}`);
 
 const filtro = `view_date >= '${inicio}' AND view_date <= '${fim}' AND classname IN (${Object.keys(CLASSES).map((c) => `'${c}'`).join(",")})`;

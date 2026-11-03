@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
@@ -128,9 +129,13 @@ export function Fotos() {
           ) : (
             <>
               {/* O nível gratuito do Gemini permite ao Google usar o que é enviado;
-                  quem manda a foto precisa saber disso antes. */}
+                  quem manda a foto precisa saber disso antes. E os termos do Gemini
+                  exigem 18 anos (vistos em 02/11/2026). */}
               <p style={{ margin: 0, fontSize: 15, color: "var(--tinta-3)" }}>
-                A foto é enviada ao Gemini, do Google, que pode usá-la para melhorar os serviços dele. Não envie fotos de pessoas.
+                Só para maiores de 18 anos. A foto é enviada ao Gemini, do Google, que pode usá-la para melhorar os serviços dele. Não envie fotos de pessoas.{" "}
+                <Link href="/privacidade#compartilhamento" className="link">
+                  Como tratamos a foto
+                </Link>
               </p>
 
               <div style={{ display: "flex", gap: 12, flexDirection: ehMobile ? "column" : "row" }}>

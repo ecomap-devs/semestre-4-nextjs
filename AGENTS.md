@@ -79,7 +79,7 @@ npm run build      # gera out/, sem precisar de credencial
 ```
 src/
 ├── app/          rotas: uma pasta por página (page.tsx), layout.tsx e template.tsx na raiz
-├── componentes/  uma pasta por tela (inicio, mapa, animais, fotos) + autenticacao, avaliacoes, comum
+├── componentes/  uma pasta por tela (inicio, mapa, animais, fotos, quiz, legal) + autenticacao, avaliacoes, comum
 ├── dados/        dados do site: PRODES e status das espécies gerados por scripts/, o resto à mão
 ├── lib/          env, firebase, supabase: a ponte com o mundo de fora
 └── tipos/        tipos de domínio + a função que valida o dado que chega
@@ -141,27 +141,37 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   buracos, que são massas d'água que o IBGE tira do bioma.
 - **Número de desmatamento vem do PRODES.** Desde 28/10/2026 a área e o percentual
   desmatado dos biomas e os números de desmatamento da Home saem de `src/dados/prodes.ts`,
-  gerado por `scripts/prodes/gerar.mjs` (o workflow `dados-prodes.yml` abre um PR todo
-  mês quando o INPE publica dado novo). Não edite o arquivo à mão nem volte a escrever
-  esses números soltos no código. Período preliminar do INPE não entra nos totais da Home.
+  gerado por `scripts/prodes/gerar.mjs` (o workflow `dados-prodes.yml` abre uma issue com o
+  link do PR todo mês quando o INPE publica dado novo). Não edite o arquivo à mão nem volte
+  a escrever esses números soltos no código. Período preliminar do INPE não entra no
+  acumulado de cada bioma nem nos totais da Home.
   A linha do tempo (`src/dados/linhaDoTempo.ts`) também calcula seus números do PRODES;
   marco escrito à mão ali só com data verificável (lei, acordo) e sem número.
 - **Status de espécie vem da lista nacional e da IUCN.** Desde 28/10/2026 o status e o
   total de espécies ameaçadas saem de `src/dados/especies.ts`, gerado por
   `scripts/especies/gerar.mjs` (MMA pelo CKAN, IUCN pelo GBIF; workflow
-  `dados-especies.yml`). Não edite o arquivo à mão. População só com estimativa publicada
-  e a fonte (`populacao` em `animais.ts`); nada de série ou percentual sem origem.
+  `dados-especies.yml`). Não edite o arquivo à mão. Espécie ameaçada no Brasil sem categoria
+  da IUCN para o gerador: quase sempre é nome que não casa no GBIF (a jacutinga e a
+  ariranha saíam "não avaliada" até 02/11/2026); só depois de conferir no site da IUCN
+  ela entra em `SEM_AVALIACAO_IUCN`. População só com estimativa publicada e a fonte
+  (`populacao` em `animais.ts`); nada de série ou percentual sem origem.
 - **Alertas do mapa vêm do DETER.** Desde 29/10/2026 `public/alertas-desmatamento.json` é
   gerado por `scripts/deter/gerar.mjs` (WFS do TerraBrasilis; workflow `dados-deter.yml`):
   12 meses de desmatamento e mineração, só Amazônia Legal e Cerrado. O arquivo antigo era
   fixo (2019 a 2023) e parecia ser do MapBiomas Alerta. Não edite à mão.
+- **Privacidade e termos andam com o código.** `/privacidade` e `/termos` saem de
+  `src/dados/legal.ts`. Coleta nova, serviço novo que recebe dado (domínio novo na CSP é o
+  sinal), campo novo no Firestore ou mudança no que é público: o texto muda no mesmo PR,
+  com a data nova em `ATUALIZADO_EM`. Afirmação ali só depois de conferir no código ou nas
+  regras, nunca de memória.
 - **Quiz e denúncia sem número solto.** As perguntas de `src/dados/quiz.ts` saem dos dados
   do site; as respostas não são escritas à mão. Telefone e site de denúncia só em
   `src/dados/denuncia.ts`, com a página oficial e a data em que foram conferidos.
 - **Trocar o fundo é trocar a camada.** Fundo claro ↔ satélite remove as camadas antigas e
   adiciona as novas (`MapaLeaflet.tsx`). No app, trocar só o endereço dentro da mesma
   camada deixava a imagem velha na tela.
-- **Avaliações sem limite.** O Flutter baixa a coleção inteira para mostrar 6. Use
+- **Avaliações sem limite.** O React (e o Flutter, até 01/10/2026) baixava a coleção
+  inteira para mostrar 6. Use
   `limit()` e `orderBy()`; média e total vêm de `getAggregateFromServer`.
 - **Alertas em SVG, não canvas.** Com `preferCanvas` o Leaflet desenhava os alertas
   pequenos bem mais finos, e o mapa parecia ter muito menos desmatamento.
@@ -192,6 +202,11 @@ testar login num preview, adicione o endereço exato dele à chave. Não mexa na
 - Branch a partir da `main`: `feat/…`, `fix/…`, `docs/…`.
 - Commit em português, no imperativo, com o porquê quando não for óbvio.
 - PR com CI verde e a revisão de alguém do grupo.
+- PR de dado (PRODES, DETER, espécies) é aberto por uma pessoa, pelo link da issue que o
+  workflow abre: PR do `GITHUB_TOKEN` não dispara a CI, e a `main` exige o check dela.
+- **O app tem cópia de parte dos dados** (`prodes_data.dart`, `especies_data.dart`,
+  `denuncia_data.dart`, `legal_data.dart` e o arquivo dos alertas). Mudou um deles aqui? Abra o PR gêmeo no
+  semestre-4-flutter, ou diga no PR por que não precisa.
 - Actions dos workflows fixadas por SHA, com a versão no comentário. Para atualizar,
   troque o SHA pelo da tag nova (`gh api repos/<dono>/<action>/commits/<tag> --jq .sha`).
 
