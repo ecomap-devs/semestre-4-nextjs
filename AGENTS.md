@@ -84,7 +84,9 @@ src/
 ├── lib/          env, firebase, supabase: a ponte com o mundo de fora
 └── tipos/        tipos de domínio + a função que valida o dado que chega
 
-public/alertas-desmatamento.json   alertas do DETER dos últimos 12 meses, gerado por scripts/deter/gerar.mjs
+public/alertas-desmatamento.json   alertas do DETER dos últimos 12 meses, um por feature (download e app)
+public/alertas/                    1-mes, 3-meses e 12-meses.json: o que o mapa desenha, dissolvido, com o resumo pronto
+scripts/deter/gerar.py             gera os dois acima, em Python com GeoPandas (requirements.txt ao lado)
 ```
 
 As páginas em `app/` são finas: só metadados e o componente da tela. A tela mora em
@@ -155,10 +157,27 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   ariranha saíam "não avaliada" até 02/11/2026); só depois de conferir no site da IUCN
   ela entra em `SEM_AVALIACAO_IUCN`. População só com estimativa publicada e a fonte
   (`populacao` em `animais.ts`); nada de série ou percentual sem origem.
-- **Alertas do mapa vêm do DETER.** Desde 29/10/2026 `public/alertas-desmatamento.json` é
-  gerado por `scripts/deter/gerar.mjs` (WFS do TerraBrasilis; workflow `dados-deter.yml`):
-  12 meses de desmatamento e mineração, só Amazônia Legal e Cerrado. O arquivo antigo era
-  fixo (2019 a 2023) e parecia ser do MapBiomas Alerta. Não edite à mão.
+- **Alertas do mapa vêm do DETER.** Desde 29/10/2026 `public/alertas-desmatamento.json` sai
+  do WFS do TerraBrasilis (workflow `dados-deter.yml`): 12 meses de desmatamento e mineração,
+  só Amazônia Legal e Cerrado. O arquivo antigo era fixo (2019 a 2023) e parecia ser do
+  MapBiomas Alerta. Desde 03/11/2026 o gerador é `scripts/deter/gerar.py`, com GeoPandas, e
+  grava também `public/alertas/`, um arquivo por período do mapa. Não edite nenhum dos dois
+  à mão. Regras do gerador:
+  - o formato de `public/alertas-desmatamento.json` não muda (chaves de topo, propriedades,
+    `MultiPolygon`, inteiro sem `.0`): o botão de download da Home e o app usam o arquivo;
+  - geometria do INPE passa por `make_valid(method="structure")`; alerta que não vira
+    polígono sai com `"geometry": null` no download, com as propriedades do INPE, fica fora
+    do desenho e continua contado no resumo (o total do mapa é o de alertas do INPE);
+  - coordenada na grade de 0,0001° (`PRECISAO`); só o alerta que essa grade anularia sai
+    com 0,000001° (`PRECISAO_FINA`);
+  - área se mede na Albers de área igual sobre SIRGAS 2000 (`ALBERS_SIRGAS_2000`), nunca em
+    graus nem em projeção conforme; o número exibido continua sendo o `areaha` do INPE;
+  - o resumo de cada período sai antes da dissolução, e a simplificação vem depois dela.
+  Para rodar: `python -m venv .venv` (no Windows, `py -3.14 -m venv .venv`), ative o
+  ambiente, `pip install -r scripts/deter/requirements.txt` e `python scripts/deter/gerar.py`.
+  Sem `--baixar`, o script lê as respostas do WFS de `.cache/deter/` e só baixa o que
+  faltar: não encha o GeoServer do INPE de consultas enquanto mexe no script. Na CI
+  (`CI=true`) ele baixa sempre.
 - **Privacidade e termos andam com o código.** `/privacidade` e `/termos` saem de
   `src/dados/legal.ts`. Coleta nova, serviço novo que recebe dado (domínio novo na CSP é o
   sinal), campo novo no Firestore ou mudança no que é público: o texto muda no mesmo PR,
