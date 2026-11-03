@@ -7,8 +7,9 @@ import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
 import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
 import { linhaDoTempoMapa } from "@/dados/linhaDoTempo";
+import type { PeriodoAlertas, ResumoAlertas } from "@/tipos/alertas";
 
-import type { EstadoAlertas, Fundo, PeriodoAlertas, ResumoAlertas } from "./MapaLeaflet";
+import type { EstadoAlertas, Fundo } from "./MapaLeaflet";
 
 const milhar = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 0 });
 
@@ -182,7 +183,7 @@ export function Mapa() {
               <span style={{ fontSize: 15, color: "var(--tinta)" }}>Alertas de desmatamento</span>
               <div style={{ fontSize: 13, color: "var(--tinta-3)" }}>
                 DETER / INPE · Amazônia Legal e Cerrado
-                {resumo && resumo.fim && (
+                {alertas === "ok" && resumo && resumo.fim && (
                   <>
                     <br />
                     {dataCurta(resumo.inicio)} a {dataCurta(resumo.fim)} · {milhar.format(resumo.total)} alertas · {hectares(resumo.areaHa)}

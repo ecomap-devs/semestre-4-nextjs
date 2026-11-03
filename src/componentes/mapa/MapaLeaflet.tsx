@@ -6,6 +6,7 @@ import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 
 import { biomaMaisEspecifico, biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
+import { ARQUIVO_DO_PERIODO, paraAlertasDoPeriodo, type AlertasDoPeriodo, type PeriodoAlertas, type ResumoAlertas } from "@/tipos/alertas";
 
 // O Leaflet toca `window` no import: este arquivo só é carregado no navegador, por
 // `dynamic(..., { ssr: false })` em Mapa.tsx.
@@ -14,15 +15,6 @@ export type EstadoAlertas = "carregando" | "ok" | "falhou";
 
 /** O fundo do mapa. Começa no claro: biomas e alertas aparecem muito mais sobre ele. */
 export type Fundo = "claro" | "satelite";
-
-/** O que a legenda conta dos alertas no período escolhido, calculado do próprio GeoJSON. */
-export type ResumoAlertas = { total: number; areaHa: number; inicio: string; fim: string };
-
-/** Quantos meses de alerta mostrar, contados do alerta mais recente do arquivo. */
-export type PeriodoAlertas = 1 | 3 | 12;
-
-/** O arquivo de scripts/deter/gerar.mjs: os alertas do mais antigo ao mais recente. */
-type ArquivoAlertas = GeoJSON.FeatureCollection & { inicio?: string; fim?: string };
 
 type Props = {
   /** Pedido de foco vindo do painel; `vez` muda a cada clique, mesmo no mesmo bioma. */
@@ -114,71 +106,26 @@ function areaComSinal(anel: GeoJSON.Position[]): number {
 
 /**
  * Os anéis de todos os alertas, no formato de multipolígono do Leaflet: uma lista de
- * polígonos, cada um com o contorno e os buracos. Feature sem geometria de área é
- * pulada, não derruba o mapa.
+ * polígonos, cada um com o contorno e os buracos.
  *
  * O contorno sai sempre num sentido e o buraco no outro: com `fillRule: "nonzero"`,
  * é isso que mantém o buraco vazio sem depender de o GeoJSON vir bem orientado.
  */
-function partesDosAlertas(features: GeoJSON.Feature[]): L.LatLngExpression[][][] {
+function partesDosAlertas(poligonos: GeoJSON.Position[][][]): L.LatLngExpression[][][] {
   const paraLatLng = (anel: GeoJSON.Position[], contorno: boolean) => {
     const orientado = (areaComSinal(anel) > 0) === contorno ? anel : [...anel].reverse();
     return orientado.map(([lng, lat]) => [lat, lng] as L.LatLngTuple);
   };
-  const poligono = (aneis: GeoJSON.Position[][]) => aneis.map((anel, i) => paraLatLng(anel, i === 0));
-  const partes: L.LatLngExpression[][][] = [];
-  for (const f of features) {
-    const g = f.geometry;
-    if (g?.type === "Polygon") partes.push(poligono(g.coordinates));
-    else if (g?.type === "MultiPolygon") for (const p of g.coordinates) partes.push(poligono(p));
-  }
-  return partes;
-}
-
-/** Data de um alerta (`view_date`, a da imagem do satélite), ou "" se não tiver. */
-function dataDoAlerta(f: GeoJSON.Feature): string {
-  const data = f.properties?.view_date;
-  return typeof data === "string" && /^\d{4}-\d{2}-\d{2}$/.test(data) ? data : "";
-}
-
-/**
- * "2026-10-16", 3 meses -> "2026-07-17": o primeiro dia dos N meses que terminam no fim.
- * O dia é preso ao último do mês de destino: até 02/11/2026, 31/03 menos um mês caía em
- * "31/02", que o `Date` vira 03/03, e "1 mês" começava em 04/03. Mesma conta de
- * scripts/deter/gerar.mjs.
- */
-function inicioDoPeriodo(fim: string, meses: number): string {
-  const [ano = 0, mes = 1, dia = 1] = fim.split("-").map(Number);
-  const ultimoDiaDoMes = new Date(Date.UTC(ano, mes - meses, 0)).getUTCDate();
-  return new Date(Date.UTC(ano, mes - 1 - meses, Math.min(dia, ultimoDiaDoMes) + 1)).toISOString().slice(0, 10);
-}
-
-/**
- * Os alertas do período e o resumo deles. O fim é o do arquivo (o alerta mais recente
- * que o INPE publicou), não o dia de hoje. Alerta sem data fica fora: não dá para dizer
- * em que período ele cai.
- */
-function filtrar(dados: ArquivoAlertas, meses: PeriodoAlertas): { features: GeoJSON.Feature[]; resumo: ResumoAlertas } {
-  const fim = dados.fim ?? dados.features.reduce((maior, f) => (dataDoAlerta(f) > maior ? dataDoAlerta(f) : maior), "");
-  const inicio = fim ? inicioDoPeriodo(fim, meses) : "";
-  const features = dados.features.filter((f) => {
-    const data = dataDoAlerta(f);
-    return data !== "" && data >= inicio && data <= fim;
-  });
-  let areaHa = 0;
-  for (const f of features) {
-    const area = Number(f.properties?.areaha);
-    if (Number.isFinite(area)) areaHa += area;
-  }
-  return { features, resumo: { total: features.length, areaHa, inicio, fim } };
+  return poligonos.map((aneis) => aneis.map((anel, i) => paraLatLng(anel, i === 0)));
 }
 
 export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, periodo, aoSelecionarBioma, aoMudarAlertas, aoResumirAlertas }: Props) {
   const container = useRef<HTMLDivElement>(null);
   const mapa = useRef<L.Map | null>(null);
   const camadasBioma = useRef(new Map<string, L.Polygon[]>());
-  // O arquivo é baixado uma vez; trocar o período só redesenha.
-  const [alertas, setAlertas] = useState<ArquivoAlertas | null>(null);
+  const [baixados, setBaixados] = useState<Partial<Record<PeriodoAlertas, AlertasDoPeriodo>>>({});
+  const exibidos = baixados[periodo];
+  const jaBaixado = exibidos !== undefined;
 
   // Os callbacks vivem num ref: o efeito que monta o mapa roda uma vez só.
   const callbacks = useRef({ aoSelecionarBioma, aoMudarAlertas, aoResumirAlertas });
@@ -223,43 +170,48 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, pe
       focar(m, bioma, e.latlng);
     });
 
-    const controlador = new AbortController();
-    callbacks.current.aoMudarAlertas("carregando");
-    fetch("/alertas-desmatamento.json", { signal: controlador.signal })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json() as Promise<ArquivoAlertas>;
-      })
-      .then((dados) => {
-        if (!Array.isArray(dados?.features)) throw new Error("arquivo de alertas sem features");
-        setAlertas(dados);
-        callbacks.current.aoMudarAlertas("ok");
-      })
-      .catch((erro: unknown) => {
-        if (erro instanceof DOMException && erro.name === "AbortError") return;
-        console.error("Alertas de desmatamento:", erro);
-        callbacks.current.aoMudarAlertas("falhou");
-      });
-
     return () => {
-      controlador.abort();
       m.remove();
       mapa.current = null;
       biomasDesenhados.clear();
     };
   }, []);
 
+  useEffect(() => {
+    if (jaBaixado) return;
+    const arquivo = ARQUIVO_DO_PERIODO[periodo];
+    const controlador = new AbortController();
+    callbacks.current.aoMudarAlertas("carregando");
+    fetch(arquivo, { signal: controlador.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json() as Promise<unknown>;
+      })
+      .then((json) => {
+        const dados = paraAlertasDoPeriodo(json, periodo);
+        if (!dados) throw new Error(`${arquivo} fora do formato`);
+        setBaixados((b) => ({ ...b, [periodo]: dados }));
+      })
+      .catch((erro: unknown) => {
+        if (erro instanceof DOMException && erro.name === "AbortError") return;
+        console.error("Alertas de desmatamento:", erro);
+        callbacks.current.aoMudarAlertas("falhou");
+      });
+    return () => {
+      controlador.abort();
+    };
+  }, [periodo, jaBaixado]);
+
   // Os alertas do período. Trocar o período troca a camada inteira, como no fundo.
   useEffect(() => {
     const m = mapa.current;
-    if (!m || !alertas) return;
-    const { features, resumo } = filtrar(alertas, periodo);
+    if (!m || !exibidos) return;
     // Todos os alertas num polígono só: UM elemento SVG em vez de dezenas de milhares.
     // Com o `L.geoJSON`, cada alerta virava um <path>, e mexer no mapa travava — mais
     // ainda no celular. O desenho é o mesmo (SVG, traço de 2 px: o alerta pequeno
     // continua aparecendo como ponto de longe). Polygon e MultiPolygon são lidos
     // os dois: os 25% de área que o parser do Flutter perdia não se perdem aqui.
-    const camada = L.polygon(partesDosAlertas(features), {
+    const camada = L.polygon(partesDosAlertas(exibidos.poligonos), {
       color: COR_ALERTA,
       weight: 2,
       fillColor: COR_ALERTA,
@@ -271,11 +223,12 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, pe
       // De longe o detalhe do contorno nem aparece; simplificar mais alivia o zoom.
       smoothFactor: 2,
     }).addTo(m);
-    callbacks.current.aoResumirAlertas(resumo);
+    callbacks.current.aoResumirAlertas(exibidos.resumo);
+    callbacks.current.aoMudarAlertas("ok");
     return () => {
       camada.remove();
     };
-  }, [alertas, periodo]);
+  }, [exibidos]);
 
   // Troca de fundo: as camadas antigas saem inteiras e as novas entram. No app, trocar
   // só o endereço dentro da mesma camada deixava a imagem velha na tela.
