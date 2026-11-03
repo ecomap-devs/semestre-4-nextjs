@@ -1,10 +1,11 @@
 name: Dados do DETER
 
 # Todo dia 1º baixa os alertas de desmatamento do DETER (INPE) dos últimos 12 meses,
-# por scripts/deter/gerar.mjs, e, se algo mudou, sobe uma branch com o
-# public/alertas-desmatamento.json novo e abre uma issue com o link do PR. Mesmo esquema
-# do dados-prodes.yml: o dado passa pela revisão, e o site no ar não depende do INPE
-# estar no ar. Também dá para rodar na mão (Actions → Dados do DETER → Run workflow).
+# por scripts/deter/gerar.py, e, se algo mudou, sobe uma branch com o
+# public/alertas-desmatamento.json e o public/alertas/ novos e abre uma issue com o
+# link do PR. Mesmo esquema do dados-prodes.yml: o dado passa pela revisão, e o site
+# no ar não depende do INPE estar no ar. Também dá para rodar na mão (Actions → Dados
+# do DETER → Run workflow).
 #
 # Por que issue e não PR: PR aberto pelo GITHUB_TOKEN não dispara a CI nem o preview
 # (regra do GitHub), e a `main` exige o check "Lint, tipos e build" da CI, então o PR
@@ -43,13 +44,22 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Gerar public/alertas-desmatamento.json
-        run: node scripts/deter/gerar.mjs
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: scripts/deter/requirements.txt
+
+      - name: Instalar o GeoPandas
+        run: pip install -r scripts/deter/requirements.txt
+
+      - name: Gerar public/alertas-desmatamento.json e public/alertas/
+        run: python scripts/deter/gerar.py
 
       - name: Ver se mudou
         id: mudou
         run: |
-          if git diff --quiet -- public/alertas-desmatamento.json; then
+          if [ -z "$(git status --porcelain -- public/alertas-desmatamento.json public/alertas/)" ]; then
             echo "Nada novo no DETER."
             echo "sim=false" >> "$GITHUB_OUTPUT"
           else
@@ -76,7 +86,7 @@ jobs:
           TITULO: Atualizar os alertas do DETER (${{ steps.mudou.outputs.data }})
           TEXTO_DO_PR: >-
             O INPE publicou alertas do DETER até ${{ steps.mudou.outputs.data }}. Gerado por
-            `scripts/deter/gerar.mjs` no workflow **Dados do DETER**, que já rodou lint, tipos
+            `scripts/deter/gerar.py` no workflow **Dados do DETER**, que já rodou lint, tipos
             e build. O arquivo é grande: confira o total de alertas no log do job e o mapa no
             preview antes do merge.
-        run: bash .github/scripts/abrir-issue-de-dados.sh public/alertas-desmatamento.json
+        run: bash .github/scripts/abrir-issue-de-dados.sh public/alertas-desmatamento.json public/alertas/
