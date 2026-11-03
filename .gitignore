@@ -47,3 +47,7 @@ firebase-debug.log
 
 # Credenciais no formato do app Flutter (env.json): nunca entram aqui.
 env.json
+
+.venv/
+__pycache__/
+.cache/
