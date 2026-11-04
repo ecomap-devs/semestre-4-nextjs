@@ -1,7 +1,7 @@
 name: Dados do DETER
 
 # Todo dia 1º baixa os alertas de desmatamento do DETER (INPE) dos últimos 12 meses,
-# por scripts/deter/gerar.py, e, se algo mudou, sobe uma branch com o
+# por scripts/deter/gerar.py, e, se os alertas mudaram, sobe uma branch com o
 # public/alertas-desmatamento.json e o public/alertas/ novos e abre uma issue com o
 # link do PR. Mesmo esquema do dados-prodes.yml: o dado passa pela revisão, e o site
 # no ar não depende do INPE estar no ar. Também dá para rodar na mão (Actions → Dados
@@ -18,23 +18,29 @@ on:
     - cron: "0 9 1 * *"
   workflow_dispatch:
 
-# Escrita só aqui: criar a branch e a issue. Nenhum secret é usado: o DETER é aberto e o
-# build compila sem credenciais.
-permissions:
-  contents: write
-  issues: write
+# Dois jobs de propósito. `gerar` roda código de dependências (pip, npm) e só lê o
+# repositório. `publicar` tem o token de escrita, parte de um checkout limpo e não roda
+# nada delas: num job só, uma dependência poderia reescrever na árvore de trabalho o
+# script que roda com o token. O que passa de um para o outro são só os arquivos de dado,
+# que ainda vão pela revisão do PR. Nenhum secret é usado: o DETER é aberto e o build
+# compila sem credenciais.
+permissions: {}
 
 concurrency:
   group: dados-deter
   cancel-in-progress: false
 
 jobs:
-  atualizar:
-    name: Baixar os alertas e abrir a issue
+  gerar:
+    name: Baixar os alertas e conferir
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      sim: ${{ steps.mudou.outputs.sim }}
+      branch: ${{ steps.mudou.outputs.branch }}
+      data: ${{ steps.mudou.outputs.data }}
     steps:
-      # Sem credencial gravada no .git/config: o `npm ci` e o build abaixo rodam código
-      # de dependências, e o token de escrita só aparece no último passo.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -51,8 +57,9 @@ jobs:
           cache-dependency-path: scripts/deter/requirements.txt
 
       - name: Instalar o GeoPandas
-        run: pip install -r scripts/deter/requirements.txt
+        run: pip install --require-hashes -r scripts/deter/requirements.txt
 
+      # Sem alerta novo, o gerador não grava nada: ele compara os alertas, não os bytes.
       - name: Gerar public/alertas-desmatamento.json e public/alertas/
         run: python scripts/deter/gerar.py
 
@@ -78,15 +85,42 @@ jobs:
           npm run typecheck
           npm run build
 
-      - name: Subir a branch e abrir a issue
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.mudou.outputs.sim == 'true'
+        with:
+          name: dados-deter
+          path: |
+            public/alertas-desmatamento.json
+            public/alertas/
+          if-no-files-found: error
+          retention-days: 1
+
+  publicar:
+    name: Subir a branch e abrir a issue
+    needs: gerar
+    if: needs.gerar.outputs.sim == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dados-deter
+          path: public
+
+      - name: Subir a branch e abrir a issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ steps.mudou.outputs.branch }}
-          TITULO: Atualizar os alertas do DETER (${{ steps.mudou.outputs.data }})
+          BRANCH: ${{ needs.gerar.outputs.branch }}
+          TITULO: Atualizar os alertas do DETER (${{ needs.gerar.outputs.data }})
           TEXTO_DO_PR: >-
-            O INPE publicou alertas do DETER até ${{ steps.mudou.outputs.data }}. Gerado por
-            `scripts/deter/gerar.py` no workflow **Dados do DETER**, que já rodou lint, tipos
-            e build. O arquivo é grande: confira o total de alertas no log do job e o mapa no
-            preview antes do merge.
+            O INPE publicou ou corrigiu alertas do DETER (o mais recente é de
+            ${{ needs.gerar.outputs.data }}). Gerado por `scripts/deter/gerar.py` no workflow
+            **Dados do DETER**, que já rodou lint, tipos e build. O arquivo é grande: confira
+            o total de alertas no log do job e o mapa no preview antes do merge.
         run: bash .github/scripts/abrir-issue-de-dados.sh public/alertas-desmatamento.json public/alertas/

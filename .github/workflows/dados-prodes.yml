@@ -8,30 +8,35 @@ name: Dados do PRODES
 #
 # Por que issue e não PR: PR aberto pelo GITHUB_TOKEN não dispara a CI nem o preview
 # (regra do GitHub), e a `main` exige o check "Lint, tipos e build" da CI, então o PR
-# ficaria preso. Por isso este job roda lint, tipos e build antes, e quem abre o PR é
+# ficaria preso. Por isso o job `gerar` roda lint, tipos e build antes, e quem abre o PR é
 # alguém do grupo, pelo link da issue (.github/scripts/abrir-issue-de-dados.sh).
 on:
   schedule:
     - cron: "0 9 1 * *"
   workflow_dispatch:
 
-# Escrita só aqui: criar a branch e a issue. Nenhum secret é usado: o PRODES é
-# aberto e o build compila sem credenciais.
-permissions:
-  contents: write
-  issues: write
+# Dois jobs de propósito. `gerar` roda código de dependências (npm) e só lê o repositório.
+# `publicar` tem o token de escrita, parte de um checkout limpo e não roda nada delas: num
+# job só, uma dependência poderia reescrever na árvore de trabalho o script que roda com o
+# token. O que passa de um para o outro é só o arquivo de dado, que ainda vai pela revisão
+# do PR. Nenhum secret é usado: o PRODES é aberto e o build compila sem credenciais.
+permissions: {}
 
 concurrency:
   group: dados-prodes
   cancel-in-progress: false
 
 jobs:
-  atualizar:
-    name: Baixar o PRODES e abrir a issue
+  gerar:
+    name: Baixar o PRODES e conferir
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      sim: ${{ steps.mudou.outputs.sim }}
+      branch: ${{ steps.mudou.outputs.branch }}
+      data: ${{ steps.mudou.outputs.data }}
     steps:
-      # Sem credencial gravada no .git/config: o `npm ci` e o build abaixo rodam código
-      # de dependências, e o token de escrita só aparece no último passo.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -65,14 +70,39 @@ jobs:
           npm run typecheck
           npm run build
 
-      - name: Subir a branch e abrir a issue
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: steps.mudou.outputs.sim == 'true'
+        with:
+          name: dados-prodes
+          path: src/dados/prodes.ts
+          if-no-files-found: error
+          retention-days: 1
+
+  publicar:
+    name: Subir a branch e abrir a issue
+    needs: gerar
+    if: needs.gerar.outputs.sim == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dados-prodes
+          path: src/dados
+
+      - name: Subir a branch e abrir a issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH: ${{ steps.mudou.outputs.branch }}
-          TITULO: Atualizar os dados do PRODES (${{ steps.mudou.outputs.data }})
+          BRANCH: ${{ needs.gerar.outputs.branch }}
+          TITULO: Atualizar os dados do PRODES (${{ needs.gerar.outputs.data }})
           TEXTO_DO_PR: >-
-            O TerraBrasilis publicou dados novos do PRODES em ${{ steps.mudou.outputs.data }}. Gerado por
+            O TerraBrasilis publicou dados novos do PRODES em ${{ needs.gerar.outputs.data }}. Gerado por
             `scripts/prodes/gerar.mjs` no workflow **Dados do PRODES**, que já rodou lint, tipos
             e build. Confira no diff se os números mudaram o esperado antes do merge.
         run: bash .github/scripts/abrir-issue-de-dados.sh src/dados/prodes.ts
