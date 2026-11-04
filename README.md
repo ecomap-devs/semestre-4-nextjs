@@ -169,11 +169,22 @@ source .venv/bin/activate                            # no Windows: .venv\Scripts
 pip install -r scripts/deter/requirements.txt
 python scripts/deter/gerar.py --baixar               # baixa do INPE (~1 min) e regera
 python scripts/deter/gerar.py                        # regera a partir do cache, sem acessar o INPE
+python scripts/deter/gerar.py --forcar               # regrava sem alerta novo, depois de mudar o script
 ```
 
 As respostas do WFS ficam em `.cache/deter/` (fora do git), para não sobrecarregar o
 GeoServer do INPE enquanto se mexe no script: sem `--baixar`, o script lê do cache e
 avisa a data do download. Na CI (`CI=true`) ele ignora o cache e baixa sempre.
+
+Sem alerta novo, o script não grava nada: ele compara os alertas (propriedades e
+geometria), não os bytes. O download sai igual em Linux e Windows, mas a união dos arquivos
+de `public/alertas/` não: em 04/11/2026, com o mesmo dado, deu 1 polígono de diferença nos
+12 meses, e o workflow anunciaria dado novo sem haver.
+
+As versões ficam em `scripts/deter/requirements.in`, e o `requirements.txt` sai dele, com os
+hashes que o workflow confere (`--require-hashes`). Para mudar uma versão, na pasta
+`scripts/deter/`, com o `pip-tools` instalado:
+`pip-compile --generate-hashes --strip-extras --no-header --no-emit-index-url --output-file=requirements.txt requirements.in`.
 
 <details>
 <summary>Detalhes que mudam a leitura dos números</summary>
@@ -208,9 +219,10 @@ avisa a data do download. Na CI (`CI=true`) ele ignora o cache e baixa sempre.
 - **Alerta sem área não é desenhado.** O INPE publica alguns alertas com `areaha` 0 e
   geometria inválida, que depois da correção vira linha ou ponto (29 nos 12 meses até
   23/10/2026). No arquivo de download eles saem com `"geometry": null` e as propriedades
-  do INPE; no mapa, não aparecem, mas contam na legenda. O app pula alerta sem geometria,
-  então a legenda dele mostra esses 29 a menos. Alerta pequeno demais para a grade de
-  0,0001° (~11 m) sai com 0,000001°, para não sumir.
+  do INPE; no mapa, não aparecem, mas contam na legenda. Alerta pequeno demais para a grade
+  de 0,0001° (~11 m) sai no download com 0,000001°, para não sumir. No desenho do mapa não há
+  essa proteção: a simplificação pode apagar uma lasca fina, que continua na legenda e no
+  download (31 alertas, 7,7 ha, nos 12 meses até 23/10/2026).
 - **O catálogo não é só de espécies ameaçadas.** Desde 28/10/2026 tem também espécies fora
   da lista nacional, como a capivara e o quero-quero, com o status "Não ameaçada". O filtro
   "Só ameaçadas" mostra apenas as da lista, e a Home só destaca ameaçadas.
@@ -225,7 +237,7 @@ avisa a data do download. Na CI (`CI=true`) ele ignora o cache e baixa sempre.
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
 | **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build, sobe uma branch `dados/…` e abre uma **issue** com o link do PR preenchido. Não usa secret |
-| **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~15 MB, ~2 MB comprimido) e `public/alertas/` (o de 12 meses tem ~5 MB, ~1,2 MB comprimido), gerados em Python |
+| **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~15 MB, ~2 MB comprimido) e `public/alertas/` (o de 12 meses tem ~5 MB, ~1,2 MB comprimido), gerados em Python. Compara os alertas, não os bytes |
 | **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, ela passa a aparecer como "Não ameaçada" no PR |
 
 > [!IMPORTANT]
@@ -242,10 +254,11 @@ O build com credenciais (`.github/scripts/build-com-credenciais.sh`) recusa secr
 e, depois do build, confere que o `projectId` do Firebase entrou no JavaScript gerado.
 As duas guardas foram testadas nos dois sentidos.
 
-Os workflows têm token só de leitura (menos os três de dados, que precisam criar a
-branch e a issue; neles o checkout não grava o token, e ele só aparece no último passo,
-depois do `npm ci` e do build) e as actions são fixadas por SHA. O preview usa o
-`firebase.json` da `main`: mudança de cabeçalho feita num PR só vale depois do merge.
+Os workflows têm token só de leitura, e as actions são fixadas por SHA. A exceção é o job
+`publicar` dos três de dados, que precisa criar a branch e a issue: ele parte de um checkout
+limpo e não roda código de dependências, que fica no job `gerar`, só de leitura; do primeiro
+para o segundo passam só os arquivos de dado. O preview usa o `firebase.json` da `main`:
+mudança de cabeçalho feita num PR só vale depois do merge.
 
 ## 🔏 Privacidade e termos
 

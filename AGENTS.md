@@ -164,12 +164,21 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   grava também `public/alertas/`, um arquivo por período do mapa. Não edite nenhum dos dois
   à mão. Regras do gerador:
   - o formato de `public/alertas-desmatamento.json` não muda (chaves de topo, propriedades,
-    `MultiPolygon`, inteiro sem `.0`): o botão de download da Home e o app usam o arquivo;
+    `MultiPolygon`, inteiro sem `.0`): o botão de download da Home e o app usam o arquivo.
+    Antes de mudar, rode os leitores dele no app com o arquivo novo: o mapa, os testes e o
+    `.github/arte/gerar.mjs`;
   - geometria do INPE passa por `make_valid(method="structure")`; alerta que não vira
     polígono sai com `"geometry": null` no download, com as propriedades do INPE, fica fora
-    do desenho e continua contado no resumo (o total do mapa é o de alertas do INPE);
+    do desenho e continua contado no resumo (o total do mapa é o de alertas do INPE). Mais
+    de 1% assim para o gerador;
   - coordenada na grade de 0,0001° (`PRECISAO`); só o alerta que essa grade anularia sai
-    com 0,000001° (`PRECISAO_FINA`);
+    com 0,000001° (`PRECISAO_FINA`), e só no download: no desenho do mapa, a simplificação
+    pode apagar uma lasca fina;
+  - ordem pelo conteúdo, nunca pelo `gid`: ele se repete quando o INPE divide um alerta entre
+    municípios, e cada download traz os empatados numa ordem. Teste de "mesma saída" não
+    vale lendo o cache, que congela essa ordem;
+  - sem alerta novo, nada é gravado: o gerador compara os alertas, não os bytes, porque a
+    união de `public/alertas/` varia entre sistemas. Mudou o script? Rode com `--forcar`;
   - área se mede na Albers de área igual sobre SIRGAS 2000 (`ALBERS_SIRGAS_2000`), nunca em
     graus nem em projeção conforme; o número exibido continua sendo o `areaha` do INPE;
   - o resumo de cada período sai antes da dissolução, e a simplificação vem depois dela.
@@ -177,7 +186,8 @@ O React do 3º semestre tem defeitos que o Flutter já corrigiu. **Não porte o 
   ambiente, `pip install -r scripts/deter/requirements.txt` e `python scripts/deter/gerar.py`.
   Sem `--baixar`, o script lê as respostas do WFS de `.cache/deter/` e só baixa o que
   faltar: não encha o GeoServer do INPE de consultas enquanto mexe no script. Na CI
-  (`CI=true`) ele baixa sempre.
+  (`CI=true`) ele baixa sempre. Versão de dependência muda no `requirements.in`, e o
+  `requirements.txt`, com os hashes, sai do `pip-compile` (comando no README).
 - **Privacidade e termos andam com o código.** `/privacidade` e `/termos` saem de
   `src/dados/legal.ts`. Coleta nova, serviço novo que recebe dado (domínio novo na CSP é o
   sinal), campo novo no Firestore ou mudança no que é público: o texto muda no mesmo PR,
@@ -228,6 +238,8 @@ testar login num preview, adicione o endereço exato dele à chave. Não mexa na
   semestre-4-flutter, ou diga no PR por que não precisa.
 - Actions dos workflows fixadas por SHA, com a versão no comentário. Para atualizar,
   troque o SHA pelo da tag nova (`gh api repos/<dono>/<action>/commits/<tag> --jq .sha`).
+- Workflow que roda código de dependências não tem token de escrita. Nos de dados, quem
+  escreve é o job `publicar`, com checkout limpo, sem instalar nada.
 
 ## Deploy
 

@@ -20,8 +20,8 @@ for v in GH_TOKEN BRANCH TITULO TEXTO_DO_PR GITHUB_REPOSITORY; do
   fi
 done
 
-# O checkout roda com persist-credentials: false; o token só entra aqui. O Actions
-# mascara o valor dele no log.
+# O job que roda isto parte de um checkout limpo, com persist-credentials: false, e não
+# roda código de dependências; o token só entra aqui. O Actions mascara o valor dele no log.
 remoto="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
 
 # Mesma data de antes: a branch (e a issue) já existem, nada a fazer.
