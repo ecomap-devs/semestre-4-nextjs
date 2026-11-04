@@ -1,3 +1,24 @@
+# Gera os alertas de desmatamento do DETER (INPE) dos últimos 12 meses:
+#
+# - public/alertas-desmatamento.json: um alerta por feature, para o botão de download da
+#   Home e para o app;
+# - public/alertas/{1-mes,3-meses,12-meses}.json: o que o mapa desenha, dissolvido, com o
+#   resumo da legenda pronto.
+#
+# Fonte: o GeoServer público do TerraBrasilis (WFS), o mesmo que alimenta o painel do DETER
+# (https://terrabrasilis.dpi.inpe.br/app/dashboard/alerts/legal/amazon/aggregated/). O DETER
+# só cobre a Amazônia Legal e o Cerrado: Mata Atlântica, Caatinga, Pantanal e Pampa não têm
+# alerta do INPE.
+#
+# Como refazer (Python 3.14, com o scripts/deter/requirements.txt num .venv; veja o README):
+#
+#   python scripts/deter/gerar.py            # lê as respostas de .cache/deter/
+#   python scripts/deter/gerar.py --baixar   # baixa tudo de novo do INPE
+#   python scripts/deter/gerar.py --forcar   # regrava mesmo sem alerta novo
+#
+# Sem alerta novo, nada é gravado (`sem_novidade`). O workflow dados-deter.yml roda isto
+# todo mês e abre uma issue com o link do PR quando os alertas mudam.
+
 import argparse
 import calendar
 import gzip
@@ -7,6 +28,7 @@ import math
 import os
 import re
 import sys
+from collections import Counter
 from datetime import date, datetime, timedelta
 from itertools import count
 from pathlib import Path
@@ -23,11 +45,15 @@ from shapely.geometry import shape
 
 GEOSERVER = "https://terrabrasilis.dpi.inpe.br/geoserver"
 
+# A camada da Amazônia é a da Amazônia Legal, que também pega um pedaço do Cerrado; o rótulo
+# segue o nome da camada, como no painel do INPE.
 CAMADAS = [
     {"bioma": "Amazônia Legal", "camada": "deter-amz:deter_amz", "geometria": "geom"},
     {"bioma": "Cerrado", "camada": "deter-cerrado-nb:deter_cerrado", "geometria": "st_multi"},
 ]
 
+# Só as classes de desmatamento. Degradação, corte seletivo e cicatriz de queimada são
+# alertas de outra coisa: a floresta danificada ainda está de pé.
 CLASSES = {
     "DESMATAMENTO_CR": "desmatamento",
     "DESMATAMENTO_VEG": "desmatamento",
@@ -37,8 +63,19 @@ CLASSES = {
 POR_PAGINA = 10000
 MESES = 12
 PERIODOS = {1: "1-mes", 3: "3-meses", 12: "12-meses"}
+
+# Um ano tem dezenas de milhares de alertas em cada camada. Um número muito menor, em
+# qualquer uma delas, é filtro quebrado ou camada fora do ar, não um ano bom. O piso é por
+# camada porque a da Amazônia sozinha já passaria de um piso geral sem o Cerrado.
 MINIMO_DE_ALERTAS = 5000
 
+# O INPE publica alguns alertas sem polígono de verdade (29 de 40.420 até 23/10/2026). Muito
+# mais que isso é geometria quebrada na fonte, e o mapa sairia vazio com a legenda cheia.
+TETO_SEM_POLIGONO = 0.01
+
+# Tolerância da simplificação, em graus (0,0005° ≈ 55 m, perto de um pixel do sensor AWFI). O
+# contorno do DETER vem em "escada", pixel a pixel; simplificar tira a escada sem mudar o que
+# se vê no mapa, e o arquivo cai a uma fração.
 TOLERANCIA = 0.0005
 PRECISAO = 0.0001
 PRECISAO_FINA = 0.000001
@@ -140,6 +177,8 @@ def inicio_do_periodo(fim, meses):
     return (date(ano_destino, mes_destino, min(dia, ultimo_dia)) + timedelta(days=1)).isoformat()
 
 
+# O fim do período é o alerta mais recente das duas camadas, não o dia de hoje: se o INPE
+# atrasar a publicação, o mapa continua com 12 meses de dado.
 def ultimo_alerta(wfs):
     fim = ""
     for camada in CAMADAS:
@@ -163,13 +202,17 @@ def baixar_alertas(wfs, inicio, fim):
     geometrias = []
     for camada in CAMADAS:
         lidos = 0
+        esperados = None
         for pagina in count():
             dados = wfs.consultar(
                 camada["camada"],
                 {
                     "CQL_FILTER": filtro,
-                    "propertyName": f"gid,classname,view_date,areamunkm,municipality,uf,{camada['geometria']}",
-                    "sortBy": "gid",
+                    "propertyName": f"classname,view_date,areamunkm,municipality,uf,{camada['geometria']}",
+                    # O gid se repete quando o INPE divide um alerta entre municípios (425 casos
+                    # em 12 meses), e o servidor devolve os empatados em qualquer ordem. Sem o
+                    # município, um alerta na virada da página pode vir duas vezes e outro, nenhuma.
+                    "sortBy": "gid,municipality",
                     "count": str(POR_PAGINA),
                     "startIndex": str(pagina * POR_PAGINA),
                 },
@@ -177,13 +220,13 @@ def baixar_alertas(wfs, inicio, fim):
             features = dados.get("features") if isinstance(dados, dict) else None
             if not isinstance(features, list):
                 raise ErroDoDeter(f'{camada["camada"]}: resposta sem "features"')
+            esperados = dados.get("numberMatched")
             for feature in features:
                 p = feature.get("properties") or {}
                 if p.get("classname") not in CLASSES or not data_valida(p.get("view_date")) or not numero_finito(p.get("areamunkm")):
                     raise ErroDoDeter(f"{camada['camada']}: alerta fora do formato ({feature.get('id')})")
                 linhas.append(
                     {
-                        "gid": str(p.get("gid") or feature.get("id") or ""),
                         "classname": CLASSES[p["classname"]],
                         "view_date": p["view_date"],
                         "areaha": area_em_hectares(p["areamunkm"]),
@@ -197,8 +240,25 @@ def baixar_alertas(wfs, inicio, fim):
             lidos += len(features)
             if len(features) < POR_PAGINA:
                 break
+        if isinstance(esperados, int) and lidos != esperados:
+            raise ErroDoDeter(f"{camada['camada']}: li {lidos} alertas, e o WFS diz que são {esperados}")
+        if lidos < MINIMO_DE_ALERTAS:
+            raise ErroDoDeter(f"{camada['camada']}: só {lidos} alertas em {MESES} meses")
         print(f"{camada['bioma']}: {lidos} alertas")
     return gpd.GeoDataFrame(pd.DataFrame(linhas), geometry=geometrias, crs=SIRGAS_2000)
+
+
+def ordenar(alertas):
+    # Pelo conteúdo, não pelo gid: ele se repete, e cada download traz os empatados numa ordem.
+    # A dissolução do mapa também depende da ordem de entrada, então o arquivo mudaria sem o
+    # dado mudar. Alerta igual em tudo, com a mesma geometria, só pode ser erro de leitura.
+    chave = ["view_date", "bioma", "classname", "uf", "municipality", "areaha", "_wkb"]
+    wkb = pd.Series(shapely.to_wkb(alertas.geometry.to_numpy(), hex=True), index=alertas.index, dtype=object).fillna("")
+    com_wkb = alertas.assign(_wkb=wkb)
+    repetidos = int(com_wkb[com_wkb["_wkb"] != ""].duplicated(subset=chave).sum())
+    if repetidos:
+        raise ErroDoDeter(f"{repetidos} alertas repetidos na leitura: a paginação do WFS escorregou; rode de novo")
+    return com_wkb.sort_values(chave, kind="stable").drop(columns="_wkb").reset_index(drop=True)
 
 
 def conferir_eixos(geometrias):
@@ -322,6 +382,24 @@ def arquivo_do_periodo(alertas, validas, calculada, fim, meses):
     return texto_json({"type": "FeatureCollection", "fonte": FONTE, "meses": meses, "inicio": inicio, "fim": fim, "resumo": resumo, "features": features})
 
 
+def conteudo(texto):
+    arquivo = json.loads(texto)
+    return arquivo.get("inicio"), arquivo.get("fim"), Counter(json.dumps(f, sort_keys=True, ensure_ascii=False) for f in arquivo.get("features", []))
+
+
+def sem_novidade(principal):
+    # Compara os alertas, não os bytes. O download sai igual em qualquer sistema, mas a união
+    # dos arquivos do mapa não: em 04/11/2026 Linux e Windows deram 1 polígono de diferença nos
+    # 12 meses, com o mesmo dado. Comparando bytes, o workflow anunciaria dado novo sem haver.
+    arquivos = [DESTINO, *(PASTA_DOS_PERIODOS / f"{nome}.json" for nome in PERIODOS.values())]
+    if not all(arquivo.exists() for arquivo in arquivos):
+        return False
+    try:
+        return conteudo(DESTINO.read_text(encoding="utf-8")) == conteudo(principal)
+    except json.JSONDecodeError:
+        return False
+
+
 def gravar(caminho, texto):
     caminho.parent.mkdir(parents=True, exist_ok=True)
     temporario = caminho.with_name(caminho.name + ".tmp")
@@ -334,6 +412,7 @@ def gravar(caminho, texto):
 def argumentos():
     leitor = argparse.ArgumentParser(description="Gera os alertas do DETER usados pelo mapa.")
     leitor.add_argument("--baixar", action="store_true", help=f"baixa tudo de novo do INPE e atualiza o cache em {PASTA_DO_CACHE.relative_to(RAIZ).as_posix()}/")
+    leitor.add_argument("--forcar", action="store_true", help="regrava os arquivos mesmo sem alerta novo (depois de mudar este script)")
     return leitor.parse_args()
 
 
@@ -358,23 +437,24 @@ def avisar_cache(wfs):
 
 
 def main():
-    wfs = preparar_wfs(argumentos().baixar)
+    args = argumentos()
+    wfs = preparar_wfs(args.baixar)
     fim = ultimo_alerta(wfs)
     inicio = inicio_do_periodo(fim, MESES)
     print(f"período: {inicio} a {fim}")
 
     alertas = baixar_alertas(wfs, inicio, fim)
     avisar_cache(wfs)
-    if len(alertas) < MINIMO_DE_ALERTAS:
-        raise ErroDoDeter(f"só {len(alertas)} alertas em {MESES} meses")
     conferir_eixos(alertas.geometry.to_numpy())
 
-    alertas = alertas.sort_values(["view_date", "gid"], kind="stable").reset_index(drop=True)
+    alertas = ordenar(alertas)
 
     invalidas = int((~alertas.geometry.is_valid & alertas.geometry.notna()).sum())
     validas = corrigir_topologia(alertas.geometry.to_numpy())
     sem_poligono = pd.isna(validas)
     print(f"topologia: {invalidas} geometrias inválidas corrigidas; {int(sem_poligono.sum())} alertas sem polígono saem com geometry null e contam no resumo")
+    if sem_poligono.mean() > TETO_SEM_POLIGONO:
+        raise ErroDoDeter(f"{int(sem_poligono.sum())} de {len(alertas)} alertas sem polígono: a geometria deve ter quebrado na fonte")
 
     desenho, precisao_fina = para_desenho(validas)
     if precisao_fina.any():
@@ -387,7 +467,12 @@ def main():
     comparar_areas(alertas, calculada)
     print(f"simplificação: {vertices(validas)} vértices viram {vertices(desenho)}")
 
-    textos = {DESTINO: arquivo_principal(alertas, desenho, inicio, fim)}
+    principal = arquivo_principal(alertas, desenho, inicio, fim)
+    if not args.forcar and sem_novidade(principal):
+        print(f"nada novo: os {len(alertas)} alertas são os mesmos de {DESTINO.relative_to(RAIZ).as_posix()}; nada foi gravado (--forcar regrava)")
+        return
+
+    textos = {DESTINO: principal}
     for meses, nome in PERIODOS.items():
         textos[PASTA_DOS_PERIODOS / f"{nome}.json"] = arquivo_do_periodo(alertas, validas, calculada, fim, meses)
     for caminho, texto in textos.items():

@@ -1,7 +1,7 @@
 /** Quantos meses de alerta mostrar, contados do alerta mais recente do arquivo. */
 export type PeriodoAlertas = 1 | 3 | 12;
 
-/** O que a legenda conta dos alertas no período escolhido, calculado do próprio GeoJSON. */
+/** O que a legenda conta dos alertas no período escolhido: vem pronto no arquivo, somado pelo gerador antes da dissolução. */
 export type ResumoAlertas = { total: number; areaHa: number; areaSemSobreposicaoHa: number | null; inicio: string; fim: string };
 
 export type AlertasDoPeriodo = { resumo: ResumoAlertas; poligonos: GeoJSON.Position[][][] };
