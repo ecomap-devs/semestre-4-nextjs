@@ -294,7 +294,7 @@ export function Animais() {
       {selecionado && <Ficha animal={selecionado} ehMobile={ehMobile} aoFechar={() => setSelecionado(null)} />}
 
       <footer style={{ borderTop: "1px solid var(--linha)", padding: ehMobile ? "20px 16px" : "24px", fontSize: 14, color: "var(--tinta-3)" }}>
-        <div style={{ maxWidth: 1120, margin: "0 auto" }}>© 2025 EcoMapBrasil · Status no Brasil: lista nacional de fauna ameaçada do{" "}
+        <div style={{ maxWidth: 1120, margin: "0 auto" }}>© 2025–2026 EcoMapBrasil · Status no Brasil: lista nacional de fauna ameaçada do{" "}
           <a href={listaNacional.fonte} target="_blank" rel="noopener noreferrer" className="link">
             MMA
           </a>{" "}

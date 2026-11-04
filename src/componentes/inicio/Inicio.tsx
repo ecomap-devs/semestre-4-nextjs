@@ -643,8 +643,8 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
             <h3 style={tituloColuna}>Para ler mais</h3>
             {[
               ["https://alerta.mapbiomas.org/relatorio/", "Relatórios do MapBiomas"],
-              ["https://g1.globo.com/busca/?q=desmatamento", "Notícias"],
-              ["https://www.ibflorestas.org.br/conteudo/leis-ambientais", "Legislação"],
+              ["https://terrabrasilis.dpi.inpe.br/", "TerraBrasilis (INPE)"],
+              ["https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm", "Código Florestal"],
             ].map(([href, rotulo]) => (
               <a key={rotulo} href={href} target="_blank" rel="noopener noreferrer" className="link-rodape" style={{ display: "block", padding: "4px 0", textDecoration: "none" }}>
                 {rotulo}
@@ -661,7 +661,7 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
         </div>
         <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,253,248,0.12)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13 }}>
           <span>
-            © 2025 EcoMapBrasil ·{" "}
+            © 2025–2026 EcoMapBrasil ·{" "}
             <Link href="/privacidade" className="link-rodape" style={{ textDecoration: "underline" }}>
               Política de privacidade
             </Link>{" "}
