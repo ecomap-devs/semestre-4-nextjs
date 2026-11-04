@@ -187,6 +187,9 @@ hashes que o workflow confere (`--require-hashes`). Para mudar uma versão, na p
 `scripts/deter/`, com o `pip-tools` instalado:
 `pip-compile --generate-hashes --strip-extras --no-header --no-emit-index-url --output-file=requirements.txt requirements.in`.
 
+Os ícones do site e a imagem que aparece ao compartilhar o link ficam em `src/app/` e saem
+de `scripts/identidade/gerar.py`, que diz como refazer.
+
 <details>
 <summary>Detalhes que mudam a leitura dos números</summary>
 
