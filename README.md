@@ -153,6 +153,7 @@ done
 | População de uma espécie | Só onde há estimativa publicada, com a fonte na ficha (hoje: onça na Mata Atlântica, mico-leão-dourado e arara-azul-de-lear). Escrita à mão em `src/dados/animais.ts` |
 | Descrição e ameaças de cada espécie | Escritas à mão em `src/dados/animais.ts`, sem número que não tenha fonte |
 | Fotos das espécies | As sete primeiras, no bucket `animals` do Supabase. As outras, do [Wikimedia Commons](https://commons.wikimedia.org), com autor, licença e link na ficha (`credito` em `src/dados/animais.ts`), como as licenças Creative Commons exigem |
+| Foto da seção "Passe adiante" | Bruno Kelly/Amazônia Real, do Wikimedia Commons (CC BY 2.0), com o crédito na própria seção (`fotoDaChamadaFinal` em `src/dados/inicio.ts`) |
 
 Para atualizar na mão:
 
@@ -185,6 +186,9 @@ As versões ficam em `scripts/deter/requirements.in`, e o `requirements.txt` sai
 hashes que o workflow confere (`--require-hashes`). Para mudar uma versão, na pasta
 `scripts/deter/`, com o `pip-tools` instalado:
 `pip-compile --generate-hashes --strip-extras --no-header --no-emit-index-url --output-file=requirements.txt requirements.in`.
+
+Os ícones do site e a imagem que aparece ao compartilhar o link ficam em `src/app/` e saem
+de `scripts/identidade/gerar.py`, que diz como refazer.
 
 <details>
 <summary>Detalhes que mudam a leitura dos números</summary>

@@ -1,0 +1,1 @@
+EcoMapBrasil: mapa do Brasil com os alertas de desmatamento do DETER dos últimos 12 meses.

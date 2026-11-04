@@ -10,7 +10,7 @@ import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
 import { corDoStatus } from "@/dados/animais";
 import { canaisDenuncia, fonteDenuncia, oQueInformar, sobreAnonimato } from "@/dados/denuncia";
-import { animaisDestaque, dadosAtualizadosEm, equipe, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
+import { animaisDestaque, dadosAtualizadosEm, equipe, fotoDaChamadaFinal, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
 
 import { BarrasAnimadas, LinhaDoTempo, UltimoPeriodo } from "./Graficos";
 import { MapaBiomas } from "./MapaBiomas";
@@ -374,7 +374,6 @@ function FaixaDeFoto({ foto, posicao = "center", children }: { foto: string; pos
 export function Inicio() {
   const irPara = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   const mico = slides.find((s) => s.rotulo === "Mico-leão-dourado") ?? slides[0]!;
-  const lobo = slides.find((s) => s.rotulo === "Lobo-guará") ?? slides[0]!;
 
   return (
     <div style={{ background: "var(--papel)" }}>
@@ -576,7 +575,8 @@ export function Inicio() {
         </div>
 
         {/* ── CHAMADA ── */}
-        <FaixaDeFoto foto={lobo.url}>
+        {/* A linha de fogo fica à direita da foto: no celular, o corte central só mostraria fumaça. */}
+        <FaixaDeFoto foto={fotoDaChamadaFinal.url} posicao="82% center">
           <Revelar>
             <h2 style={{ ...tituloSecao, fontSize: "clamp(40px, 7vw, 88px)", color: "var(--branco)", maxWidth: 800 }}>Passe adiante.</h2>
             <p style={{ color: "rgba(255,253,248,0.85)", fontSize: 20, maxWidth: 560, marginBottom: 36 }}>Quanto mais gente souber o tamanho do problema, mais difícil fica ignorá-lo.</p>
@@ -587,6 +587,13 @@ export function Inicio() {
                 <i className="fas fa-download" aria-hidden="true" /> Baixar os dados
               </a>
             </div>
+            <p style={{ color: "rgba(255,253,248,0.75)", fontSize: 13, margin: "28px 0 0" }}>
+              Foto:{" "}
+              <a href={fotoDaChamadaFinal.credito.link} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
+                {fotoDaChamadaFinal.credito.autor}
+              </a>{" "}
+              · {fotoDaChamadaFinal.credito.licenca} · Wikimedia Commons
+            </p>
           </Revelar>
         </FaixaDeFoto>
       </main>
@@ -636,8 +643,8 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
             <h3 style={tituloColuna}>Para ler mais</h3>
             {[
               ["https://alerta.mapbiomas.org/relatorio/", "Relatórios do MapBiomas"],
-              ["https://g1.globo.com/busca/?q=desmatamento", "Notícias"],
-              ["https://www.ibflorestas.org.br/conteudo/leis-ambientais", "Legislação"],
+              ["https://terrabrasilis.dpi.inpe.br/", "TerraBrasilis (INPE)"],
+              ["https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm", "Código Florestal"],
             ].map(([href, rotulo]) => (
               <a key={rotulo} href={href} target="_blank" rel="noopener noreferrer" className="link-rodape" style={{ display: "block", padding: "4px 0", textDecoration: "none" }}>
                 {rotulo}
@@ -654,7 +661,7 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
         </div>
         <div className="footer-bottom" style={{ borderTop: "1px solid rgba(255,253,248,0.12)", paddingTop: 24, display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: 13 }}>
           <span>
-            © 2025 EcoMapBrasil ·{" "}
+            © 2025–2026 EcoMapBrasil ·{" "}
             <Link href="/privacidade" className="link-rodape" style={{ textDecoration: "underline" }}>
               Política de privacidade
             </Link>{" "}

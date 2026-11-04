@@ -32,6 +32,17 @@ export const slides = [
   { url: `${SUPABASE_ANIMAIS}/micoleao-cke.png`, rotulo: "Mico-leão-dourado" },
 ];
 
+// A foto da seção final da Home ("Passe adiante"): queimada perto da Flona do Jacundá (RO),
+// em 07/08/2020. A licença CC BY pede crédito, que aparece na própria seção.
+export const fotoDaChamadaFinal = {
+  url: "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/SOBREVVO_EM_RONDONIA_DIA_07-08-2020_%28FOTO_BRUNO_KELLY%29_%2835%29_%2850224380121%29.jpg/1920px-SOBREVVO_EM_RONDONIA_DIA_07-08-2020_%28FOTO_BRUNO_KELLY%29_%2835%29_%2850224380121%29.jpg",
+  credito: {
+    autor: "Bruno Kelly/Amazônia Real",
+    licenca: "CC BY 2.0",
+    link: "https://commons.wikimedia.org/wiki/File:SOBREVVO_EM_RONDONIA_DIA_07-08-2020_(FOTO_BRUNO_KELLY)_(35)_(50224380121).jpg",
+  },
+};
+
 export const solucoes = [
   { titulo: "Consumo consciente", texto: "Evite produtos que contribuem para o desmatamento, como carne de origem duvidosa, madeira ilegal e óleo de palma não sustentável." },
   { titulo: "Apoie organizações", texto: "Contribua com instituições que trabalham para preservar os biomas brasileiros e combater o desmatamento ilegal." },
