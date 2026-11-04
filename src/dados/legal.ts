@@ -27,7 +27,7 @@ export type Documento = {
 };
 
 /** A data da versão em vigor dos dois documentos. */
-export const ATUALIZADO_EM = "2 de novembro de 2026";
+export const ATUALIZADO_EM = "4 de novembro de 2026";
 
 /** Onde fazer pedidos sobre dados: issue pública, com o modelo que avisa para não pôr dado pessoal. */
 export const CONTATO_DADOS = "https://github.com/ecomap-devs/semestre-4-nextjs/issues/new?template=pedido-de-dados.md";
@@ -181,6 +181,11 @@ export const privacidade: Documento = {
             [
               "[Wikimedia Commons](https://foundation.wikimedia.org/wiki/Policy:Privacy_policy)",
               "Parte das fotos das espécies",
+              "Seu endereço IP, como em qualquer imagem da web",
+            ],
+            [
+              "[Bosch](https://www.bosch.com.br/politica-de-privacidade/)",
+              "A foto da seção final da página inicial",
               "Seu endereço IP, como em qualquer imagem da web",
             ],
             [
@@ -394,6 +399,11 @@ export const termos: Documento = {
               "Fotos das espécies com crédito na ficha",
               "Autores do [Wikimedia Commons](https://commons.wikimedia.org)",
               "A de cada foto, indicada na ficha",
+            ],
+            [
+              "Foto da seção final da página inicial",
+              "[Bosch](https://www.bosch.com.br/noticias-e-historias/sustentabilidade/queimadas/)",
+              "Direitos reservados, conforme os [avisos legais da Bosch](https://www.bosch.com.br/avisos-legais/)",
             ],
             [
               "Fundos do mapa",

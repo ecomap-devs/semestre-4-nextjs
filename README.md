@@ -153,6 +153,7 @@ done
 | População de uma espécie | Só onde há estimativa publicada, com a fonte na ficha (hoje: onça na Mata Atlântica, mico-leão-dourado e arara-azul-de-lear). Escrita à mão em `src/dados/animais.ts` |
 | Descrição e ameaças de cada espécie | Escritas à mão em `src/dados/animais.ts`, sem número que não tenha fonte |
 | Fotos das espécies | As sete primeiras, no bucket `animals` do Supabase. As outras, do [Wikimedia Commons](https://commons.wikimedia.org), com autor, licença e link na ficha (`credito` em `src/dados/animais.ts`), como as licenças Creative Commons exigem |
+| Foto da seção "Passe adiante" | Do site da [Bosch](https://www.bosch.com.br/noticias-e-historias/sustentabilidade/queimadas/), com todos os direitos reservados. Vem direto de lá (`fotoDaChamadaFinal` em `src/dados/inicio.ts`) |
 
 Para atualizar na mão:
 

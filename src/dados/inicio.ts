@@ -32,6 +32,11 @@ export const slides = [
   { url: `${SUPABASE_ANIMAIS}/micoleao-cke.png`, rotulo: "Mico-leão-dourado" },
 ];
 
+// A foto da seção final da Home ("Passe adiante"), servida pelo site da Bosch: o endereço
+// está na CSP (`firebase.json`) e a Bosch, na política de privacidade e nos créditos
+// (`legal.ts`). Trocou a foto? Alinhe os dois.
+export const fotoDaChamadaFinal = "https://www.bosch.com.br/media/stories/sustentabilidade/queimadas/queimadas-bosch-banner-16x9.jpg";
+
 export const solucoes = [
   { titulo: "Consumo consciente", texto: "Evite produtos que contribuem para o desmatamento, como carne de origem duvidosa, madeira ilegal e óleo de palma não sustentável." },
   { titulo: "Apoie organizações", texto: "Contribua com instituições que trabalham para preservar os biomas brasileiros e combater o desmatamento ilegal." },

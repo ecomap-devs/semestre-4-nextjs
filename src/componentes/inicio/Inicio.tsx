@@ -10,7 +10,7 @@ import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
 import { corDoStatus } from "@/dados/animais";
 import { canaisDenuncia, fonteDenuncia, oQueInformar, sobreAnonimato } from "@/dados/denuncia";
-import { animaisDestaque, dadosAtualizadosEm, equipe, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
+import { animaisDestaque, dadosAtualizadosEm, equipe, fotoDaChamadaFinal, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
 
 import { BarrasAnimadas, LinhaDoTempo, UltimoPeriodo } from "./Graficos";
 import { MapaBiomas } from "./MapaBiomas";
@@ -374,7 +374,6 @@ function FaixaDeFoto({ foto, posicao = "center", children }: { foto: string; pos
 export function Inicio() {
   const irPara = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   const mico = slides.find((s) => s.rotulo === "Mico-leão-dourado") ?? slides[0]!;
-  const lobo = slides.find((s) => s.rotulo === "Lobo-guará") ?? slides[0]!;
 
   return (
     <div style={{ background: "var(--papel)" }}>
@@ -576,7 +575,7 @@ export function Inicio() {
         </div>
 
         {/* ── CHAMADA ── */}
-        <FaixaDeFoto foto={lobo.url}>
+        <FaixaDeFoto foto={fotoDaChamadaFinal}>
           <Revelar>
             <h2 style={{ ...tituloSecao, fontSize: "clamp(40px, 7vw, 88px)", color: "var(--branco)", maxWidth: 800 }}>Passe adiante.</h2>
             <p style={{ color: "rgba(255,253,248,0.85)", fontSize: 20, maxWidth: 560, marginBottom: 36 }}>Quanto mais gente souber o tamanho do problema, mais difícil fica ignorá-lo.</p>
