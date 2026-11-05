@@ -247,7 +247,10 @@ testar login num preview, adicione o endereço exato dele à chave. Não mexa na
 merge: é o que garante que o site no ar é código revisado. Deploy de árvore local não é
 reproduzível.
 
-**Para lançar uma versão:** num PR, `npm version 1.1.0 --no-git-tag-version`. Depois do
-merge, `git tag v1.1.0 && git push origin v1.1.0` na `main`. A release só registra a versão:
-o site já foi publicado no merge. Tag com hífen (`v1.1.0-rc.1`) é ensaio: vira rascunho, sem
-publicar nada.
+## Versões
+
+**Para lançar uma versão, siga o [RELEASES.md](RELEASES.md).** Em resumo: num PR,
+`npm version 1.1.0 --no-git-tag-version`; depois do merge, crie a tag `v1.1.0` na `main` pelo
+`git`, não pelo botão do GitHub. A release só registra a versão: o site já foi publicado no merge.
+Tag com hífen (`v1.1.0-rc.1`) é ensaio e vira rascunho. Assistente de IA não cria tag sem pedido
+explícito: uma tag `v*.*.*` na `main` publica uma versão.

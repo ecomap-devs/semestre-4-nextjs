@@ -265,6 +265,26 @@ limpo e não roda código de dependências, que fica no job `gerar`, só de leit
 para o segundo passam só os arquivos de dado. O preview usa o `firebase.json` da `main`:
 mudança de cabeçalho feita num PR só vale depois do merge.
 
+## 🏷️ Versões e releases
+
+O site vai ao ar a cada merge na `main`. Uma [release](https://github.com/ecomap-devs/semestre-4-nextjs/releases)
+não publica nada: ela só marca um momento que vale a pena reencontrar, como uma entrega.
+
+**Para lançar uma versão,** siga o guia **[RELEASES.md](RELEASES.md)**. Qualquer pessoa com escrita
+no repositório consegue:
+
+1. Num PR, rode `npm version 1.1.0 --no-git-tag-version`.
+2. Depois do merge, crie a tag na `main`, pelo `git`:
+
+   ```bash
+   git switch main
+   git pull
+   git tag v1.1.0
+   git push origin v1.1.0
+   ```
+
+O GitHub confere a versão e publica a release, com as notas geradas a partir dos PRs.
+
 ## 🔏 Privacidade e termos
 
 As páginas `/privacidade` e `/termos` (desde 02/11/2026) valem para o site e para o app.
