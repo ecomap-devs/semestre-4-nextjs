@@ -240,6 +240,7 @@ de `scripts/identidade/gerar.py`, que diz como refazer.
 | **CI** | Push ou PR na `main` | Lint, tipos, build e confere que cada rota virou HTML. Não usa secret |
 | **Preview do PR** | PR aberto | Dois jobs: o build roda o código do PR **sem** a conta de serviço; um job separado, que não executa código do PR, publica o `out/` num canal de preview que expira em 7 dias |
 | **Deploy para produção** | Merge na `main` (ou na mão) | Publica no endereço principal |
+| **Release** | Tag `v*.*.*` | Cria a release com as notas dos PRs. Só registra a versão: quem publica o site é o deploy. Tag com hífen (`v1.1.0-rc.1`) é ensaio e vira rascunho |
 | **Dados do PRODES** | Dia 1º de cada mês (ou na mão) | Regera `src/dados/prodes.ts`; se mudou, roda lint, tipos e build, sobe uma branch `dados/…` e abre uma **issue** com o link do PR preenchido. Não usa secret |
 | **Dados do DETER** | Dia 1º de cada mês (ou na mão) | O mesmo para `public/alertas-desmatamento.json` (~15 MB, ~2 MB comprimido) e `public/alertas/` (o de 12 meses tem ~5 MB, ~1,2 MB comprimido), gerados em Python. Compara os alertas, não os bytes |
 | **Dados das espécies** | Dia 1º de cada mês (ou na mão) | O mesmo para `src/dados/especies.ts`. Se uma espécie do catálogo sair da lista nacional, ela passa a aparecer como "Não ameaçada" no PR |
