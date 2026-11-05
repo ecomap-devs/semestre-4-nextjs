@@ -1,0 +1,65 @@
+name: Release
+
+# Publica uma versão do site quando alguém cria uma tag na main:
+#
+#   git tag v1.1.0 && git push origin v1.1.0
+#
+# Antes, a versão de package.json precisa ser a da tag (npm version 1.1.0
+# --no-git-tag-version, num PR). A release só registra a versão: quem publica o site é o
+# workflow de deploy, a cada merge na main.
+#
+# Tag com hífen (v1.1.0-rc.1) é ensaio: a versão só precisa bater sem o sufixo, a tag não
+# precisa estar na main, e o resultado é um rascunho, que não aparece para ninguém de
+# fora. Apague o rascunho e a tag depois.
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+# Precisa de escrita para criar a release, e por isso não instala dependência nenhuma:
+# só o checkout, o jq e o gh, que já vêm no runner.
+permissions: {}
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    name: Publicar a release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Conferir a versão
+        run: |
+          versao="${GITHUB_REF_NAME#v}"
+          no_package=$(jq -r .version package.json)
+          if [ "$no_package" != "${versao%%-*}" ]; then
+            echo "::error::A tag é $GITHUB_REF_NAME, e o package.json diz $no_package"
+            exit 1
+          fi
+          case "$GITHUB_REF_NAME" in
+            *-*) echo "Ensaio: sem conferir a main." ;;
+            *)
+              if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+                echo "::error::A tag precisa apontar para um commit da main"
+                exit 1
+              fi
+              ;;
+          esac
+
+      - name: Criar a release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-*) ensaio=(--draft --prerelease) ;;
+            *) ensaio=() ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME: site do EcoMapBrasil" --notes "No ar em https://ecomapbrasil-17756.web.app" --generate-notes "${ensaio[@]}"
