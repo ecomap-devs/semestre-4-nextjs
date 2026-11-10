@@ -6,7 +6,7 @@ import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from "firebase/firest
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 
 import { Dialogo } from "@/componentes/comum/Dialogo";
-import { caminhoDoAvatar, fotoConfiavel, prepararAvatar } from "@/lib/avatar";
+import { caminhoDaResposta, fotoConfiavel, paraBase64, prepararAvatar } from "@/lib/avatar";
 import { auth, db } from "@/lib/firebase";
 import { supabase } from "@/lib/supabase";
 
@@ -36,18 +36,26 @@ function mensagemDeErro(erro: unknown): string {
  * Sobe o avatar e devolve a URL pública, ou "" se falhar. Falha na foto não derruba
  * o cadastro: perder a conta por causa da foto seria pior que ficar sem foto.
  *
- * O arquivo é reencodado para WebP antes de subir, e o caminho é `<uid>/<uuid>.webp`:
- * imprevisível, e o bucket não deixa sobrescrever (revisão de 01/10/2026 — antes o
- * caminho era `<uid>.<extensão do arquivo>`, com qualquer tipo e tamanho).
+ * O arquivo é reencodado para WebP e vai para a Edge Function `enviar-avatar`, com o ID
+ * token do Firebase. Ela confere o login, o tipo pelos bytes e o limite de fotos por dia,
+ * e grava em `<uid>/<uuid>.webp` (o código mora no semestre-4-flutter). Até 10/11/2026 o
+ * site gravava direto no bucket, que aceitava arquivo de qualquer pessoa, até sem login.
  */
-async function enviarAvatar(uid: string, foto: File): Promise<string> {
+async function enviarAvatar(usuario: User, foto: File): Promise<string> {
   try {
     const imagem = await prepararAvatar(foto);
-    const caminho = caminhoDoAvatar(uid);
-    const bucket = supabase().storage.from("avatars");
-    const { error } = await bucket.upload(caminho, imagem, { contentType: "image/webp", upsert: false });
-    if (error) return "";
-    return fotoConfiavel(bucket.getPublicUrl(caminho).data.publicUrl);
+    const token = await usuario.getIdToken();
+    const { data, error } = await supabase().functions.invoke("enviar-avatar", {
+      body: { imagem: await paraBase64(imagem) },
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (error) {
+      console.error("Foto de perfil não subiu:", error);
+      return "";
+    }
+    const caminho = caminhoDaResposta(data, usuario.uid);
+    if (!caminho) return "";
+    return fotoConfiavel(supabase().storage.from("avatars").getPublicUrl(caminho).data.publicUrl);
   } catch {
     return "";
   }
@@ -59,7 +67,7 @@ async function enviarAvatar(uid: string, foto: File): Promise<string> {
  */
 async function concluirPerfil(usuario: User, nome: string, foto: File | null) {
   let photoURL = fotoConfiavel(usuario.photoURL);
-  if (foto && !photoURL) photoURL = await enviarAvatar(usuario.uid, foto);
+  if (foto && !photoURL) photoURL = await enviarAvatar(usuario, foto);
   const nomeFinal = nome.trim().slice(0, MAX_NOME);
   await updateProfile(usuario, { displayName: nomeFinal, photoURL: photoURL || null });
   await usuario.reload();

@@ -312,7 +312,7 @@ Revisão de 01/10/2026 (Codex), corrigida no mesmo dia:
 |---|---|
 | Avaliações | Uma por pessoa (o id é o uid); esquema completo também na edição; hora do servidor; sem campo extra. Testado em `firestore-testes/` do semestre-4-flutter |
 | Foto do avatar | Só do bucket `avatars` do projeto (nas rules, no código e na CSP), com `referrerPolicy="no-referrer"`. Antes, uma URL livre podia registrar o IP de quem abrisse as avaliações |
-| Upload do avatar | Reencodado para WebP de até 512 px no navegador (só imagem de verdade, sem EXIF), em `<uid>/<uuid>.webp`, sem sobrescrever |
+| Upload do avatar | Reencodado para WebP de até 512 px no navegador (só imagem de verdade, sem EXIF). Desde 10/11/2026 vai pela Edge Function `enviar-avatar`, que confere o login do Firebase, o tipo pelos bytes e 5 fotos por pessoa por dia, e grava em `<uid>/<uuid>.webp`, sem sobrescrever |
 | Preview do PR | A conta de serviço não fica mais no job que roda o código do PR |
 | Cabeçalhos | CSP com os domínios usados, `frame-ancestors 'none'`, `nosniff`, `Referrer-Policy`, `Permissions-Policy` |
 | Modais | Foco preso no diálogo, fundo inerte, Esc fecha, o foco volta à origem (`src/componentes/comum/Dialogo.tsx`) |
@@ -324,6 +324,10 @@ Revisão de 01/10/2026 (Codex), corrigida no mesmo dia:
   entram pelo Firebase Auth. Amarrar exige a integração de terceiros do Supabase com o
   Firebase, que pede uma claim `role` em todos os usuários (Admin SDK ou funções de
   bloqueio). As políticas do bucket estão em `supabase/avatars.sql` do semestre-4-flutter.
+  **Resolvido de outro jeito em 10/11/2026:** a foto passa pela Edge Function
+  `enviar-avatar`, que confere o ID token do Firebase. O envio direto ao bucket só fecha
+  depois de uma versão nova do app (`supabase/avatars-so-pela-funcao.sql` do
+  semestre-4-flutter).
 - **Mesma conta de serviço no preview e na produção.** Separar exige criar outra conta no
   Google Cloud com permissão só de canais de preview.
 - **`'unsafe-inline'` em `script-src`.** A exportação estática do Next põe scripts inline

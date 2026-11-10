@@ -43,7 +43,30 @@ export async function prepararAvatar(arquivo: File): Promise<Blob> {
   }
 }
 
-/** `<uid>/<uuid>.webp`: imprevisível, e o bucket não deixa sobrescrever. */
-export function caminhoDoAvatar(uid: string): string {
-  return `${uid}/${crypto.randomUUID()}.webp`;
+/** O formato que a função `enviar-avatar` grava: `<uid>/<uuid>.<ext>`. */
+const FORMATO_DO_CAMINHO = /^[A-Za-z0-9]{1,128}\/[0-9a-f-]{32,36}\.(jpg|png|webp)$/;
+
+/**
+ * O caminho que a função `enviar-avatar` devolveu, se tiver o formato dela e for da
+ * pasta de `uid`; senão, `null`. A URL pública sai daqui, então uma resposta estranha
+ * não vira foto de perfil. O app Flutter tem a mesma conferência (`caminhoDoAvatar`).
+ */
+export function caminhoDaResposta(resposta: unknown, uid: string): string | null {
+  const caminho =
+    typeof resposta === "object" && resposta !== null && "caminho" in resposta
+      ? (resposta as { caminho: unknown }).caminho
+      : null;
+  if (typeof caminho !== "string" || !caminho.startsWith(`${uid}/`)) return null;
+  return FORMATO_DO_CAMINHO.test(caminho) ? caminho : null;
+}
+
+/** O conteúdo de um Blob em base64 puro, sem o `data:...;base64,` da frente. */
+export async function paraBase64(blob: Blob): Promise<string> {
+  const dataUrl = await new Promise<string>((ok, falha) => {
+    const leitor = new FileReader();
+    leitor.onload = () => ok(String(leitor.result));
+    leitor.onerror = () => falha(leitor.error);
+    leitor.readAsDataURL(blob);
+  });
+  return dataUrl.slice(dataUrl.indexOf(",") + 1);
 }
