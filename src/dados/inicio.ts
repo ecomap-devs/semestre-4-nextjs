@@ -7,8 +7,6 @@ import { biomas } from "./biomas";
 import { listaNacional } from "./especies";
 import { prodes, prodesAtualizadoEm } from "./prodes";
 
-const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/object/public/animals";
-
 export type Membro = { nome: string };
 
 // O React listava quatro; o grupo é de cinco.
@@ -25,12 +23,16 @@ export const equipe: Membro[] = [
 // "queda da população" sem fonte em cada card.
 export const animaisDestaque = animais.filter(ehAmeacada).slice(0, 6);
 
-export const slides = [
-  { url: `${SUPABASE_ANIMAIS}/onca-pintada.png`, rotulo: "Onça-pintada" },
-  { url: `${SUPABASE_ANIMAIS}/arara-azul-de-lear_01_0.png`, rotulo: "Arara-azul-de-lear" },
-  { url: `${SUPABASE_ANIMAIS}/lobo-guara.png`, rotulo: "Lobo-guará" },
-  { url: `${SUPABASE_ANIMAIS}/micoleao-cke.png`, rotulo: "Mico-leão-dourado" },
-];
+// As fotos da abertura são as do catálogo, com o mesmo crédito. Até 10/11/2026 eram quatro
+// arquivos do bucket `animals`, sem origem registrada; desde então todas vêm do Wikimedia
+// Commons, e a licença pede o autor à vista, na própria abertura.
+const ABERTURA = ["Onça-pintada", "Arara-azul-de-lear", "Lobo-guará", "Mico-leão-dourado"];
+
+export const slides = ABERTURA.map((nome) => {
+  const animal = animais.find((a) => a.nome === nome);
+  if (!animal) throw new Error(`Espécie da abertura fora do catálogo: ${nome}`);
+  return { url: animal.imagem, rotulo: animal.nome, credito: animal.credito };
+});
 
 // A foto da seção final da Home ("Passe adiante"): queimada perto da Flona do Jacundá (RO),
 // em 07/08/2020. A licença CC BY pede crédito, que aparece na própria seção.

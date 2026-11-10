@@ -8,7 +8,7 @@ import { Avaliacoes } from "@/componentes/avaliacoes/Avaliacoes";
 import { Contador, Revelar } from "@/componentes/comum/efeitos";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
-import { corDoStatus } from "@/dados/animais";
+import { corDoStatus, type Credito } from "@/dados/animais";
 import { canaisDenuncia, fonteDenuncia, oQueInformar, sobreAnonimato } from "@/dados/denuncia";
 import { animaisDestaque, dadosAtualizadosEm, equipe, fotoDaChamadaFinal, linksNavegacao, numeros, slides, solucoes, ultimoPeriodo } from "@/dados/inicio";
 
@@ -301,9 +301,13 @@ function Slideshow() {
               </button>
             ))}
           </div>
-          <p aria-hidden="true" style={{ fontSize: 15, color: "rgba(255,253,248,0.85)", fontStyle: "italic" }}>
-            {slides[atual]?.rotulo}
-          </p>
+          {/* O nome do animal da vez e o crédito da foto, que a licença CC pede à vista. */}
+          <div style={{ minWidth: 0 }}>
+            <p aria-hidden="true" style={{ fontSize: 15, color: "rgba(255,253,248,0.85)", fontStyle: "italic" }}>
+              {slides[atual]?.rotulo}
+            </p>
+            {slides[atual] && <CreditoDaFoto credito={slides[atual].credito} />}
+          </div>
           <button type="button" className="rolar-hero" onClick={() => irPara("numeros")} aria-label="Rolar para o conteúdo" style={{ marginLeft: "auto", background: "none", border: "none", color: "var(--branco)", fontSize: 18, cursor: "pointer", minWidth: 44, minHeight: 44, animation: "descer 2s ease-in-out infinite" }}>
             <i className="fas fa-arrow-down" />
           </button>
@@ -360,6 +364,19 @@ function VoltarAoTopo() {
 }
 
 /** Faixa de foto de ponta a ponta com uma frase só. */
+/** "Foto: autor · licença · Wikimedia Commons", sobre fundo escuro, como na seção "Passe adiante". */
+function CreditoDaFoto({ credito }: { credito: Credito }) {
+  return (
+    <p style={{ fontSize: 12, color: "rgba(255,253,248,0.7)", marginTop: 4 }}>
+      Foto:{" "}
+      <a href={credito.link} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>
+        {credito.autor}
+      </a>{" "}
+      · {credito.licenca} · Wikimedia Commons
+    </p>
+  );
+}
+
 function FaixaDeFoto({ foto, posicao = "center", children }: { foto: string; posicao?: string; children: React.ReactNode }) {
   return (
     <section className="foto-fixa" style={{ position: "relative", minHeight: "min(85vh, 760px)", display: "flex", alignItems: "flex-end", backgroundImage: `url('${foto}')`, backgroundSize: "cover", backgroundPosition: posicao, backgroundColor: "var(--mata-noite)" }}>
@@ -428,6 +445,7 @@ export function Inicio() {
               Restam cerca de <span style={{ color: "var(--sol)" }}>4.800</span> micos-leões-dourados na natureza.
             </p>
             <p style={{ fontSize: 18, color: textoClaro, marginTop: 20 }}>Mico-leão-dourado, Mata Atlântica · censo de 2023 da Associação Mico-Leão-Dourado</p>
+            <CreditoDaFoto credito={mico.credito} />
           </Revelar>
         </FaixaDeFoto>
 

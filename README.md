@@ -152,7 +152,7 @@ done
 | Status de cada espécie | "No Brasil": a mesma lista do MMA; fora dela, "Não ameaçada". "No mundo": a Lista Vermelha da IUCN, pela API do GBIF, pelo nome que o GBIF aceita e, quando o GBIF não liga a espécie à IUCN, direto no checklist da IUCN publicado lá |
 | População de uma espécie | Só onde há estimativa publicada, com a fonte na ficha (hoje: onça na Mata Atlântica, mico-leão-dourado e arara-azul-de-lear). Escrita à mão em `src/dados/animais.ts` |
 | Descrição e ameaças de cada espécie | Escritas à mão em `src/dados/animais.ts`, sem número que não tenha fonte |
-| Fotos das espécies | As sete primeiras, no bucket `animals` do Supabase. As outras, do [Wikimedia Commons](https://commons.wikimedia.org), com autor, licença e link na ficha (`credito` em `src/dados/animais.ts`), como as licenças Creative Commons exigem |
+| Fotos das espécies | Todas do [Wikimedia Commons](https://commons.wikimedia.org), com autor, licença e link na ficha e na abertura da página inicial (`credito` em `src/dados/animais.ts`), como as licenças Creative Commons exigem. Até 10/11/2026 as sete primeiras eram do bucket `animals` do Supabase, sem origem registrada |
 | Foto da seção "Passe adiante" | Bruno Kelly/Amazônia Real, do Wikimedia Commons (CC BY 2.0), com o crédito na própria seção (`fotoDaChamadaFinal` em `src/dados/inicio.ts`) |
 
 Para atualizar na mão:
