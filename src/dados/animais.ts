@@ -7,12 +7,14 @@
 // e a "arara-azul" com foto da arara-azul-de-lear.
 //
 // Desde 28/10/2026 o catálogo tem também espécies fora da lista nacional, com o status
-// "Não ameaçada", para mostrar a fauna de cada bioma e não só a que está sumindo. As
-// fotos das espécies novas vêm do Wikimedia Commons, com autor e licença em `credito`.
+// "Não ameaçada", para mostrar a fauna de cada bioma e não só a que está sumindo.
+//
+// Todas as fotos vêm do Wikimedia Commons, com autor e licença em `credito`. Até
+// 10/11/2026 as sete primeiras eram do bucket `animals` do Supabase, sem crédito: vieram
+// dos semestres anteriores e, pelo nome dos arquivos, eram cópia das imagens de terceiros
+// que o React usava (Biologia Net, Toda Matéria, Brasil Escola, Agência Brasil).
 
 import { statusEspecies, type CategoriaIUCN, type CategoriaNacional } from "./especies";
-
-const SUPABASE_ANIMAIS = "https://wqvxjttidoxcblkfjoaf.supabase.co/storage/v1/object/public/animals";
 
 /** Status na lista nacional, pelo nome usado no site. Fora da lista: "Não ameaçada". */
 export type StatusConservacao = "Extinta" | "Extinta na natureza" | "Regionalmente extinta" | "Criticamente em perigo" | "Em perigo" | "Vulnerável" | "Não ameaçada";
@@ -67,14 +69,8 @@ type Especie = {
   descricao: string;
   ameacas: string[];
   imagem: string;
-  /**
-   * Autor e licença, nas fotos do Wikimedia Commons. As sete do bucket `animals` vieram
-   * dos semestres anteriores sem crédito registrado, e pelo nome dos arquivos várias são
-   * cópia das imagens de terceiros que o React usava (Biologia Net, Toda Matéria, Brasil
-   * Escola, Agência Brasil). A origem está em revisão; os termos de uso dizem isso e
-   * oferecem crédito ou remoção (02/11/2026).
-   */
-  credito?: Credito;
+  /** Autor, licença e a página da foto no Wikimedia Commons. Toda espécie tem. */
+  credito: Credito;
   populacao?: Populacao;
 };
 
@@ -93,7 +89,8 @@ const catalogo: Especie[] = [
     descricao:
       "O maior felino das Américas. Na Mata Atlântica, que já perdeu cerca de 85% do habitat da espécie, restam provavelmente menos de 300 onças, em grupos pequenos e isolados entre si.",
     ameacas: ["Perda de habitat", "Fragmentação florestal", "Morte causada por pessoas"],
-    imagem: `${SUPABASE_ANIMAIS}/onca-pintada.png`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b2/On%C3%A7a-pintada-PE_Encontro_das_%C3%81guas-Thiagomarcelcampi%28001%29.jpg/960px-On%C3%A7a-pintada-PE_Encontro_das_%C3%81guas-Thiagomarcelcampi%28001%29.jpg",
+    credito: { autor: "Thiagomarcelcampi", licenca: "CC BY-SA 4.0", link: "https://commons.wikimedia.org/wiki/File:On%C3%A7a-pintada-PE_Encontro_das_%C3%81guas-Thiagomarcelcampi(001).jpg" },
     populacao: {
       texto: "menos de 300 na Mata Atlântica",
       fonte: "Paviolo et al., Scientific Reports (2016)",
@@ -108,7 +105,8 @@ const catalogo: Especie[] = [
     descricao:
       "Só existe no norte da Bahia, onde faz ninho em paredões de arenito e se alimenta sobretudo do coquinho do licuri. A população cresce com a proteção dos dormitórios e do licurizal, mas o tráfico continua.",
     ameacas: ["Tráfico de animais", "Perda do licuri", "Perda de habitat"],
-    imagem: `${SUPABASE_ANIMAIS}/arara-azul-de-lear_01_0.png`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Anodorhynchus_leari_-Rio_de_Janeiro_Zoo%2C_Brazil-8a.jpg/960px-Anodorhynchus_leari_-Rio_de_Janeiro_Zoo%2C_Brazil-8a.jpg",
+    credito: { autor: "Marcos Pereira", licenca: "CC BY 2.0", link: "https://commons.wikimedia.org/wiki/File:Anodorhynchus_leari_-Rio_de_Janeiro_Zoo,_Brazil-8a.jpg" },
     populacao: {
       texto: "2.548 aves (censo de 2024)",
       fonte: "Censo do CEMAVE/ICMBio, via Fundação Biodiversitas",
@@ -123,7 +121,8 @@ const catalogo: Especie[] = [
     descricao:
       "Só existe na Mata Atlântica do Rio de Janeiro. Reintroduções e corredores florestais tiraram a espécie da beira da extinção; o surto de febre amarela de 2016 a 2018 derrubou a população de cerca de 3.700 para 2.500, que voltou a crescer.",
     ameacas: ["Fragmentação florestal", "Febre amarela", "Baixa diversidade genética"],
-    imagem: `${SUPABASE_ANIMAIS}/micoleao-cke.png`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Mico-le%C3%A3o-dourado_RPPN_do_Mico.jpg/960px-Mico-le%C3%A3o-dourado_RPPN_do_Mico.jpg",
+    credito: { autor: "Rodrigo.Argenton", licenca: "CC BY-SA 4.0", link: "https://commons.wikimedia.org/wiki/File:Mico-le%C3%A3o-dourado_RPPN_do_Mico.jpg" },
     populacao: {
       texto: "cerca de 4.800 (censo de 2023)",
       fonte: "Associação Mico-Leão-Dourado",
@@ -138,7 +137,8 @@ const catalogo: Especie[] = [
     descricao:
       "O maior canídeo da América do Sul vive nos campos e savanas do Cerrado. A expansão agrícola toma o seu habitat, e os atropelamentos estão entre as principais causas de morte da espécie.",
     ameacas: ["Expansão agrícola", "Atropelamentos", "Perda de habitat"],
-    imagem: `${SUPABASE_ANIMAIS}/lobo-guara.png`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0a/Chrysocyon_brachyurus_no_Parque_Nacional_da_Serra_da_Canastra_por_Celso_Ferrarezi_Jr_%2807%29.jpg/960px-Chrysocyon_brachyurus_no_Parque_Nacional_da_Serra_da_Canastra_por_Celso_Ferrarezi_Jr_%2807%29.jpg",
+    credito: { autor: "Ferrarezi Jr.", licenca: "CC BY-SA 4.0", link: "https://commons.wikimedia.org/wiki/File:Chrysocyon_brachyurus_no_Parque_Nacional_da_Serra_da_Canastra_por_Celso_Ferrarezi_Jr_(07).jpg" },
   },
   {
     nome: "Tamanduá-bandeira",
@@ -148,7 +148,8 @@ const catalogo: Especie[] = [
     descricao:
       "Come formigas e cupins e tem um filhote por vez, depois de cerca de seis meses de gestação, por isso a população demora a se recuperar. Queimadas, atropelamentos e a perda de habitat no Cerrado são as maiores ameaças.",
     ameacas: ["Queimadas", "Atropelamentos", "Perda de habitat"],
-    imagem: `${SUPABASE_ANIMAIS}/tamandua-bandeira-2.png`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/07/185_Giant_anteater_in_Encontro_das_%C3%81guas_State_Park_Photo_by_Giles_Laurent.jpg/960px-185_Giant_anteater_in_Encontro_das_%C3%81guas_State_Park_Photo_by_Giles_Laurent.jpg",
+    credito: { autor: "Giles Laurent", licenca: "CC BY-SA 4.0", link: "https://commons.wikimedia.org/wiki/File:185_Giant_anteater_in_Encontro_das_%C3%81guas_State_Park_Photo_by_Giles_Laurent.jpg" },
   },
   {
     nome: "Boto-cor-de-rosa",
@@ -158,7 +159,8 @@ const catalogo: Especie[] = [
     descricao:
       "O maior golfinho de rio do mundo vive nos rios da Amazônia. É morto para servir de isca na pesca da piracatinga, se enrosca em redes de pesca e perde rios livres para as hidrelétricas, que isolam as populações.",
     ameacas: ["Captura para isca de pesca", "Pesca acidental", "Hidrelétricas"],
-    imagem: `${SUPABASE_ANIMAIS}/banner_blog_novo_24.png`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Inia_geoffrensis_179341177.jpg/960px-Inia_geoffrensis_179341177.jpg",
+    credito: { autor: "Diogo Luiz", licenca: "CC BY-SA 4.0", link: "https://commons.wikimedia.org/wiki/File:Inia_geoffrensis_179341177.jpg" },
   },
   {
     nome: "Ararinha-azul",
@@ -168,7 +170,8 @@ const catalogo: Especie[] = [
     descricao:
       "Desapareceu da natureza em 2000 e sobreviveu só em cativeiro. Em 2022, as primeiras aves criadas em cativeiro foram soltas em Curaçá, na Caatinga da Bahia; a lista nacional a classifica como criticamente em perigo, e a IUCN ainda como extinta na natureza.",
     ameacas: ["Captura para o tráfico", "Perda das matas de caraibeira", "População muito pequena"],
-    imagem: `${SUPABASE_ANIMAIS}/ARARINHA_AZUL-795.jpg`,
+    imagem: "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ac/Cyanopsitta_spixii_-Vogelpark_Walsrode%2C_Walsrode%2C_Germany-1980.jpg/960px-Cyanopsitta_spixii_-Vogelpark_Walsrode%2C_Walsrode%2C_Germany-1980.jpg",
+    credito: { autor: "Rüdiger Stehn", licenca: "CC BY-SA 2.0", link: "https://commons.wikimedia.org/wiki/File:Cyanopsitta_spixii_-Vogelpark_Walsrode,_Walsrode,_Germany-1980.jpg" },
   },
   {
     nome: "Sauim-de-coleira",
