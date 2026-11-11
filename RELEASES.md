@@ -14,7 +14,7 @@ estado do site naquele momento, com as notas do que mudou desde a anterior.
 
 | | Quando acontece | O que faz |
 |---|---|---|
-| **Merge na `main`** | A cada PR | Publica o site em [ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app) |
+| **Merge na `main`** | A cada PR | Publica o site em [ecomapbrasil.web.app](https://ecomapbrasil.web.app) |
 | **Release** | Quando alguém cria uma tag | Só registra a versão, sem mudar nada no ar |
 
 Por isso, criar uma tag não coloca nada no ar, e apagar uma release não tira nada do ar.
