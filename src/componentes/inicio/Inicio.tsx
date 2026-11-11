@@ -1,7 +1,8 @@
 "use client";
 
+import { type User } from "firebase/auth";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
 import { Avaliacoes } from "@/componentes/avaliacoes/Avaliacoes";
@@ -29,6 +30,8 @@ const CSS = `
   .nav-link:hover { color: var(--mata); }
   .cabecalho-foto .nav-link { color: rgba(255,253,248,0.85); }
   .cabecalho-foto .nav-link:hover { color: var(--branco); }
+  .item-conta { display: block; width: 100%; text-align: left; background: none; border: none; border-radius: calc(var(--raio) - 2px); padding: 10px 12px; font-size: 15px; color: var(--tinta); cursor: pointer; }
+  .item-conta:hover, .item-conta:focus-visible { background: var(--papel-2); }
   .seta-hero { transition: background 0.15s; background: rgba(0,0,0,0.25); }
   .seta-hero:hover { background: rgba(0,0,0,0.5); }
   .botao-claro { background: var(--branco); color: var(--tinta); }
@@ -88,8 +91,81 @@ const tituloSecao = { fontSize: "clamp(32px, 5vw, 56px)", marginBottom: 18, lett
 const introSecao = { fontSize: 19, color: "var(--tinta-2)", maxWidth: 580 } as const;
 const textoClaro = "rgba(255,253,248,0.78)";
 
+/**
+ * A foto e o nome de quem está logado, que abrem Sair e Apagar conta, como o menu da
+ * foto no app. Até 11/11/2026 o "Sair" ficava solto ao lado do nome; com o "Apagar
+ * conta" a linha não caberia em 1024 px, onde o menu do topo já está no limite.
+ *
+ * É um botão que mostra e esconde a lista (não um `role="menu"`, que pediria setas):
+ * fecha com Esc, com clique fora e ao escolher.
+ */
+function MenuDaConta({ usuario, sobreFoto }: { usuario: User; sobreFoto: boolean }) {
+  const { sair, abrirApagarConta } = useAuth();
+  const [aberto, setAberto] = useState(false);
+  const caixa = useRef<HTMLDivElement>(null);
+  const botao = useRef<HTMLButtonElement>(null);
+  const id = useId();
+
+  useEffect(() => {
+    if (!aberto) return;
+    const aoClicar = (e: PointerEvent) => {
+      if (!caixa.current?.contains(e.target as Node)) setAberto(false);
+    };
+    const aoTeclar = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setAberto(false);
+      botao.current?.focus();
+    };
+    document.addEventListener("pointerdown", aoClicar);
+    document.addEventListener("keydown", aoTeclar);
+    return () => {
+      document.removeEventListener("pointerdown", aoClicar);
+      document.removeEventListener("keydown", aoTeclar);
+    };
+  }, [aberto]);
+
+  const foto = fotoConfiavel(usuario.photoURL);
+  return (
+    <div ref={caixa} style={{ position: "relative", paddingLeft: 20, borderLeft: `1px solid ${sobreFoto ? "rgba(255,253,248,0.3)" : "var(--linha)"}` }}>
+      <button ref={botao} type="button" className="nav-link" aria-expanded={aberto} aria-controls={`${id}-conta`} onClick={() => setAberto((v) => !v)} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14 }}>
+        {foto && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={foto} alt="" referrerPolicy="no-referrer" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
+        )}
+        <span>{usuario.displayName || usuario.email}</span>
+        <i className={`fas ${aberto ? "fa-chevron-up" : "fa-chevron-down"}`} aria-hidden="true" style={{ fontSize: 11 }} />
+      </button>
+      {aberto && (
+        <div id={`${id}-conta`} style={{ position: "absolute", right: 0, top: "calc(100% + 10px)", minWidth: 180, background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", boxShadow: "0 8px 24px rgba(29,38,32,0.15)", padding: 6 }}>
+          <button
+            type="button"
+            className="item-conta"
+            onClick={() => {
+              setAberto(false);
+              void sair();
+            }}
+          >
+            Sair
+          </button>
+          <button
+            type="button"
+            className="item-conta"
+            onClick={() => {
+              setAberto(false);
+              abrirApagarConta();
+            }}
+            style={{ color: "var(--terra)" }}
+          >
+            Apagar conta
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Cabecalho() {
-  const { usuario, abrirLogin, sair } = useAuth();
+  const { usuario, abrirLogin, sair, abrirApagarConta } = useAuth();
   const [menuAberto, setMenuAberto] = useState(false);
   const [rolou, setRolou] = useState(false);
 
@@ -141,16 +217,7 @@ function Cabecalho() {
           </Link>
           {/* Enquanto o Firebase não responde, o espaço fica vazio em vez de piscar "Entrar". */}
           {usuario === undefined ? null : usuario ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, paddingLeft: 20, borderLeft: `1px solid ${sobreFoto ? "rgba(255,253,248,0.3)" : "var(--linha)"}` }}>
-              {fotoConfiavel(usuario.photoURL) && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={fotoConfiavel(usuario.photoURL)} alt="" referrerPolicy="no-referrer" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover" }} />
-              )}
-              <span style={{ fontSize: 14, color: sobreFoto ? "var(--branco)" : "var(--tinta-2)" }}>{usuario.displayName || usuario.email}</span>
-              <button type="button" onClick={() => void sair()} className="nav-link" style={{ fontSize: 14 }}>
-                Sair
-              </button>
-            </div>
+            <MenuDaConta usuario={usuario} sobreFoto={sobreFoto} />
           ) : (
             <button type="button" onClick={abrirLogin} className={`botao ${sobreFoto ? "botao-vazado" : "botao-contorno"}`} style={{ padding: "6px 16px", fontSize: 14 }}>
               Entrar
@@ -179,16 +246,28 @@ function Cabecalho() {
             Quiz
           </Link>
           {usuario === undefined ? null : usuario ? (
-            <button
-              type="button"
-              onClick={() => {
-                void sair();
-                setMenuAberto(false);
-              }}
-              style={{ ...itemMenuMobile, color: "var(--tinta-3)" }}
-            >
-              Sair
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  void sair();
+                  setMenuAberto(false);
+                }}
+                style={{ ...itemMenuMobile, color: "var(--tinta-3)" }}
+              >
+                Sair
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  abrirApagarConta();
+                  setMenuAberto(false);
+                }}
+                style={{ ...itemMenuMobile, color: "var(--terra)" }}
+              >
+                Apagar conta
+              </button>
+            </>
           ) : (
             <button
               type="button"

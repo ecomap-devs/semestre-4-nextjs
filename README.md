@@ -295,7 +295,7 @@ recebem algo (Firebase, Supabase, Gemini, Esri, Wikimedia, GitHub) e as licença
 
 | Ponto | Como ficou |
 |---|---|
-| Pedidos sobre dados (LGPD, art. 18) | Por issue pública, com o modelo `.github/ISSUE_TEMPLATE/pedido-de-dados.md`, que avisa para não escrever dado pessoal. Apagar conta, avaliação e foto de perfil ainda é feito pela equipe: o site e o app não têm esse botão |
+| Pedidos sobre dados (LGPD, art. 18) | Por issue pública, com o modelo `.github/ISSUE_TEMPLATE/pedido-de-dados.md`, que avisa para não escrever dado pessoal. Desde 11/11/2026, a conta se apaga pelo botão **Apagar conta**, no menu com o nome (site) ou na foto (app), com a senha de novo: saem a conta, o perfil, as avaliações, a foto de perfil e as linhas de limite (função `apagar-conta`, no semestre-4-flutter). Apagar só a avaliação ou só a foto ainda é feito pela equipe |
 | Identificação por foto | Só a partir de 18 anos: os [termos do Gemini](https://ai.google.dev/gemini-api/terms) proíbem usar a API em serviço provável de ser acessado por menores. O aviso está na página Fotos |
 | Cadastro | O modal avisa que criar a conta é concordar com os termos e a política, e que nome e foto aparecem nas avaliações |
 | Rodapé | Links nas duas páginas no rodapé da Home e no da página Animais |
