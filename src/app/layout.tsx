@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   description: "Desmatamento e fauna ameaçada nos biomas brasileiros, em mapa, gráfico e ficha de espécie.",
   // Ícones e imagem de compartilhamento são arquivos em src/app/ (scripts/identidade/gerar.py).
-  metadataBase: new URL("https://ecomapbrasil-17756.web.app"),
+  metadataBase: new URL("https://ecomapbrasil.web.app"),
   openGraph: { type: "website", siteName: "EcoMapBrasil", locale: "pt_BR" },
   twitter: { card: "summary_large_image" },
 };

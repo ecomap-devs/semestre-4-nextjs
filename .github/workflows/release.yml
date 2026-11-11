@@ -64,4 +64,4 @@ jobs:
             *-*) ensaio=(--draft --prerelease) ;;
             *) ensaio=() ;;
           esac
-          gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME: site do EcoMapBrasil" --notes "No ar em https://ecomapbrasil-17756.web.app" --generate-notes "${ensaio[@]}"
+          gh release create "$GITHUB_REF_NAME" -R "$GITHUB_REPOSITORY" --verify-tag --title "$GITHUB_REF_NAME: site do EcoMapBrasil" --notes "No ar em https://ecomapbrasil.web.app" --generate-notes "${ensaio[@]}"

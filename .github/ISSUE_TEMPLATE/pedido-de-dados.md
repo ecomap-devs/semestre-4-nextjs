@@ -7,7 +7,7 @@ labels: []
 
 > **Esta issue é pública.** Não escreva e-mail, nome completo, telefone nem outro dado
 > pessoal. A equipe responde aqui, em até 15 dias, e combina com você como confirmar que a
-> conta é sua sem expor nada. Veja a [política de privacidade](https://ecomapbrasil-17756.web.app/privacidade#direitos).
+> conta é sua sem expor nada. Veja a [política de privacidade](https://ecomapbrasil.web.app/privacidade#direitos).
 
 **O que você quer?** (marque com um `x`)
 

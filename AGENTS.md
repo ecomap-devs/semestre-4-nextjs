@@ -221,7 +221,7 @@ A **Web key** do Firebase é restrita por referenciador (Google Cloud → Creden
 Endereço fora da lista dá "Algo deu errado" no login, com
 `auth/requests-from-referer-...-are-blocked` no console. `http://localhost:3000/*` está
 liberado (use a porta 3000). Cada **preview de PR** tem um endereço próprio, e o Google
-não aceita curinga no meio do nome (`ecomapbrasil-17756--*.web.app` é recusado): para
+não aceita curinga no meio do nome (`ecomapbrasil--*.web.app` é recusado): para
 testar login num preview, adicione o endereço exato dele à chave. Não mexa na Android key.
 
 ---
@@ -246,6 +246,11 @@ testar login num preview, adicione o endereço exato dele à chave. Não mexa na
 **Não rode `firebase deploy` da sua máquina.** O deploy sai da `main`, pela CI, a cada
 merge: é o que garante que o site no ar é código revisado. Deploy de árvore local não é
 reproduzível.
+
+O site mora em **`ecomapbrasil.web.app`** (o site `ecomapbrasil` do Hosting) desde 11/11/2026. O
+site padrão do projeto, `ecomapbrasil-17756.web.app`, só redireciona para ele: os dois estão no
+`firebase.json`, e o deploy publica os dois. Endereço do site em código, metadados,
+`robots.txt`, `sitemap.xml` ou texto é sempre o novo.
 
 ## Versões
 

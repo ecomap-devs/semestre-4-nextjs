@@ -1,6 +1,7 @@
 name: Deploy para produção
 
-# Todo merge na main publica o site em ecomapbrasil-17756.web.app. Também dá para rodar
+# Todo merge na main publica o site em ecomapbrasil.web.app e o redirecionamento do endereço antigo,
+# ecomapbrasil-17756.web.app (os dois sites do firebase.json, desde 11/11/2026). Também dá para rodar
 # na mão (Actions → Deploy para produção → Run workflow), por exemplo para republicar
 # depois de trocar um secret.
 #

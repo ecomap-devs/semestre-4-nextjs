@@ -1,4 +1,4 @@
 User-Agent: *
 Allow: /
 
-Sitemap: https://ecomapbrasil-17756.web.app/sitemap.xml
+Sitemap: https://ecomapbrasil.web.app/sitemap.xml

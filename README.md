@@ -24,15 +24,16 @@ aparece no site.
 > [!NOTE]
 > **As três telas do React estão portadas** (Início, Mapa e Animais, com login e
 > avaliações), com os defeitos conhecidos corrigidos, e o site está no endereço principal
-> desde 01/10/2026: **[ecomapbrasil-17756.web.app](https://ecomapbrasil-17756.web.app)**.
+> desde 01/10/2026: **[ecomapbrasil.web.app](https://ecomapbrasil.web.app)** (até 11/11/2026, ecomapbrasil-17756.web.app, que hoje
+> redireciona para o novo).
 > Depois do porte vieram a página **Fotos** (identificação de animal por foto, 02/10), os
 > **biomas pelo limite do IBGE** (02/10), um **visual próprio** (22/10), que substituiu o
 > do React, e os **dados reais** (28/10) no lugar dos valores de referência herdados do
 > React: desmatamento do **PRODES/INPE** e status das espécies na **lista nacional do MMA**
 > e na **Lista Vermelha da IUCN**. Em 29/10 vieram os **alertas do DETER** dos últimos 12
 > meses no mapa, o **quiz** e a seção **Como denunciar**, com os canais oficiais do Ibama.
-> Em 02/11, a **[política de privacidade](https://ecomapbrasil-17756.web.app/privacidade)** e os
-> **[termos de uso](https://ecomapbrasil-17756.web.app/termos)**, que valem também para o app.
+> Em 02/11, a **[política de privacidade](https://ecomapbrasil.web.app/privacidade)** e os
+> **[termos de uso](https://ecomapbrasil.web.app/termos)**, que valem também para o app.
 
 ## 🧭 Onde este repositório entra
 
@@ -130,7 +131,7 @@ deploy:
 
 ```bash
 for u in / /mapa /_next/static/; do
-  echo -n "$u  "; curl -sI "https://ecomapbrasil-17756.web.app$u" | grep -i '^cache-control'
+  echo -n "$u  "; curl -sI "https://ecomapbrasil.web.app$u" | grep -i '^cache-control'
 done
 ```
 
@@ -380,6 +381,26 @@ porte mudou foi de propósito:
 | Geral | A página ficava em branco até o Firebase responder | A página aparece na hora; só o botão de login espera |
 
 </details>
+
+## 🔤 O nome novo (11/11/2026)
+
+O endereço `ecomapbrasil-17756.web.app` vinha do ID do projeto no Firebase, que não muda. Sem comprar
+domínio, a saída foi criar um segundo site no mesmo projeto, com nome próprio:
+**`ecomapbrasil.web.app`**. O `firebase.json` tem os dois:
+
+| Site | O que serve |
+|---|---|
+| `ecomapbrasil` | O site, com os cabeçalhos e a CSP |
+| `ecomapbrasil-17756` | Só um redirecionamento permanente (301) para o mesmo caminho no endereço novo, com os parâmetros. A pasta `redirecionamento/` existe porque todo site precisa de uma pasta publicada; ela só aparece se o redirecionamento falhar |
+
+O site padrão do projeto não pode ser apagado nem renomeado, e o redirecionamento mantém
+funcionando os links antigos (APKs, READMEs, QR codes). As regras do redirecionamento são
+por `regex`, com grupo nomeado: a forma com glob (`/:caminho*`) não casou nem no servidor
+local da CLI. O preview dos PRs vai só para o site novo (`target` no `preview.yml`).
+
+Junto da troca, a **Web key** (Google Cloud → Credenciais) e os **domínios autorizados**
+do Firebase Authentication passaram a aceitar `ecomapbrasil.web.app` e `ecomapbrasil.firebaseapp.com`:
+sem isso, o login no endereço novo dá "Algo deu errado".
 
 ## 🔀 A troca de endereço (feita em 01/10/2026)
 
