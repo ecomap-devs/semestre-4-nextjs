@@ -34,7 +34,9 @@ function Estrelas({ valor, aoMudar, tamanho = 16 }: { valor: number; aoMudar?: (
   const [sobre, setSobre] = useState(0);
   const editavel = Boolean(aoMudar);
   return (
-    <div style={{ display: "flex", gap: 4 }} role={editavel ? "radiogroup" : "img"} aria-label={editavel ? "Sua nota" : `${valor} de 5 estrelas`}>
+    // As estrelas de dar nota têm 44px de toque cada (eram 23x28, com 4px entre elas); o
+    // desenho continua do mesmo tamanho. As só de mostrar ficam juntas, como antes.
+    <div style={{ display: "flex", gap: editavel ? 0 : 4, marginLeft: editavel ? -8 : 0 }} role={editavel ? "radiogroup" : "img"} aria-label={editavel ? "Sua nota" : `${valor} de 5 estrelas`}>
       {[1, 2, 3, 4, 5].map((n) => {
         const estilo = {
           fontSize: tamanho,
@@ -46,6 +48,7 @@ function Estrelas({ valor, aoMudar, tamanho = 16 }: { valor: number; aoMudar?: (
           border: "none",
           padding: 0,
           lineHeight: 1,
+          ...(editavel && { minWidth: 44, minHeight: 44, display: "inline-flex", alignItems: "center", justifyContent: "center" }),
         };
         return editavel ? (
           <button
