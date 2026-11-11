@@ -2,21 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/**
- * Largura da janela. No build não há janela, então começa em `inicial` (desktop) e
- * se ajusta assim que a página monta no navegador.
- */
-export function useLarguraJanela(inicial = 1280): number {
-  const [largura, setLargura] = useState(inicial);
-  useEffect(() => {
-    const atualizar = () => setLargura(window.innerWidth);
-    atualizar();
-    window.addEventListener("resize", atualizar);
-    return () => window.removeEventListener("resize", atualizar);
-  }, []);
-  return largura;
-}
-
 /** `true` a partir da primeira vez que o elemento entra na tela. Não volta a `false`. */
 export function useApareceu<T extends Element>(limiar = 0.2) {
   const ref = useRef<T>(null);

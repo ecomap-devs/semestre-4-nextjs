@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
-import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { perguntas, TAMANHO_RODADA, type Pergunta } from "@/dados/quiz";
 
 // O quiz. As perguntas e as respostas saem dos dados do site (`dados/quiz.ts`); aqui
@@ -48,9 +47,6 @@ function mensagemFinal(acertos: number, total: number): string {
 }
 
 export function Quiz() {
-  const largura = useLarguraJanela();
-  const ehMobile = largura < 768;
-
   // A rodada só é sorteada no clique: sortear na renderização daria um HTML no build
   // e outro no navegador.
   const [rodada, setRodada] = useState<Rodada | null>(null);
@@ -91,8 +87,6 @@ export function Quiz() {
     setAtual((a) => a + 1);
   }
 
-  const caixa = { maxWidth: 720, margin: "0 auto", padding: ehMobile ? "32px 16px 64px" : "56px 24px 96px" } as const;
-
   return (
     <div style={{ background: "var(--papel)", minHeight: "100vh" }}>
       <style>{`
@@ -100,12 +94,12 @@ export function Quiz() {
         .opcao-quiz:not(:disabled):hover { border-color: var(--tinta-3) !important; background: var(--branco) !important; }
       `}</style>
 
-      <CabecalhoInterno titulo="Quiz" ehMobile={ehMobile} />
+      <CabecalhoInterno titulo="Quiz" />
 
-      <main style={caixa}>
+      <main className="pagina-estreita" style={{ maxWidth: 720, margin: "0 auto" }}>
         {rodada === null && (
           <>
-            <h1 style={{ fontSize: ehMobile ? 36 : 56, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 16 }}>Quanto você sabe sobre o desmatamento no Brasil?</h1>
+            <h1 className="titulo-pagina" style={{ letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 16 }}>Quanto você sabe sobre o desmatamento no Brasil?</h1>
             <p style={{ fontSize: 19, color: "var(--tinta-2)", marginBottom: 12 }}>
               {TAMANHO_RODADA} perguntas sobre os biomas, as espécies ameaçadas e como denunciar. Cada resposta vem dos mesmos dados do site: PRODES e DETER do INPE, lista nacional do MMA e IUCN.
             </p>
@@ -125,7 +119,7 @@ export function Quiz() {
               <div style={{ height: "100%", width: `${(atual / total) * 100}%`, background: "var(--mata)", borderRadius: 2, transition: "width 300ms ease" }} />
             </div>
 
-            <h1 ref={titulo} tabIndex={-1} style={{ fontSize: ehMobile ? 26 : 34, lineHeight: 1.2, marginBottom: 24, outline: "none" }}>
+            <h1 ref={titulo} tabIndex={-1} className="titulo-secao" style={{ lineHeight: 1.2, marginBottom: 24, outline: "none" }}>
               {item.pergunta.enunciado}
             </h1>
 
@@ -180,7 +174,7 @@ export function Quiz() {
 
         {acabou && (
           <>
-            <h1 ref={titulo} tabIndex={-1} style={{ fontSize: ehMobile ? 36 : 56, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 12, outline: "none" }}>
+            <h1 ref={titulo} tabIndex={-1} className="titulo-pagina" style={{ letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 12, outline: "none" }}>
               {acertos} de {total}
             </h1>
             <p style={{ fontSize: 19, color: "var(--tinta-2)", marginBottom: 32 }}>{mensagemFinal(acertos, total)}</p>

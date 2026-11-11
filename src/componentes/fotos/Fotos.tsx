@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
 import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
-import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { declarouMaioridade, registrarMaioridade } from "@/lib/idade";
 import { ErroIdentificacao, identificar } from "@/lib/identificacao";
 import { identificacaoVazia, rotuloConfianca, type Identificacao } from "@/tipos/identificacao";
@@ -58,7 +57,6 @@ function Resultado({ r }: { r: Identificacao }) {
 }
 
 export function Fotos() {
-  const ehMobile = useLarguraJanela() < 768;
   const { usuario, abrirLogin } = useAuth();
 
   const [previa, setPrevia] = useState<string | null>(null);
@@ -173,15 +171,25 @@ export function Fotos() {
       <style>{`
         .botao-foto:focus-visible { outline: 2px solid var(--mata); outline-offset: 2px; }
         .titulo-pergunta:focus { outline: none; }
+        .fotos-caixa { padding: 64px 24px 80px; }
+        .fotos-titulo { font-size: 48px; }
+        .fotos-intro { font-size: 19px; }
+        .fotos-botoes { display: flex; gap: 12px; }
+        @media (max-width: 767px) {
+          .fotos-caixa { padding: 36px 16px 56px; }
+          .fotos-titulo { font-size: 32px; }
+          .fotos-intro { font-size: 17px; }
+          .fotos-botoes { flex-direction: column; }
+        }
       `}</style>
 
-      <CabecalhoInterno titulo="Identificar por foto" ehMobile={ehMobile} />
+      <CabecalhoInterno titulo="Identificar por foto" />
 
       <main>
-        <div style={{ position: "relative", maxWidth: 720, margin: "0 auto", padding: ehMobile ? "36px 16px 56px" : "64px 24px 80px", display: "flex", flexDirection: "column", gap: 20 }}>
+        <div className="fotos-caixa" style={{ position: "relative", maxWidth: 720, margin: "0 auto", display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ marginBottom: 8 }}>
-            <h1 style={{ fontSize: ehMobile ? 32 : 48, margin: "0 0 12px" }}>Que animal é esse?</h1>
-            <p style={{ fontSize: ehMobile ? 17 : 19 }}>Tire uma foto ou escolha uma imagem, e o Gemini, do Google, tenta dizer qual é o animal.</p>
+            <h1 className="fotos-titulo" style={{ margin: "0 0 12px" }}>Que animal é esse?</h1>
+            <p className="fotos-intro">Tire uma foto ou escolha uma imagem, e o Gemini, do Google, tenta dizer qual é o animal.</p>
           </div>
 
           {usuario === undefined ? (
@@ -217,7 +225,7 @@ export function Fotos() {
                     Você tem 18 anos ou mais?
                   </h2>
                   <p style={{ margin: "0 0 16px", fontSize: 16, color: "var(--tinta-2)" }}>A identificação por foto usa o Gemini, do Google, e os termos dele só permitem o uso por quem tem 18 anos ou mais.</p>
-                  <div style={{ display: "flex", gap: 12, flexDirection: ehMobile ? "column" : "row" }}>
+                  <div className="fotos-botoes">
                     <button type="button" onClick={() => responder(true)} className="botao botao-cheio">
                       Tenho 18 anos ou mais
                     </button>
@@ -233,7 +241,7 @@ export function Fotos() {
                       <p style={{ margin: 0, fontSize: 16, color: "var(--tinta-2)" }}>A identificação por foto é só para quem tem 18 anos ou mais, por exigência do Google. O mapa, as espécies e o resto do EcoMapBrasil continuam abertos para você.</p>
                     </div>
                   )}
-                  <div style={{ display: "flex", gap: 12, flexDirection: ehMobile ? "column" : "row" }}>
+                  <div className="fotos-botoes">
                     <button type="button" className="botao-foto" disabled={desligado} onClick={() => tentar("camera")} style={botao(true)}>
                       <i className="fas fa-camera" aria-hidden="true" /> Tirar foto
                     </button>

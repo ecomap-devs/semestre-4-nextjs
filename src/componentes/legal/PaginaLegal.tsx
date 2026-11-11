@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Fragment } from "react";
 
 import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
-import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { ATUALIZADO_EM, type Bloco, type Documento } from "@/dados/legal";
 
 // A política de privacidade e os termos de uso. O texto vem de `dados/legal.ts`, o
@@ -113,14 +112,12 @@ function Blocos({ blocos }: { blocos: Bloco[] }) {
 }
 
 export function PaginaLegal({ documento, outro }: { documento: Documento; outro: { href: string; rotulo: string } }) {
-  const ehMobile = useLarguraJanela() < 768;
-
   return (
     <div style={{ background: "var(--papel)", minHeight: "100vh" }}>
-      <CabecalhoInterno titulo={documento.titulo} ehMobile={ehMobile} />
+      <CabecalhoInterno titulo={documento.titulo} />
 
-      <main style={{ maxWidth: 760, margin: "0 auto", padding: ehMobile ? "32px 16px 64px" : "56px 24px 96px" }}>
-        <h1 style={{ fontSize: ehMobile ? 36 : 52, letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 12 }}>{documento.titulo}</h1>
+      <main className="pagina-estreita" style={{ maxWidth: 760, margin: "0 auto" }}>
+        <h1 className="titulo-pagina" style={{ ["--tamanho-titulo" as string]: "52px", letterSpacing: "-0.02em", lineHeight: 1.05, marginBottom: 12 }}>{documento.titulo}</h1>
         <p style={{ fontSize: 15, color: "var(--tinta-3)", marginBottom: 20 }}>Versão de {ATUALIZADO_EM}</p>
         <p style={{ fontSize: 19, lineHeight: 1.55, color: "var(--tinta-2)", marginBottom: 32 }}>
           <Texto texto={documento.abertura} />
@@ -142,7 +139,7 @@ export function PaginaLegal({ documento, outro }: { documento: Documento; outro:
         {documento.secoes.map((s) => (
           // A margem de rolagem desconta o cabeçalho fixo ao seguir um link #secao.
           <section key={s.id} id={s.id} aria-labelledby={`titulo-${s.id}`} style={{ marginBottom: 40, scrollMarginTop: 88 }}>
-            <h2 id={`titulo-${s.id}`} style={{ fontSize: ehMobile ? 26 : 30, marginBottom: 14 }}>
+            <h2 id={`titulo-${s.id}`} className="titulo-secao" style={{ ["--tamanho-titulo" as string]: "30px", marginBottom: 14 }}>
               {s.titulo}
             </h2>
             <Blocos blocos={s.blocos} />

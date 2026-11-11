@@ -162,6 +162,86 @@
   text-decoration-color: currentColor;
 }
 
+/* Layout de celular sem JavaScript. Até 11/11/2026 Animais, Mapa, Fotos, Quiz e as
+   páginas legais mediam a janela em JS (useLarguraJanela): o HTML estático saía como
+   desktop e o celular trocava de layout depois de carregar. Agora a troca é aqui, nas
+   mesmas larguras de antes: celular abaixo de 768px, tablet de 768 a 1023px. */
+@media (max-width: 767px) {
+  .so-desktop {
+    display: none !important;
+  }
+}
+@media (min-width: 768px) {
+  .so-celular {
+    display: none !important;
+  }
+}
+
+/* Cabeçalho de Animais, Fotos, Mapa, Quiz e das páginas legais (CabecalhoInterno). */
+:root {
+  --altura-cabecalho-interno: 64px;
+}
+.cabecalho-interno {
+  height: var(--altura-cabecalho-interno);
+  padding: 0 24px;
+  gap: 16px;
+}
+.cabecalho-interno .voltar {
+  padding: 0 14px;
+}
+.cabecalho-interno .titulo-interno {
+  font-size: 19px;
+}
+@media (max-width: 767px) {
+  :root {
+    --altura-cabecalho-interno: 56px;
+  }
+  .cabecalho-interno {
+    padding: 0 16px;
+    gap: 12px;
+  }
+  .cabecalho-interno .voltar {
+    padding: 0 12px;
+  }
+  .cabecalho-interno .titulo-interno {
+    font-size: 17px;
+  }
+}
+.titulo-curto {
+  display: none;
+}
+@media (max-width: 1023px) {
+  .titulo-longo {
+    display: none;
+  }
+  .titulo-curto {
+    display: inline;
+  }
+}
+
+/* Páginas de uma coluna de texto: Quiz, privacidade e termos. O tamanho do título
+   de desktop pode mudar por página com --tamanho-titulo; no celular é um só. */
+.pagina-estreita {
+  padding: 56px 24px 96px;
+}
+.titulo-pagina {
+  font-size: var(--tamanho-titulo, 56px);
+}
+.titulo-secao {
+  font-size: var(--tamanho-titulo, 34px);
+}
+@media (max-width: 767px) {
+  .pagina-estreita {
+    padding: 32px 16px 64px;
+  }
+  .titulo-pagina {
+    font-size: 36px;
+  }
+  .titulo-secao {
+    font-size: 26px;
+  }
+}
+
 /* Entrada ao rolar (componente Revelar). */
 .revelar {
   opacity: 0;
