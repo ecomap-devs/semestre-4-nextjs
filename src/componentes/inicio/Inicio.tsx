@@ -81,6 +81,12 @@ const CSS = `
     .footer-bottom { flex-direction: column !important; }
   }
 
+  /* Entre 600 e 860px cabem duas espécies lado a lado; com uma só, o tablet mostrava
+     uma espécie por tela. */
+  @media (min-width: 600px) and (max-width: 860px) {
+    .animals-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 48px 24px !important; }
+  }
+
   @media (max-width: 480px) {
     .footer-grid { grid-template-columns: 1fr !important; }
   }
