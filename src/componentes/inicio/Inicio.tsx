@@ -73,6 +73,8 @@ const CSS = `
 
   @media (max-width: 768px) {
     .seta-hero, .rolar-hero { display: none !important; }
+    .indicadores-hero { flex-wrap: wrap; margin-top: 20px !important; }
+    .credito-hero { flex-basis: 100%; }
     .section-pad { padding: 64px 20px !important; }
     .numeros-grid { grid-template-columns: 1fr !important; gap: 48px !important; }
     .animals-grid { grid-template-columns: 1fr !important; }
@@ -330,7 +332,10 @@ function Slideshow() {
       ))}
       {/* Escurece o topo (para o cabeçalho) e a base (para o texto); o meio aparece inteiro. */}
       <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to bottom, rgba(16,24,18,0.55) 0%, rgba(16,24,18,0) 22%, rgba(16,24,18,0) 40%, rgba(16,24,18,0.88) 100%)" }} />
-      <div style={{ position: "relative", zIndex: 2, height: "100%", ...larguraMaxima, padding: "88px 24px 104px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+      {/* Os indicadores e o crédito da foto vêm no mesmo fluxo do texto, logo abaixo dos
+          botões. Até 11/11/2026 ficavam presos a 36px da base, por cima, e em 375px o
+          crédito encostava no botão "Espécies ameaçadas". */}
+      <div style={{ position: "relative", zIndex: 2, height: "100%", ...larguraMaxima, padding: "88px 24px 32px", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
         {/* O tamanho acompanha também a altura da tela: em notebook baixo, 8vw empurrava o título para baixo do cabeçalho. */}
         <h1 style={{ fontSize: "clamp(36px, min(8vw, 12.5vh), 108px)", color: "var(--branco)", margin: "0 0 24px", maxWidth: 980, fontWeight: 400, letterSpacing: "-0.03em", lineHeight: 0.98, textShadow: "0 2px 30px rgba(16,24,18,0.35)" }}>
           O desmatamento no Brasil é{" "}
@@ -347,27 +352,19 @@ function Slideshow() {
             Espécies ameaçadas
           </button>
         </div>
-      </div>
 
-      <button type="button" aria-label="Foto anterior" className="seta-hero" onClick={() => setAtual((a) => (a - 1 + slides.length) % slides.length)} style={{ ...setaEstilo, left: 16 }}>
-        <i className="fas fa-chevron-left" />
-      </button>
-      <button type="button" aria-label="Próxima foto" className="seta-hero" onClick={() => setAtual((a) => (a + 1) % slides.length)} style={{ ...setaEstilo, right: 16 }}>
-        <i className="fas fa-chevron-right" />
-      </button>
-
-      {/* Indicadores que se enchem até a próxima foto, com o nome do animal da vez. */}
-      <div style={{ position: "absolute", left: 0, right: 0, bottom: 36, zIndex: 3 }}>
-        <div style={{ ...larguraMaxima, padding: "0 24px", display: "flex", alignItems: "center", gap: 20 }}>
-          <div style={{ display: "flex", gap: 8 }}>
+        {/* Indicadores que se enchem até a próxima foto, com o nome do animal da vez. */}
+        <div className="indicadores-hero" style={{ display: "flex", alignItems: "center", columnGap: 20, marginTop: 28 }}>
+          <div style={{ display: "flex", gap: 4 }}>
             {slides.map((s, i) => (
+              // 44px de toque; a barra desenhada continua com 2px de altura.
               <button
                 key={s.url}
                 type="button"
                 aria-label={`Mostrar ${s.rotulo}`}
                 aria-current={atual === i}
                 onClick={() => setAtual(i)}
-                style={{ width: 40, height: 20, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center" }}
+                style={{ width: 44, height: 44, background: "none", border: "none", cursor: "pointer", padding: "0 2px", display: "flex", alignItems: "center" }}
               >
                 <span style={{ display: "block", width: "100%", height: 2, background: "rgba(255,253,248,0.3)", position: "relative", overflow: "hidden" }}>
                   {atual === i && (
@@ -380,8 +377,9 @@ function Slideshow() {
               </button>
             ))}
           </div>
-          {/* O nome do animal da vez e o crédito da foto, que a licença CC pede à vista. */}
-          <div style={{ minWidth: 0 }}>
+          {/* O nome do animal da vez e o crédito da foto, que a licença CC pede à vista. No
+              celular vão numa linha própria, abaixo das barras. */}
+          <div className="credito-hero" style={{ minWidth: 0 }}>
             <p aria-hidden="true" style={{ fontSize: 15, color: "rgba(255,253,248,0.85)", fontStyle: "italic" }}>
               {slides[atual]?.rotulo}
             </p>
@@ -392,6 +390,14 @@ function Slideshow() {
           </button>
         </div>
       </div>
+
+      <button type="button" aria-label="Foto anterior" className="seta-hero" onClick={() => setAtual((a) => (a - 1 + slides.length) % slides.length)} style={{ ...setaEstilo, left: 16 }}>
+        <i className="fas fa-chevron-left" />
+      </button>
+      <button type="button" aria-label="Próxima foto" className="seta-hero" onClick={() => setAtual((a) => (a + 1) % slides.length)} style={{ ...setaEstilo, right: 16 }}>
+        <i className="fas fa-chevron-right" />
+      </button>
+
     </section>
   );
 }
