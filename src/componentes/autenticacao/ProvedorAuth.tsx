@@ -7,14 +7,17 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { firebaseConfigurado } from "@/lib/env";
 import { auth } from "@/lib/firebase";
 
-// O modal só é baixado quando alguém pede para entrar, como o LazyAuthModal do React.
+// Os modais só são baixados quando alguém pede, como o LazyAuthModal do React.
 const ModalAuth = dynamic(() => import("./ModalAuth"), { ssr: false });
+const ModalApagarConta = dynamic(() => import("./ModalApagarConta"), { ssr: false });
 
 type EstadoAuth = {
   /** `undefined` enquanto o Firebase ainda não respondeu; `null` sem login. */
   usuario: User | null | undefined;
   abrirLogin: () => void;
   sair: () => Promise<void>;
+  /** Abre a confirmação de apagar a conta de quem está logado. */
+  abrirApagarConta: () => void;
 };
 
 const ContextoAuth = createContext<EstadoAuth | null>(null);
@@ -24,6 +27,9 @@ export function ProvedorAuth({ children }: { children: React.ReactNode }) {
   // esperar para sempre por uma resposta que não vem.
   const [usuario, setUsuario] = useState<User | null | undefined>(() => (firebaseConfigurado() ? undefined : null));
   const [loginAberto, setLoginAberto] = useState(false);
+  // A conta é guardada ao abrir: quando ela é apagada, `usuario` vira `null`, e o
+  // modal continua na tela para dizer que deu certo.
+  const [contaParaApagar, setContaParaApagar] = useState<User | null>(null);
 
   useEffect(() => {
     if (!firebaseConfigurado()) {
@@ -35,13 +41,15 @@ export function ProvedorAuth({ children }: { children: React.ReactNode }) {
 
   const abrirLogin = useCallback(() => setLoginAberto(true), []);
   const sair = useCallback(() => signOut(auth()), []);
+  const abrirApagarConta = useCallback(() => setContaParaApagar(auth().currentUser), []);
 
-  const valor = useMemo(() => ({ usuario, abrirLogin, sair }), [usuario, abrirLogin, sair]);
+  const valor = useMemo(() => ({ usuario, abrirLogin, sair, abrirApagarConta }), [usuario, abrirLogin, sair, abrirApagarConta]);
 
   return (
     <ContextoAuth.Provider value={valor}>
       {children}
       {loginAberto && <ModalAuth aoFechar={() => setLoginAberto(false)} />}
+      {contaParaApagar && <ModalApagarConta usuario={contaParaApagar} aoFechar={() => setContaParaApagar(null)} />}
     </ContextoAuth.Provider>
   );
 }
