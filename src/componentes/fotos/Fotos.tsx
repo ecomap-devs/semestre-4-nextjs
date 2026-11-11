@@ -74,6 +74,28 @@ export function Fotos() {
   const campoGaleria = useRef<HTMLInputElement>(null);
   const tituloPergunta = useRef<HTMLHeadingElement>(null);
 
+  // A página continua montada quando a conta muda (sair e entrar com outra), então o
+  // estado da conta anterior sai: o "não" dela, a pergunta pela metade, e a foto e o
+  // resultado, que num computador compartilhado ficariam à vista de outra pessoa
+  // (revisão do Codex de 11/11/2026). É o ajuste de estado durante a renderização,
+  // sem efeito: a tela da conta nova nunca aparece com o estado da anterior.
+  const uid = usuario?.uid ?? null;
+  const [uidDoEstado, setUidDoEstado] = useState(uid);
+  if (uid !== uidDoEstado) {
+    setUidDoEstado(uid);
+    setPrevia(null);
+    setResultado(null);
+    setErro("");
+    setCarregando(false);
+    setPerguntando(null);
+    setMenor(false);
+  }
+  // A conta da tela agora, para a resposta que chega depois da troca ser descartada.
+  const uidAtual = useRef(uid);
+  useEffect(() => {
+    uidAtual.current = uid;
+  }, [uid]);
+
   // A prévia é uma URL `blob:` que ocupa memória até ser revogada.
   useEffect(() => {
     if (!previa) return;
@@ -111,17 +133,19 @@ export function Fotos() {
     e.target.value = "";
     if (!arquivo || !usuario) return;
 
+    const dono = usuario.uid;
     setPrevia(URL.createObjectURL(arquivo));
     setResultado(null);
     setErro("");
     setCarregando(true);
     try {
-      setResultado(await identificar(arquivo, usuario));
+      const r = await identificar(arquivo, usuario);
+      if (uidAtual.current === dono) setResultado(r);
     } catch (falha) {
-      setErro(falha instanceof ErroIdentificacao ? falha.message : "Algo deu errado. Verifique sua internet e tente de novo.");
+      if (uidAtual.current === dono) setErro(falha instanceof ErroIdentificacao ? falha.message : "Algo deu errado. Verifique sua internet e tente de novo.");
       if (!(falha instanceof ErroIdentificacao)) console.error("Identificação falhou:", falha);
     } finally {
-      setCarregando(false);
+      if (uidAtual.current === dono) setCarregando(false);
     }
   }
 
