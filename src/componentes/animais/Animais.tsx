@@ -136,6 +136,12 @@ export function Animais() {
     <div style={{ background: "var(--papel)", minHeight: "100vh" }}>
       <style>{`
         .animal-card:hover .nome-animal { color: var(--mata); }
+        /* O "Ver ficha" se estende pelo cartão inteiro: o toque e o clique em qualquer
+           ponto dele contam, e o link pequeno (73x23px) deixa de ser o único alvo. */
+        .animal-card { position: relative; }
+        .ver-ficha::after { content: ""; position: absolute; inset: 0; }
+        .ver-ficha:focus-visible { outline: none; }
+        .animal-card:has(.ver-ficha:focus-visible) { outline: 2px solid var(--mata); outline-offset: 6px; border-radius: var(--raio); }
         .campo-busca:focus { border-color: var(--mata) !important; outline: none; }
         .filtro-btn { transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; }
         .filtro-btn[aria-pressed="false"]:hover { border-color: var(--tinta-3) !important; }
@@ -261,7 +267,7 @@ export function Animais() {
             <div style={{ display: "grid", gridTemplateColumns: colunas, gap: ehMobile ? "40px 16px" : "56px 32px" }}>
               {filtrados.map((animal) => {
                 return (
-                  <article key={animal.nome} className="animal-card" onClick={() => setSelecionado(animal)} style={{ cursor: "pointer" }}>
+                  <article key={animal.nome} className="animal-card" style={{ cursor: "pointer" }}>
                     <div style={{ aspectRatio: "4 / 3", overflow: "hidden", borderRadius: "var(--raio)", marginBottom: 14, background: "var(--linha)" }}>
                       <ImagemComReserva src={animal.imagem} alt={animal.nome} style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
                     </div>
@@ -279,8 +285,7 @@ export function Animais() {
                       No mundo (IUCN): <span style={{ color: "var(--tinta-2)" }}>{animal.iucn ?? "não avaliada"}</span>
                     </p>
 
-                    {/* O clique sobe até o card; o botão existe para quem navega pelo teclado. */}
-                    <button type="button" className="link" aria-label={`Ver ficha de ${animal.nome}`} style={{ padding: 0, marginTop: 10, fontSize: 15 }}>
+                    <button type="button" className="link ver-ficha" onClick={() => setSelecionado(animal)} aria-label={`Ver ficha de ${animal.nome}`} style={{ padding: 0, marginTop: 10, fontSize: 15 }}>
                       Ver ficha →
                     </button>
                   </article>

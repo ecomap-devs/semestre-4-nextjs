@@ -204,4 +204,15 @@
     transition-duration: 1ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* Reduzir movimento não é tirar toda transição: o corte seco também incomoda.
+     O que entra ao rolar e a troca de página ficam num fade curto, sem deslocamento
+     (auditoria de responsividade de 11/11/2026). */
+  .revelar {
+    transform: none;
+    transition: opacity 0.25s ease !important;
+  }
+  .pagina {
+    animation-duration: 0.2s !important;
+  }
 }
