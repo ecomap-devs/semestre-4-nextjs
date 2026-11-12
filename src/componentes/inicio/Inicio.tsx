@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { useAuth } from "@/componentes/autenticacao/ProvedorAuth";
 import { Avaliacoes } from "@/componentes/avaliacoes/Avaliacoes";
+import { BotaoDeTema } from "@/componentes/comum/BotaoDeTema";
 import { Contador, Revelar } from "@/componentes/comum/efeitos";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { fotoConfiavel } from "@/lib/avatar";
@@ -34,14 +35,14 @@ const CSS = `
   .item-conta:hover, .item-conta:focus-visible { background: var(--papel-2); }
   .seta-hero { transition: background 0.15s; background: rgba(0,0,0,0.25); }
   .seta-hero:hover { background: rgba(0,0,0,0.5); }
-  .botao-claro { background: var(--branco); color: var(--tinta); }
-  .botao-claro:hover { background: var(--papel-2); }
+  .botao-claro { background: var(--branco); color: var(--mata-noite); }
+  .botao-claro:hover { background: color-mix(in srgb, var(--branco) 88%, var(--mata-noite)); }
   .botao-vazado { background: transparent; color: var(--branco); border-color: rgba(255,253,248,0.5) !important; }
   .botao-vazado:hover { background: rgba(255,253,248,0.12); }
   .botao-grande { padding: 15px 28px; font-size: 17px; }
   .link-rodape { color: rgba(255,253,248,0.7); transition: color 0.15s; }
   .link-rodape:hover { color: var(--branco); }
-  .voltar-topo { transition: background 0.15s; background: var(--branco); }
+  .voltar-topo { transition: background 0.15s; background: var(--cartao); }
   .voltar-topo:hover { background: var(--papel-2); }
   .hidden-mobile { display: flex; }
   .show-mobile { display: none !important; }
@@ -144,7 +145,7 @@ function MenuDaConta({ usuario, sobreFoto }: { usuario: User; sobreFoto: boolean
         <i className={`fas ${aberto ? "fa-chevron-up" : "fa-chevron-down"}`} aria-hidden="true" style={{ fontSize: 11 }} />
       </button>
       {aberto && (
-        <div id={`${id}-conta`} style={{ position: "absolute", right: 0, top: "calc(100% + 10px)", minWidth: 180, background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", boxShadow: "0 8px 24px rgba(29,38,32,0.15)", padding: 6 }}>
+        <div id={`${id}-conta`} style={{ position: "absolute", right: 0, top: "calc(100% + 10px)", minWidth: 180, background: "var(--cartao)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", boxShadow: "0 8px 24px rgba(29,38,32,0.15)", padding: 6 }}>
           <button
             type="button"
             className="item-conta"
@@ -211,37 +212,40 @@ function Cabecalho() {
       <div style={{ ...larguraMaxima, padding: "0 24px", height: 64, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" style={{ height: 34, width: "auto" }} />
+          <img src="/pino.png" alt="" style={{ height: 32, width: "auto" }} />
           <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 20, color: sobreFoto ? "var(--branco)" : "var(--tinta)", transition: "color 0.3s" }}>EcoMapBrasil</span>
         </div>
-        <nav aria-label="Seções da página" style={{ gap: 28, alignItems: "center" }} className="menu-topo">
-          {linksNavegacao.map(([id, rotulo]) => (
-            <button key={id} type="button" className="nav-link" onClick={() => irPara(id)}>
-              {rotulo}
-            </button>
-          ))}
-          <Link href="/quiz" className="nav-link">
-            Quiz
-          </Link>
-          {/* Enquanto o Firebase não responde, o espaço fica vazio em vez de piscar "Entrar". */}
-          {usuario === undefined ? null : usuario ? (
-            <MenuDaConta usuario={usuario} sobreFoto={sobreFoto} />
-          ) : (
-            <button type="button" onClick={abrirLogin} className={`botao ${sobreFoto ? "botao-vazado" : "botao-contorno"}`} style={{ padding: "6px 16px", fontSize: 14 }}>
-              Entrar
-            </button>
-          )}
-        </nav>
-        <button
-          type="button"
-          onClick={() => setMenuAberto((v) => !v)}
-          aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
-          aria-expanded={menuAberto}
-          style={{ background: "none", border: "none", color: sobreFoto ? "var(--branco)" : "var(--tinta)", fontSize: 20, cursor: "pointer", minWidth: 44, minHeight: 44 }}
-          className="botao-menu"
-        >
-          <i className={`fas ${menuAberto ? "fa-times" : "fa-bars"}`} />
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <nav aria-label="Seções da página" style={{ gap: 28, alignItems: "center" }} className="menu-topo">
+            {linksNavegacao.map(([id, rotulo]) => (
+              <button key={id} type="button" className="nav-link" onClick={() => irPara(id)}>
+                {rotulo}
+              </button>
+            ))}
+            <Link href="/quiz" className="nav-link">
+              Quiz
+            </Link>
+            {/* Enquanto o Firebase não responde, o espaço fica vazio em vez de piscar "Entrar". */}
+            {usuario === undefined ? null : usuario ? (
+              <MenuDaConta usuario={usuario} sobreFoto={sobreFoto} />
+            ) : (
+              <button type="button" onClick={abrirLogin} className={`botao ${sobreFoto ? "botao-vazado" : "botao-contorno"}`} style={{ padding: "6px 16px", fontSize: 14 }}>
+                Entrar
+              </button>
+            )}
+          </nav>
+          <BotaoDeTema />
+          <button
+            type="button"
+            onClick={() => setMenuAberto((v) => !v)}
+            aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
+            aria-expanded={menuAberto}
+            style={{ background: "none", border: "none", color: sobreFoto ? "var(--branco)" : "var(--tinta)", fontSize: 20, cursor: "pointer", minWidth: 44, minHeight: 44 }}
+            className="botao-menu"
+          >
+            <i className={`fas ${menuAberto ? "fa-times" : "fa-bars"}`} />
+          </button>
+        </div>
       </div>
       {menuAberto && (
         <div style={{ background: "var(--papel)", borderTop: "1px solid var(--linha)", padding: "8px 24px 16px" }}>
@@ -723,7 +727,7 @@ function Rodape({ aoIrPara }: { aoIrPara: (id: string) => void }) {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="" style={{ height: 28 }} />
+              <img src="/pino.png" alt="" style={{ height: 26 }} />
               <span style={{ fontFamily: "var(--fonte-titulo)", fontSize: 19, color: "var(--branco)" }}>EcoMapBrasil</span>
             </div>
             {/* A equipe era uma seção com cartões de ícone genérico; o nome de cada um basta. */}

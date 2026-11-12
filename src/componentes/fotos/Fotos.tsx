@@ -18,7 +18,7 @@ import { identificacaoVazia, rotuloConfianca, type Identificacao } from "@/tipos
 // vez que a pessoa clica em "Tirar foto" ou "Escolher imagem": os termos da Gemini API
 // não aceitam uso por menores (src/lib/idade.ts).
 
-const cartao = { background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: 24 } as const;
+const cartao = { background: "var(--cartao)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: 24 } as const;
 
 type Origem = "camera" | "galeria";
 
@@ -161,8 +161,8 @@ export function Fotos() {
       fontWeight: 600,
       cursor: desligado ? "not-allowed" : "pointer",
       opacity: desligado ? 0.6 : 1,
-      background: primario ? "var(--mata)" : "var(--branco)",
-      color: primario ? "var(--branco)" : "var(--mata)",
+      background: primario ? "var(--mata)" : "var(--cartao)",
+      color: primario ? "var(--sobre-destaque)" : "var(--mata)",
       border: "1px solid var(--mata)",
     }) as const;
 

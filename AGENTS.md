@@ -92,10 +92,29 @@ scripts/deter/gerar.py             gera os dois acima, em Python com GeoPandas (
 As páginas em `app/` são finas: só metadados e o componente da tela. A tela mora em
 `componentes/` e é `'use client'`.
 
-### Cores e fontes
+### Cores, tema e fontes
 As cores são variáveis CSS no `src/app/globals.css` (`--papel`, `--mata`, `--terra`,
 `--ocre`…). **Use sempre a variável, nunca o hexadecimal solto**, para que um ajuste ali
-valha no site todo. As fontes (Fraunces nos títulos, Source Sans 3 no texto) entram pelo
+valha no site todo.
+
+Desde 12/11/2026 o site tem **tema claro e escuro**, com as cores do app (`Cores.claro` e
+`Cores.escuro` em `lib/theme/app_theme.dart` do semestre-4-flutter: mudou uma aqui, mude lá
+no PR gêmeo, e o contrário também).
+- Cada cor do tema é `light-dark(claro, escuro)`, e quem escolhe é o `color-scheme`: o do
+  sistema ou o do botão de tema (`BotaoDeTema`, `src/lib/tema.ts`), que grava `data-tema` no
+  `<html>`. Não use `@media (prefers-color-scheme)` solto para pintar: a escolha do botão não
+  passa por ele. O que o CSS não alcança (o fundo do mapa) pergunta `useTemaEscuro()`.
+- Sobre o papel, use as cores do tema: `--cartao` para cartão, modal, menu e campo;
+  `--sobre-destaque` para texto sobre fundo cheio de `--mata` ou `--terra`; `--mata-forte`
+  para o hover do botão cheio e o texto de sucesso.
+- `--branco`, `--mata-escura`, `--mata-noite` e `--sol` são **fixas**, iguais nos dois
+  temas: só para o que fica sobre foto ou faixa escura. `--branco` como fundo de cartão
+  vira um cartão branco com texto claro no escuro.
+- Texto com 4,5:1 ou mais sobre o fundo, nos dois temas.
+- Nos cabeçalhos e no rodapé, a marca é o pino (`public/pino.png`), sem o nome, que fica em
+  texto ao lado. Sai do `scripts/identidade/gerar.py`.
+
+As fontes (Fraunces nos títulos, Source Sans 3 no texto) entram pelo
 `next/font` no `layout.tsx` e saem do próprio site: não as carregue de CDN, que a CSP
 bloqueia.
 

@@ -2,29 +2,54 @@
 
 /* Cores do site. Tons de papel, mata e terra em vez da paleta pronta do Tailwind
    (o verde #4ade80 e os cinzas azulados do React). Use sempre a variável, nunca o
-   hexadecimal solto, para que um ajuste aqui valha no site todo. */
+   hexadecimal solto, para que um ajuste aqui valha no site todo.
+
+   Tema claro e escuro (12/11/2026), com as cores do app (`Cores.claro` e `Cores.escuro`
+   em lib/theme/app_theme.dart do semestre-4-flutter): mudou uma aqui, mude lá. Cada cor
+   do tema é `light-dark(claro, escuro)`. Quem escolhe é o `color-scheme`: o do sistema,
+   ou o do botão de tema, que grava `data-tema` no <html> (src/lib/tema.ts). */
 :root {
-  --papel: #f6f3ec; /* fundo das páginas */
-  --papel-2: #ece7db; /* seção alternada, campo desabilitado */
-  --branco: #fffdf8; /* cartão sobre o papel */
-  --linha: #ddd6c6; /* bordas e divisórias */
+  color-scheme: light dark;
 
-  --tinta: #1d2620; /* títulos */
-  --tinta-2: #4a5249; /* texto corrido */
-  --tinta-3: #7a8075; /* legenda, data, texto de apoio */
+  /* Do tema: tudo que fica sobre o papel ou o cartão. */
+  --papel: light-dark(#f6f3ec, #131814); /* fundo das páginas */
+  --papel-2: light-dark(#ece7db, #1b221d); /* seção alternada, campo desabilitado, hover */
+  --cartao: light-dark(#fffdf8, #1f2721); /* cartão, modal e campo sobre o papel */
+  --linha: light-dark(#ddd6c6, #333d35); /* bordas e divisórias */
 
-  --mata: #2f5233; /* cor principal: botão, link, destaque */
-  --mata-escura: #1f3a24; /* faixa escura, hover */
-  --mata-noite: #16291a; /* rodapé */
-  --mata-clara: #e3eadb; /* fundo de aviso de sucesso, seleção */
+  --tinta: light-dark(#1d2620, #ece8de); /* títulos */
+  --tinta-2: light-dark(#4a5249, #c5c7bd); /* texto corrido */
+  /* Legenda, data, texto de apoio. Era #7a8075, com 3,7:1 sobre o papel; desde 12/11/2026
+     passa de 4,5:1 sobre o papel, o papel-2, o cartão e a mata-clara. */
+  --tinta-3: light-dark(#646a5f, #979c90);
 
-  --terra: #a4472a; /* perda, alerta, erro */
-  --terra-clara: #f3e1d8;
-  --ocre: #b8862b; /* estrelas, atenção */
-  --ocre-clara: #f4e9cf;
+  --mata: light-dark(#2f5233, #8fbf8a); /* cor principal: botão, link, destaque */
+  --mata-forte: light-dark(#1f3a24, #b5d6ae); /* hover do botão cheio, texto de sucesso */
+  --mata-clara: light-dark(#e3eadb, #24362a); /* fundo de aviso de sucesso, seleção */
+
+  --terra: light-dark(#a4472a, #e08a6c); /* perda, alerta, erro */
+  --terra-clara: light-dark(#f3e1d8, #3a231b);
+  --ocre: light-dark(#b8862b, #d9ae57); /* estrelas, atenção */
+  --ocre-clara: light-dark(#f4e9cf, #3a2f17);
+
+  /* Texto sobre um fundo cheio de mata ou terra (botão, filtro ativo): no escuro a mata
+     clareia, e o texto por cima fica escuro. */
+  --sobre-destaque: light-dark(#fffdf8, #10170f);
+
+  /* Fixas: o que fica sobre foto ou faixa escura, que é escuro nos dois temas (o
+     `AppCores` do app). Texto sobre o papel nunca usa estas. */
+  --branco: #fffdf8; /* texto sobre foto e faixa escura; botão claro sobre foto */
+  --mata-escura: #1f3a24; /* faixa "O que dá para fazer" */
+  --mata-noite: #16291a; /* rodapé, faixa dos números, fundo sob as fotos */
   --sol: #e3b553; /* destaque sobre fundo escuro: números, numeração */
 
   --raio: 6px;
+}
+:root[data-tema="claro"] {
+  color-scheme: light;
+}
+:root[data-tema="escuro"] {
+  color-scheme: dark;
 }
 
 /* Base herdada do App.css do React. Fica em @layer base para que um utilitário do
@@ -131,10 +156,10 @@
 }
 .botao-cheio {
   background: var(--mata);
-  color: var(--branco);
+  color: var(--sobre-destaque);
 }
 .botao-cheio:hover:not(:disabled) {
-  background: var(--mata-escura);
+  background: var(--mata-forte);
 }
 .botao-contorno {
   background: transparent;
@@ -160,6 +185,68 @@
 }
 .link:hover {
   text-decoration-color: currentColor;
+}
+
+/* Botão de tema dos cabeçalhos (BotaoDeTema.tsx) e a lista que ele abre. Sobre a foto
+   da Início (.cabecalho-foto), o ícone fica claro como os links. */
+.botao-tema {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: none;
+  border: none;
+  color: var(--tinta-2);
+  font-size: 17px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.botao-tema:hover {
+  color: var(--mata);
+  background: var(--papel-2);
+}
+.cabecalho-foto .botao-tema {
+  color: rgba(255, 253, 248, 0.85);
+}
+.cabecalho-foto .botao-tema:hover {
+  color: var(--branco);
+  background: rgba(255, 253, 248, 0.12);
+}
+.lista-tema {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  min-width: 200px;
+  background: var(--cartao);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  padding: 6px;
+}
+.item-tema {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: calc(var(--raio) - 2px);
+  padding: 10px 12px;
+  font-size: 15px;
+  color: var(--tinta);
+  cursor: pointer;
+}
+.item-tema:hover,
+.item-tema:focus-visible {
+  background: var(--papel-2);
+}
+.item-tema[aria-pressed="true"] {
+  font-weight: 600;
 }
 
 /* Layout de celular sem JavaScript. Até 11/11/2026 Animais, Mapa, Fotos, Quiz e as

@@ -164,7 +164,7 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
       aoFechar={aoFechar}
       idTitulo={`${id}-titulo`}
       estiloFundo={{ position: "fixed", inset: 0, background: "rgba(29,38,32,0.55)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-      estiloCaixa={{ background: "var(--branco)", borderRadius: "var(--raio)", padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 12px 40px rgba(29,38,32,0.2)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
+      estiloCaixa={{ background: "var(--cartao)", borderRadius: "var(--raio)", padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 12px 40px rgba(29,38,32,0.2)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
     >
       <style>{`
         .campo-auth:focus-visible { border-color: var(--mata) !important; outline: none; box-shadow: 0 0 0 3px var(--mata-clara); }
@@ -313,5 +313,5 @@ const estiloCampo: CSSProperties = {
   boxSizing: "border-box",
   // O React usava #fff aqui: o texto digitado sumia no fundo branco do campo.
   color: "var(--tinta)",
-  background: "var(--branco)",
+  background: "var(--cartao)",
 };

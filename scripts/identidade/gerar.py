@@ -2,6 +2,8 @@
 #
 # - src/app/favicon.ico, icon.png e apple-icon.png: o pino de public/logo.png, sem o nome,
 #   que ficaria ilegível nesses tamanhos;
+# - public/pino.png: só o pino, para os cabeçalhos e o rodapé. O nome já está em texto ao
+#   lado, e o da logo, preto, sumia no tema escuro e no rodapé verde-escuro;
 # - src/app/opengraph-image.png: os alertas do DETER de public/alertas/12-meses.json sobre
 #   os biomas do IBGE (src/dados/biomasContornos.ts). Não traz número, para não envelhecer.
 #
@@ -29,6 +31,10 @@ BRANCO = "#fffdf8"
 SUAVE = "#c4ccc0"
 
 LARGURA, ALTURA = 1200, 630
+
+# O pino dos cabeçalhos tem até 32 px de altura; 4x cobre as telas de densidade alta.
+# É o mesmo arquivo que o tool/icone/gerar.py do app grava em assets/img/pino.png.
+ALTURA_PINO = 120
 AMPLIACAO = 3
 
 
@@ -110,7 +116,13 @@ def main():
     no_quadrado(marca, 192, 0.94).save(APP / "icon.png", optimize=True)
     no_quadrado(marca, 180, 0.76, PAPEL).convert("RGB").save(APP / "apple-icon.png", optimize=True)
     compartilhamento(fontes, marca).save(APP / "opengraph-image.png", optimize=True)
-    print("ok: favicon.ico, icon.png, apple-icon.png e opengraph-image.png em src/app/")
+    salvar_pino(marca)
+    print("ok: favicon.ico, icon.png, apple-icon.png e opengraph-image.png em src/app/, e public/pino.png")
+
+
+def salvar_pino(marca):
+    largura = round(marca.width * ALTURA_PINO / marca.height)
+    marca.resize((largura, ALTURA_PINO), Image.LANCZOS).save(RAIZ / "public" / "pino.png", optimize=True)
 
 
 if __name__ == "__main__":

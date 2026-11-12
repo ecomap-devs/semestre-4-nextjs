@@ -34,6 +34,8 @@ aparece no site.
 > meses no mapa, o **quiz** e a seção **Como denunciar**, com os canais oficiais do Ibama.
 > Em 02/11, a **[política de privacidade](https://ecomapbrasil.web.app/privacidade)** e os
 > **[termos de uso](https://ecomapbrasil.web.app/termos)**, que valem também para o app.
+> Em 12/11, o **tema claro e escuro**: segue o do sistema ou o que você escolher no botão
+> do cabeçalho, com as mesmas cores do app.
 
 ## 🧭 Onde este repositório entra
 
@@ -188,8 +190,9 @@ hashes que o workflow confere (`--require-hashes`). Para mudar uma versão, na p
 `scripts/deter/`, com o `pip-tools` instalado:
 `pip-compile --generate-hashes --strip-extras --no-header --no-emit-index-url --output-file=requirements.txt requirements.in`.
 
-Os ícones do site e a imagem que aparece ao compartilhar o link ficam em `src/app/` e saem
-de `scripts/identidade/gerar.py`, que diz como refazer.
+Os ícones do site e a imagem que aparece ao compartilhar o link ficam em `src/app/`, e o pino
+dos cabeçalhos e do rodapé em `public/pino.png`. Todos saem de `scripts/identidade/gerar.py`,
+que diz como refazer.
 
 <details>
 <summary>Detalhes que mudam a leitura dos números</summary>
