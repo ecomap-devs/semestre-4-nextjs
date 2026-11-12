@@ -51,7 +51,7 @@ function Ficha({ animal, aoFechar }: { animal: Animal; aoFechar: () => void }) {
           onClick={aoFechar}
           aria-label="Fechar"
           data-foco-inicial
-          style={{ position: "absolute", top: 12, right: 12, background: "var(--branco)", border: "none", color: "var(--tinta)", width: 40, height: 40, borderRadius: "50%", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}
+          style={{ position: "absolute", top: 12, right: 12, background: "var(--cartao)", border: "none", color: "var(--tinta)", width: 40, height: 40, borderRadius: "50%", cursor: "pointer", fontSize: 15, display: "flex", alignItems: "center", justifyContent: "center" }}
         >
           <i className="fas fa-times" />
         </button>
@@ -140,7 +140,7 @@ export function Animais() {
         .filtro-btn { transition: background 0.15s, color 0.15s, border-color 0.15s; cursor: pointer; }
         .filtro-btn[aria-pressed="false"]:hover { border-color: var(--tinta-3) !important; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(29,38,32,0.55); z-index: 1300; display: flex; align-items: center; justify-content: center; padding: 16px; }
-        .modal-content { background: var(--branco); border-radius: var(--raio); max-width: 680px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(29,38,32,0.25); }
+        .modal-content { background: var(--cartao); border-radius: var(--raio); max-width: 680px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(29,38,32,0.25); }
         .biome-scroll::-webkit-scrollbar { display: none; }
 
         /* Celular, tablet e desktop no CSS, não em JS: o HTML estático já sai certo. */
@@ -221,7 +221,7 @@ export function Animais() {
                   value={busca}
                   onChange={(e) => setBusca(e.target.value)}
                   className="campo-busca"
-                  style={{ width: "100%", paddingLeft: 36, paddingRight: 12, paddingTop: 9, paddingBottom: 9, border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 16, boxSizing: "border-box", transition: "border-color 0.15s", color: "var(--tinta)", background: "var(--branco)", minHeight: 44 }}
+                  style={{ width: "100%", paddingLeft: 36, paddingRight: 12, paddingTop: 9, paddingBottom: 9, border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 16, boxSizing: "border-box", transition: "border-color 0.15s", color: "var(--tinta)", background: "var(--cartao)", minHeight: 44 }}
                 />
               </div>
 
@@ -231,7 +231,7 @@ export function Animais() {
                   onClick={() => setFiltrosAbertos((v) => !v)}
                   aria-expanded={filtrosAbertos}
                   aria-controls="filtros-animais"
-                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: "var(--raio)", border: `1px solid ${temFiltroAtivo ? "var(--mata)" : "var(--linha)"}`, background: filtrosAbertos ? "var(--papel-2)" : "var(--branco)", color: temFiltroAtivo ? "var(--mata)" : "var(--tinta-2)", fontSize: 15, cursor: "pointer", whiteSpace: "nowrap", minHeight: 44, flexShrink: 0 }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: "var(--raio)", border: `1px solid ${temFiltroAtivo ? "var(--mata)" : "var(--linha)"}`, background: filtrosAbertos ? "var(--papel-2)" : "var(--cartao)", color: temFiltroAtivo ? "var(--mata)" : "var(--tinta-2)", fontSize: 15, cursor: "pointer", whiteSpace: "nowrap", minHeight: 44, flexShrink: 0 }}
                 >
                   <i className="fas fa-sliders-h" aria-hidden="true" style={{ fontSize: 13 }} />
                   Filtros
@@ -254,7 +254,7 @@ export function Animais() {
                         className="filtro-btn"
                         aria-pressed={ativo}
                         onClick={() => setFiltroBioma(b)}
-                        style={{ padding: "6px 14px", borderRadius: 999, fontSize: 15, background: ativo ? "var(--mata)" : "transparent", color: ativo ? "var(--branco)" : "var(--tinta-2)", border: `1px solid ${ativo ? "var(--mata)" : "var(--linha)"}`, whiteSpace: "nowrap", minHeight: 36 }}
+                        style={{ padding: "6px 14px", borderRadius: 999, fontSize: 15, background: ativo ? "var(--mata)" : "transparent", color: ativo ? "var(--sobre-destaque)" : "var(--tinta-2)", border: `1px solid ${ativo ? "var(--mata)" : "var(--linha)"}`, whiteSpace: "nowrap", minHeight: 36 }}
                       >
                         {b}
                       </button>
@@ -268,7 +268,7 @@ export function Animais() {
                     value={filtroStatus}
                     onChange={(e) => setFiltroStatus(e.target.value)}
                     className="ani-status"
-                    style={{ padding: "7px 12px", borderRadius: "var(--raio)", border: "1px solid var(--linha)", fontSize: 15, color: "var(--tinta-2)", cursor: "pointer", background: "var(--branco)", minHeight: 36 }}
+                    style={{ padding: "7px 12px", borderRadius: "var(--raio)", border: "1px solid var(--linha)", fontSize: 15, color: "var(--tinta-2)", cursor: "pointer", background: "var(--cartao)", minHeight: 36 }}
                   >
                     {filtrosStatus.map((s) => (
                       <option key={s} value={s}>

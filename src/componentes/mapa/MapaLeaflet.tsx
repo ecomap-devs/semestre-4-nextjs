@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
 
+import { useTemaEscuro } from "@/componentes/comum/ganchos";
 import { biomaMaisEspecifico, biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
 import { ARQUIVO_DO_PERIODO, paraAlertasDoPeriodo, type AlertasDoPeriodo, type PeriodoAlertas, type ResumoAlertas } from "@/tipos/alertas";
 
@@ -13,7 +14,10 @@ import { ARQUIVO_DO_PERIODO, paraAlertasDoPeriodo, type AlertasDoPeriodo, type P
 
 export type EstadoAlertas = "carregando" | "ok" | "falhou";
 
-/** O fundo do mapa. Começa no claro: biomas e alertas aparecem muito mais sobre ele. */
+/**
+ * O fundo do mapa. Começa no "claro", o mapa cinza: biomas e alertas aparecem muito mais
+ * sobre ele do que sobre o satélite. No tema escuro, esse mapa cinza é o escuro da Esri.
+ */
 export type Fundo = "claro" | "satelite";
 
 type Props = {
@@ -38,13 +42,17 @@ const CREDITO = 'Mapa: <a href="https://www.esri.com">Esri</a> · Biomas: IBGE �
 /**
  * As camadas de cada fundo: a base e os nomes de cidades e fronteiras. Os nomes vão
  * num painel acima dos biomas e dos alertas, senão o preenchimento os apagaria.
+ *
+ * No tema escuro, o mapa cinza é o `World_Dark_Gray` da Esri, o mesmo do app; o satélite
+ * não muda. É o mesmo servidor (server.arcgisonline.com), já liberado na CSP.
  */
-function camadasDoFundo(fundo: Fundo): { base: L.TileLayer; nomes: L.TileLayer } {
+function camadasDoFundo(fundo: Fundo, escuro: boolean): { base: L.TileLayer; nomes: L.TileLayer } {
   const comum = { maxZoom: 16 } as const;
+  const cinza = escuro ? "Dark" : "Light";
   return fundo === "claro"
     ? {
-        base: L.tileLayer(`${ESRI}/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}`, { ...comum, attribution: CREDITO }),
-        nomes: L.tileLayer(`${ESRI}/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { ...comum, pane: "nomes" }),
+        base: L.tileLayer(`${ESRI}/Canvas/World_${cinza}_Gray_Base/MapServer/tile/{z}/{y}/{x}`, { ...comum, attribution: CREDITO }),
+        nomes: L.tileLayer(`${ESRI}/Canvas/World_${cinza}_Gray_Reference/MapServer/tile/{z}/{y}/{x}`, { ...comum, pane: "nomes" }),
       }
     : {
         base: L.tileLayer(`${ESRI}/World_Imagery/MapServer/tile/{z}/{y}/{x}`, { ...comum, attribution: CREDITO }),
@@ -126,6 +134,7 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, pe
   const [baixados, setBaixados] = useState<Partial<Record<PeriodoAlertas, AlertasDoPeriodo>>>({});
   const exibidos = baixados[periodo];
   const jaBaixado = exibidos !== undefined;
+  const escuro = useTemaEscuro();
 
   // Os callbacks vivem num ref: o efeito que monta o mapa roda uma vez só.
   const callbacks = useRef({ aoSelecionarBioma, aoMudarAlertas, aoResumirAlertas });
@@ -230,19 +239,19 @@ export default function MapaLeaflet({ foco, selecionado, fundo, versaoLayout, pe
     };
   }, [exibidos]);
 
-  // Troca de fundo: as camadas antigas saem inteiras e as novas entram. No app, trocar
-  // só o endereço dentro da mesma camada deixava a imagem velha na tela.
+  // Troca de fundo (ou de tema): as camadas antigas saem inteiras e as novas entram. No
+  // app, trocar só o endereço dentro da mesma camada deixava a imagem velha na tela.
   useEffect(() => {
     const m = mapa.current;
     if (!m) return;
-    const { base, nomes } = camadasDoFundo(fundo);
+    const { base, nomes } = camadasDoFundo(fundo, escuro);
     base.addTo(m);
     nomes.addTo(m);
     return () => {
       base.remove();
       nomes.remove();
     };
-  }, [fundo]);
+  }, [fundo, escuro]);
 
   // O destaque é só estilo, sem `bringToFront`: trazer o bioma para a frente o poria
   // por cima dos alertas, e o preenchimento esconderia o vermelho justo nele.

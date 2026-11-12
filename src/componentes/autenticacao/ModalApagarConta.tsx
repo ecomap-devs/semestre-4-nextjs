@@ -52,7 +52,7 @@ export default function ModalApagarConta({ usuario, aoFechar }: { usuario: User;
       aoFechar={fechar}
       idTitulo={`${id}-titulo`}
       estiloFundo={{ position: "fixed", inset: 0, background: "rgba(29,38,32,0.55)", zIndex: 1500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16 }}
-      estiloCaixa={{ background: "var(--branco)", borderRadius: "var(--raio)", padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 12px 40px rgba(29,38,32,0.2)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
+      estiloCaixa={{ background: "var(--cartao)", borderRadius: "var(--raio)", padding: "36px 32px", width: "100%", maxWidth: 420, position: "relative", boxShadow: "0 12px 40px rgba(29,38,32,0.2)", maxHeight: "calc(100dvh - 32px)", overflowY: "auto" }}
     >
       <button type="button" onClick={fechar} disabled={carregando} aria-label="Fechar" style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--tinta-3)" }}>
         ✕
@@ -99,11 +99,11 @@ export default function ModalApagarConta({ usuario, aoFechar }: { usuario: User;
             onChange={(e) => setSenha(e.target.value)}
             disabled={carregando}
             data-foco-inicial
-            style={{ width: "100%", padding: "11px 14px", border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 14, marginBottom: 20, outline: "none", display: "block", boxSizing: "border-box", color: "var(--tinta)", background: "var(--branco)" }}
+            style={{ width: "100%", padding: "11px 14px", border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 14, marginBottom: 20, outline: "none", display: "block", boxSizing: "border-box", color: "var(--tinta)", background: "var(--cartao)" }}
           />
           <style>{`.campo-apagar:focus-visible { border-color: var(--terra) !important; box-shadow: 0 0 0 3px var(--terra-clara); }`}</style>
 
-          <button type="submit" disabled={carregando} className="botao" style={{ width: "100%", marginBottom: 12, background: "var(--terra)", color: "var(--branco)", borderColor: "var(--terra)" }}>
+          <button type="submit" disabled={carregando} className="botao" style={{ width: "100%", marginBottom: 12, background: "var(--terra)", color: "var(--sobre-destaque)", borderColor: "var(--terra)" }}>
             {carregando ? "Apagando..." : "Apagar minha conta"}
           </button>
           <button type="button" onClick={fechar} disabled={carregando} style={{ width: "100%", background: "none", border: "none", color: "var(--mata)", fontSize: 15, cursor: "pointer", textDecoration: "underline", textUnderlineOffset: 4 }}>

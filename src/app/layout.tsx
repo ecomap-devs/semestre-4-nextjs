@@ -4,6 +4,7 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import "./globals.css";
 
 import { ProvedorAuth } from "@/componentes/autenticacao/ProvedorAuth";
+import { SCRIPT_DO_TEMA } from "@/lib/tema";
 
 // O next/font baixa as fontes no build e as serve do próprio site: nenhum pedido vai
 // ao Google, e a CSP (font-src 'self') não muda.
@@ -28,7 +29,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${fonteTitulo.variable} ${fonteTexto.variable}`}>
+    // suppressHydrationWarning: o script do tema põe `data-tema` no <html> antes de o React
+    // hidratar, e o HTML estático não tem o atributo.
+    <html lang="pt-BR" className={`${fonteTitulo.variable} ${fonteTexto.variable}`} suppressHydrationWarning>
+      <head>
+        {/* O tema escolhido no botão, aplicado antes da primeira pintura (src/lib/tema.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_DO_TEMA }} />
+      </head>
       <body>
         <ProvedorAuth>{children}</ProvedorAuth>
       </body>

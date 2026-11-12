@@ -74,7 +74,7 @@ function ItemBioma({ b, ativo, compacto = false, aoEscolher }: { b: Bioma; ativo
       className={`bioma-item${compacto ? " bioma-compacto" : ""}`}
       aria-pressed={ativo}
       onClick={aoEscolher}
-      style={{ display: "flex", alignItems: "center", gap: 10, borderRadius: "var(--raio)", cursor: "pointer", border: `1px solid ${ativo ? "var(--tinta-3)" : "transparent"}`, background: ativo ? "var(--branco)" : "transparent", textAlign: "left", width: "100%", minHeight: 44 }}
+      style={{ display: "flex", alignItems: "center", gap: 10, borderRadius: "var(--raio)", cursor: "pointer", border: `1px solid ${ativo ? "var(--tinta-3)" : "transparent"}`, background: ativo ? "var(--cartao)" : "transparent", textAlign: "left", width: "100%", minHeight: 44 }}
     >
       <span aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 2, background: b.cor, flexShrink: 0 }} />
       <span style={{ flex: 1, minWidth: 0, display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", columnGap: 8 }}>
@@ -112,7 +112,7 @@ export function Mapa() {
   // A troca entre celular, tablet e desktop é no CSS e vem com o resize da janela, que
   // o Leaflet já acompanha; só o painel do celular precisa avisar o mapa.
   const versaoLayout = String(painelAberto);
-  const cartaoFlutuante = { background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", boxShadow: "0 2px 12px rgba(29,38,32,0.12)" } as const;
+  const cartaoFlutuante = { background: "var(--cartao)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", boxShadow: "0 2px 12px rgba(29,38,32,0.12)" } as const;
 
   return (
     <div style={{ height: "100dvh", display: "flex", flexDirection: "column", background: "var(--papel)", overflow: "hidden" }}>
@@ -123,6 +123,14 @@ export function Mapa() {
         .botao-periodo[aria-pressed="false"]:hover { border-color: var(--tinta-3) !important; }
         .leaflet-container { font-family: var(--fonte-texto), system-ui, sans-serif; background: var(--papel-2); }
         .leaflet-popup-content-wrapper { border-radius: var(--raio); }
+        /* O Leaflet pinta popup, zoom e crédito de branco fixo; aqui seguem o tema. */
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--cartao); color: var(--tinta-2); }
+        .leaflet-container a.leaflet-popup-close-button { color: var(--tinta-3); }
+        .leaflet-bar a, .leaflet-bar a:hover { background: var(--cartao); color: var(--tinta); border-bottom-color: var(--linha); }
+        .leaflet-bar a:hover { background: var(--papel-2); }
+        .leaflet-container .leaflet-control-attribution { background: color-mix(in srgb, var(--cartao) 85%, transparent); color: var(--tinta-3); }
+        .leaflet-control-attribution a { color: var(--mata); }
+        .leaflet-control-scale-line { background: color-mix(in srgb, var(--cartao) 70%, transparent); color: var(--tinta-2); border-color: var(--tinta-3); }
         /* No celular o zoom é por pinça, e o +/− ficava escondido atrás do botão Biomas. */
         @media (max-width: 767px) { .leaflet-control-zoom { display: none; } }
 
@@ -257,7 +265,7 @@ export function Mapa() {
                   className="botao-periodo"
                   aria-pressed={ativo}
                   onClick={() => setPeriodo(p.meses)}
-                  style={{ padding: "4px 10px", borderRadius: 999, fontSize: 14, cursor: "pointer", background: ativo ? "var(--mata)" : "transparent", color: ativo ? "var(--branco)" : "var(--tinta-2)", border: `1px solid ${ativo ? "var(--mata)" : "var(--linha)"}`, minHeight: 32 }}
+                  style={{ padding: "4px 10px", borderRadius: 999, fontSize: 14, cursor: "pointer", background: ativo ? "var(--mata)" : "transparent", color: ativo ? "var(--sobre-destaque)" : "var(--tinta-2)", border: `1px solid ${ativo ? "var(--mata)" : "var(--linha)"}`, minHeight: 32 }}
                 >
                   {p.rotulo}
                 </button>

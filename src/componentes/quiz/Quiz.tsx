@@ -91,7 +91,7 @@ export function Quiz() {
     <div style={{ background: "var(--papel)", minHeight: "100vh" }}>
       <style>{`
         .opcao-quiz { transition: border-color 0.15s, background 0.15s; }
-        .opcao-quiz:not(:disabled):hover { border-color: var(--tinta-3) !important; background: var(--branco) !important; }
+        .opcao-quiz:not(:disabled):hover { border-color: var(--tinta-3) !important; background: var(--cartao) !important; }
       `}</style>
 
       <CabecalhoInterno titulo="Quiz" />

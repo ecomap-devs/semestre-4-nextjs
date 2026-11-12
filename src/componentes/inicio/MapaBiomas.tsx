@@ -81,7 +81,7 @@ export function MapaBiomas() {
             onMouseEnter={() => setAtivo(b.chave)}
             onFocus={() => setAtivo(b.chave)}
             onClick={() => setAtivo(b.chave)}
-            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: ativo === b.chave ? "var(--tinta)" : "var(--tinta-2)", background: ativo === b.chave ? "var(--branco)" : "transparent", border: `1px solid ${ativo === b.chave ? "var(--linha)" : "transparent"}`, borderRadius: 999, padding: "4px 10px", cursor: "pointer", minHeight: 32 }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 14, color: ativo === b.chave ? "var(--tinta)" : "var(--tinta-2)", background: ativo === b.chave ? "var(--cartao)" : "transparent", border: `1px solid ${ativo === b.chave ? "var(--linha)" : "transparent"}`, borderRadius: 999, padding: "4px 10px", cursor: "pointer", minHeight: 32 }}
           >
             <span aria-hidden="true" style={{ width: 10, height: 10, borderRadius: 2, background: b.cor }} />
             {b.nome}

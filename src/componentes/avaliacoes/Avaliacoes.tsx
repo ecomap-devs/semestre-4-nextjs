@@ -282,11 +282,11 @@ export function Avaliacoes() {
           </div>
         )}
 
-        <div style={{ background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: "28px", maxWidth: 560, margin: "0 auto" }}>
+        <div style={{ background: "var(--cartao)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", padding: "28px", maxWidth: 560, margin: "0 auto" }}>
           <h3 style={{ fontSize: 22, marginBottom: 20 }}>{usuario ? "Deixe sua avaliação" : "Faça login para avaliar"}</h3>
 
           {sucesso && (
-            <div role="status" style={{ background: "var(--mata-clara)", borderRadius: "var(--raio)", padding: "10px 14px", marginBottom: 16, fontSize: 15, color: "var(--mata-escura)" }}>
+            <div role="status" style={{ background: "var(--mata-clara)", borderRadius: "var(--raio)", padding: "10px 14px", marginBottom: 16, fontSize: 15, color: "var(--mata-forte)" }}>
               {sucesso}
             </div>
           )}
@@ -309,7 +309,7 @@ export function Avaliacoes() {
             disabled={!usuario}
             maxLength={MAX_COMENTARIO}
             rows={4}
-            style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 16, resize: "vertical", boxSizing: "border-box", background: usuario ? "var(--branco)" : "var(--papel-2)", color: "var(--tinta)", marginBottom: 14, fontFamily: "inherit" }}
+            style={{ width: "100%", padding: "12px 14px", border: "1px solid var(--linha)", borderRadius: "var(--raio)", fontSize: 16, resize: "vertical", boxSizing: "border-box", background: usuario ? "var(--cartao)" : "var(--papel-2)", color: "var(--tinta)", marginBottom: 14, fontFamily: "inherit" }}
           />
 
           <button

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { BotaoDeTema } from "@/componentes/comum/BotaoDeTema";
+
 /** Altura do cabeçalho em CSS (64px, ou 56px no celular); as telas usam para grudar o que fica embaixo dele. */
 export const alturaCabecalhoInterno = "var(--altura-cabecalho-interno)";
 
@@ -36,7 +38,7 @@ export function CabecalhoInterno({
         </Link>
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo.png" alt="" style={{ height: 30, width: "auto" }} />
+          <img src="/pino.png" alt="" style={{ height: 28, width: "auto" }} />
           <span className="so-desktop" style={{ fontFamily: "var(--fonte-titulo)", fontSize: 19, color: "var(--tinta)" }}>
             EcoMapBrasil
           </span>
@@ -53,6 +55,7 @@ export function CabecalhoInterno({
           )}
         </Titulo>
         {extra}
+        <BotaoDeTema />
       </div>
     </header>
   );
