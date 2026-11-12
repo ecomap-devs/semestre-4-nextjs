@@ -4,7 +4,6 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
-import { useLarguraJanela } from "@/componentes/comum/ganchos";
 import { biomas, COR_ALERTA, type Bioma } from "@/dados/biomas";
 import { linhaDoTempoMapa } from "@/dados/linhaDoTempo";
 import type { PeriodoAlertas, ResumoAlertas } from "@/tipos/alertas";
@@ -62,28 +61,36 @@ function LinhaDoTempoLista() {
 
 const tituloPainel = { margin: "0 0 10px", fontSize: 18 } as const;
 
-/** Um bioma na lista do painel: amostra de cor, nome e quanto foi desmatado. */
-function ItemBioma({ b, ativo, compacto, aoEscolher }: { b: Bioma; ativo: boolean; compacto: boolean; aoEscolher: () => void }) {
+/**
+ * Um bioma na lista do painel: amostra de cor, nome e quanto foi desmatado. O nome
+ * nunca é cortado: no painel de 260px "Mata Atlântica" virava "Mata Atlân…"; se não
+ * couber ao lado, o percentual desce para a linha de baixo. `compacto` é o painel do
+ * celular; o do tablet fica compacto pelo CSS (`.mapa-painel .bioma-item`).
+ */
+function ItemBioma({ b, ativo, compacto = false, aoEscolher }: { b: Bioma; ativo: boolean; compacto?: boolean; aoEscolher: () => void }) {
   return (
     <button
       type="button"
-      className="bioma-item"
+      className={`bioma-item${compacto ? " bioma-compacto" : ""}`}
       aria-pressed={ativo}
       onClick={aoEscolher}
-      style={{ display: "flex", alignItems: "center", gap: 10, padding: compacto ? "8px 10px" : "9px 12px", borderRadius: "var(--raio)", cursor: "pointer", border: `1px solid ${ativo ? "var(--tinta-3)" : "transparent"}`, background: ativo ? "var(--branco)" : "transparent", textAlign: "left", width: "100%", minHeight: 44 }}
+      style={{ display: "flex", alignItems: "center", gap: 10, borderRadius: "var(--raio)", cursor: "pointer", border: `1px solid ${ativo ? "var(--tinta-3)" : "transparent"}`, background: ativo ? "var(--branco)" : "transparent", textAlign: "left", width: "100%", minHeight: 44 }}
     >
       <span aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 2, background: b.cor, flexShrink: 0 }} />
-      <span style={{ flex: 1, minWidth: 0, fontSize: compacto ? 15 : 16, color: "var(--tinta)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{b.nome}</span>
-      <span style={{ fontSize: 14, color: "var(--tinta-3)", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{b.desmatamento} desmatado</span>
+      <span style={{ flex: 1, minWidth: 0, display: "flex", flexWrap: "wrap", alignItems: "baseline", justifyContent: "space-between", columnGap: 8 }}>
+        <span className="bioma-nome" style={{ color: "var(--tinta)" }}>{b.nome}</span>
+        <span style={{ fontSize: 14, color: "var(--tinta-3)", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{b.desmatamento} desmatado</span>
+      </span>
     </button>
   );
 }
 
-export function Mapa() {
-  const largura = useLarguraJanela();
-  const ehMobile = largura < 768;
-  const ehTablet = largura >= 768 && largura < 1024;
+/** Celular pela mesma largura do CSS; só para eventos, nunca para desenhar. */
+function ehCelular(): boolean {
+  return window.matchMedia("(max-width: 767px)").matches;
+}
 
+export function Mapa() {
   const [biomaAtivo, setBiomaAtivo] = useState<string | null>(null);
   const [foco, setFoco] = useState<{ chave: string; vez: number } | null>(null);
   const [painelAberto, setPainelAberto] = useState(false);
@@ -92,15 +99,19 @@ export function Mapa() {
   const [resumo, setResumo] = useState<ResumoAlertas | null>(null);
   const [fundo, setFundo] = useState<Fundo>("claro");
   const [periodo, setPeriodo] = useState<PeriodoAlertas>(12);
+  // Só vale no celular, onde a legenda cobria um terço do mapa: começa recolhida, com
+  // o título e o botão para abrir. No tablet e no desktop ela aparece inteira sempre.
+  const [legendaAberta, setLegendaAberta] = useState(false);
 
   const focarBioma = (b: Bioma) => {
     setBiomaAtivo(b.chave);
     setFoco((f) => ({ chave: b.chave, vez: (f?.vez ?? 0) + 1 }));
-    if (ehMobile) setPainelAberto(false);
+    if (ehCelular()) setPainelAberto(false);
   };
 
-  const larguraPainel = ehTablet ? 260 : 320;
-  const versaoLayout = `${ehMobile}-${ehTablet}-${painelAberto}`;
+  // A troca entre celular, tablet e desktop é no CSS e vem com o resize da janela, que
+  // o Leaflet já acompanha; só o painel do celular precisa avisar o mapa.
+  const versaoLayout = String(painelAberto);
   const cartaoFlutuante = { background: "var(--branco)", border: "1px solid var(--linha)", borderRadius: "var(--raio)", boxShadow: "0 2px 12px rgba(29,38,32,0.12)" } as const;
 
   return (
@@ -114,16 +125,47 @@ export function Mapa() {
         .leaflet-popup-content-wrapper { border-radius: var(--raio); }
         /* No celular o zoom é por pinça, e o +/− ficava escondido atrás do botão Biomas. */
         @media (max-width: 767px) { .leaflet-control-zoom { display: none; } }
+
+        /* Celular, tablet e desktop no CSS, não em JS (useLarguraJanela até 11/11/2026):
+           o HTML estático saía como desktop, e a legenda deslizava de 32 para 84px
+           depois que a página abria. */
+        .mapa-painel { width: 320px; display: flex; }
+        .botao-fundo { right: 336px; }
+        .bioma-item { padding: 9px 12px; }
+        .bioma-nome { font-size: 16px; }
+        .bioma-compacto { padding: 8px 10px; }
+        .bioma-compacto .bioma-nome { font-size: 15px; }
+        .mapa-legenda { bottom: 32px; max-width: 320px; }
+        .legenda-alternar { display: none; }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .mapa-painel { width: 260px; }
+          .botao-fundo { right: 276px; }
+          .mapa-painel .bioma-item { padding: 8px 10px; }
+          .mapa-painel .bioma-nome { font-size: 15px; }
+        }
+        @media (max-width: 767px) {
+          .mapa-painel { display: none; }
+          .botao-fundo { right: 16px; }
+          .mapa-legenda { bottom: 84px; max-width: calc(100% - 32px); }
+          .mapa-legenda[data-painel="true"] { bottom: 210px; }
+          .legenda-alternar { display: flex; }
+          .mapa-legenda[data-aberta="false"] .legenda-detalhe { display: none; }
+        }
       `}</style>
 
       {/* O seletor de fontes do celular (um botão "i" com menu) virou a linha de fontes
           da legenda, que já aparecia lá. */}
+      {/* O título longo cortava "por pouco" no tablet: até 1023px vai o curto. */}
       <CabecalhoInterno
-        titulo={ehMobile ? "Mapa do desmatamento" : "Mapa do desmatamento nos biomas"}
-        ehMobile={ehMobile}
+        titulo="Mapa do desmatamento nos biomas"
+        tituloCurto="Mapa do desmatamento"
         tituloDaPagina
         larguraTotal
-        extra={!ehMobile && <span style={{ fontSize: 14, color: "var(--tinta-3)", flexShrink: 0 }}>Dados: INPE e IBGE</span>}
+        extra={
+          <span className="so-desktop" style={{ fontSize: 14, color: "var(--tinta-3)", flexShrink: 0 }}>
+            Dados: INPE e IBGE
+          </span>
+        }
       />
 
       <div style={{ display: "flex", flex: 1, overflow: "hidden", position: "relative" }}>
@@ -144,7 +186,7 @@ export function Mapa() {
           onClick={() => setFundo((f) => (f === "claro" ? "satelite" : "claro"))}
           aria-label={fundo === "claro" ? "Mostrar imagem de satélite" : "Mostrar mapa"}
           className="botao-fundo"
-          style={{ ...cartaoFlutuante, position: "absolute", top: 12, right: ehMobile ? 16 : larguraPainel + 16, zIndex: 1000, display: "flex", alignItems: "center", gap: 8, minHeight: 44, padding: "0 14px", color: "var(--tinta)", fontSize: 15, cursor: "pointer", transition: "background 0.15s" }}
+          style={{ ...cartaoFlutuante, position: "absolute", top: 12, zIndex: 1000, display: "flex", alignItems: "center", gap: 8, minHeight: 44, padding: "0 14px", color: "var(--tinta)", fontSize: 15, cursor: "pointer", transition: "background 0.15s" }}
         >
           <i className={`fas ${fundo === "claro" ? "fa-satellite" : "fa-map"}`} aria-hidden="true" style={{ color: "var(--mata)" }} />
           {fundo === "claro" ? "Satélite" : "Mapa"}
@@ -156,14 +198,13 @@ export function Mapa() {
           </div>
         )}
 
-        {!ehMobile && (
-          <aside aria-label="Biomas e linha do tempo" style={{ width: larguraPainel, background: "var(--papel)", borderLeft: "1px solid var(--linha)", overflowY: "auto", display: "flex", flexDirection: "column", flexShrink: 0 }}>
+        <aside className="mapa-painel" aria-label="Biomas e linha do tempo" style={{ background: "var(--papel)", borderLeft: "1px solid var(--linha)", overflowY: "auto", flexDirection: "column", flexShrink: 0 }}>
             <div style={{ padding: "20px 16px", flex: 1 }}>
               <h2 style={{ ...tituloPainel, padding: "0 4px" }}>Biomas</h2>
               <p style={{ fontSize: 14, color: "var(--tinta-3)", margin: "0 4px 10px" }}>Escolha um para centralizar o mapa nele.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 28 }}>
                 {biomas.map((b) => (
-                  <ItemBioma key={b.chave} b={b} ativo={biomaAtivo === b.chave} compacto={ehTablet} aoEscolher={() => focarBioma(b)} />
+                  <ItemBioma key={b.chave} b={b} ativo={biomaAtivo === b.chave} aoEscolher={() => focarBioma(b)} />
                 ))}
               </div>
               <div style={{ padding: "0 4px" }}>
@@ -172,16 +213,17 @@ export function Mapa() {
               </div>
             </div>
           </aside>
-        )}
 
         {/* No React a legenda tinha "Limites Estaduais" em azul, mas nenhuma camada azul é
             desenhada. Fonte, período e totais saem do próprio GeoJSON, não de texto fixo. */}
-        <div style={{ ...cartaoFlutuante, position: "absolute", bottom: ehMobile ? (painelAberto ? 210 : 84) : 32, left: 16, maxWidth: ehMobile ? "calc(100% - 32px)" : 320, padding: "12px 14px", zIndex: 1000, transition: "bottom 0.3s ease" }}>
+        {/* No celular a legenda começa recolhida: com o seletor de período ela tinha
+            259px e cobria um terço do mapa em 375px. */}
+        <div className="mapa-legenda" data-painel={painelAberto} data-aberta={legendaAberta} style={{ ...cartaoFlutuante, position: "absolute", left: 16, padding: "12px 14px", zIndex: 1000, transition: "bottom 0.3s ease" }}>
           <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
             <span aria-hidden="true" style={{ width: 12, height: 12, borderRadius: 2, background: COR_ALERTA, flexShrink: 0, marginTop: 4 }} />
-            <div>
+            <div style={{ flex: 1 }}>
               <span style={{ fontSize: 15, color: "var(--tinta)" }}>Alertas de desmatamento</span>
-              <div style={{ fontSize: 13, color: "var(--tinta-3)" }}>
+              <div className="legenda-detalhe" style={{ fontSize: 13, color: "var(--tinta-3)" }}>
                 DETER / INPE · Amazônia Legal e Cerrado
                 {alertas === "ok" && resumo && resumo.fim && (
                   <>
@@ -191,7 +233,19 @@ export function Mapa() {
                 )}
               </div>
             </div>
+            <button
+              type="button"
+              className="legenda-alternar"
+              onClick={() => setLegendaAberta((v) => !v)}
+              aria-expanded={legendaAberta}
+              aria-controls="legenda-detalhe"
+              aria-label={legendaAberta ? "Recolher a legenda" : "Abrir a legenda"}
+              style={{ alignItems: "center", justifyContent: "center", width: 44, height: 44, margin: "-12px -10px -12px 0", background: "none", border: "none", color: "var(--tinta-2)", cursor: "pointer", flexShrink: 0 }}
+            >
+              <i className={`fas ${legendaAberta ? "fa-chevron-down" : "fa-chevron-up"}`} aria-hidden="true" style={{ fontSize: 13 }} />
+            </button>
           </div>
+          <div id="legenda-detalhe" className="legenda-detalhe">
           {/* O fim é o alerta mais recente publicado pelo INPE, não o dia de hoje. */}
           <div role="group" aria-label="Período dos alertas" style={{ display: "flex", gap: 6, margin: "10px 0 0" }}>
             {PERIODOS.map((p) => {
@@ -220,10 +274,10 @@ export function Mapa() {
               </span>
             ))}
           </div>
+          </div>
         </div>
 
-        {ehMobile && (
-          <>
+        <div className="so-celular">
             {!painelAberto && (
               <button
                 type="button"
@@ -277,8 +331,7 @@ export function Mapa() {
                 )}
               </div>
             </div>
-          </>
-        )}
+        </div>
       </div>
     </div>
   );

@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { CabecalhoInterno, alturaCabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
-import { useLarguraJanela } from "@/componentes/comum/ganchos";
+import { CabecalhoInterno } from "@/componentes/comum/CabecalhoInterno";
 import { Dialogo } from "@/componentes/comum/Dialogo";
 import { ImagemComReserva } from "@/componentes/comum/ImagemComReserva";
 import { animais, corDoStatus, ehAmeacada, filtrosBioma, filtrosStatus, passaNoFiltroStatus, type Animal } from "@/dados/animais";
@@ -24,7 +23,7 @@ function normalizar(texto: string): string {
 // eram inventados. No lugar, os dois status e a estimativa publicada, quando há.
 
 /** Os dois status lado a lado: o do Brasil e o do mundo. */
-function Status({ animal, tamanho }: { animal: Animal; tamanho: number }) {
+function Status({ animal }: { animal: Animal }) {
   return (
     <dl style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
       {[
@@ -34,18 +33,18 @@ function Status({ animal, tamanho }: { animal: Animal; tamanho: number }) {
         // No <dl> o termo vem antes do valor; column-reverse põe o valor em cima.
         <div key={d.rotulo} style={{ borderTop: "1px solid var(--linha)", paddingTop: 10, display: "flex", flexDirection: "column-reverse", justifyContent: "flex-end" }}>
           <dt style={{ fontSize: 14, color: "var(--tinta-3)" }}>{d.rotulo}</dt>
-          <dd style={{ fontFamily: "var(--fonte-titulo)", fontSize: tamanho, color: d.cor, lineHeight: 1.15 }}>{d.valor}</dd>
+          <dd className="status-valor" style={{ fontFamily: "var(--fonte-titulo)", color: d.cor, lineHeight: 1.15 }}>{d.valor}</dd>
         </div>
       ))}
     </dl>
   );
 }
 
-function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boolean; aoFechar: () => void }) {
+function Ficha({ animal, aoFechar }: { animal: Animal; aoFechar: () => void }) {
   return (
     // Foco preso na ficha, fundo inerte, Esc fecha e o foco volta ao card (Dialogo).
     <Dialogo aoFechar={aoFechar} idTitulo="titulo-ficha" classeFundo="modal-overlay" classeCaixa="modal-content" fechaNoFundo>
-      <div style={{ height: ehMobile ? 200 : 300, position: "relative", background: "var(--linha)" }}>
+      <div className="ficha-foto" style={{ position: "relative", background: "var(--linha)" }}>
         <ImagemComReserva src={animal.imagem} alt={animal.nome} loading="eager" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
         <button
           type="button"
@@ -58,7 +57,7 @@ function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boole
         </button>
       </div>
       {animal.credito && (
-        <p style={{ fontSize: 13, color: "var(--tinta-3)", padding: ehMobile ? "6px 18px 0" : "6px 32px 0" }}>
+        <p className="ficha-credito" style={{ fontSize: 13, color: "var(--tinta-3)" }}>
           Foto:{" "}
           <a href={animal.credito.link} target="_blank" rel="noopener noreferrer" className="link">
             {animal.credito.autor}
@@ -67,8 +66,8 @@ function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boole
         </p>
       )}
 
-      <div style={{ padding: ehMobile ? "20px 18px 28px" : "28px 32px 36px" }}>
-        <h2 id="titulo-ficha" style={{ fontSize: ehMobile ? 26 : 32, margin: "0 0 2px" }}>
+      <div className="ficha-corpo">
+        <h2 id="titulo-ficha" className="ficha-nome" style={{ margin: "0 0 2px" }}>
           {animal.nome}
         </h2>
         <p style={{ fontSize: 15, color: "var(--tinta-3)", marginBottom: 16 }}>
@@ -78,7 +77,7 @@ function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boole
         <p style={{ fontSize: 16, color: "var(--tinta-2)", marginBottom: 24 }}>{animal.descricao}</p>
 
         <div style={{ marginBottom: 24 }}>
-          <Status animal={animal} tamanho={ehMobile ? 22 : 26} />
+          <Status animal={animal} />
         </div>
 
         {animal.populacao && (
@@ -105,10 +104,6 @@ function Ficha({ animal, ehMobile, aoFechar }: { animal: Animal; ehMobile: boole
 }
 
 export function Animais() {
-  const largura = useLarguraJanela();
-  const ehMobile = largura < 768;
-  const ehTablet = largura >= 768 && largura < 1024;
-
   const [filtroBioma, setFiltroBioma] = useState("Todos");
   const [filtroStatus, setFiltroStatus] = useState("Todos");
   const [busca, setBusca] = useState("");
@@ -123,7 +118,6 @@ export function Animais() {
       (normalizar(a.nome).includes(termo) || normalizar(a.bioma).includes(termo)),
   );
 
-  const colunas = ehMobile ? "1fr" : ehTablet ? "repeat(2, 1fr)" : "repeat(auto-fill, minmax(300px, 1fr))";
   const temFiltroAtivo = filtroBioma !== "Todos" || filtroStatus !== "Todos";
   const contador = `${filtrados.length} espécie${filtrados.length !== 1 ? "s" : ""}`;
   const resumo = [
@@ -148,23 +142,66 @@ export function Animais() {
         .modal-overlay { position: fixed; inset: 0; background: rgba(29,38,32,0.55); z-index: 1300; display: flex; align-items: center; justify-content: center; padding: 16px; }
         .modal-content { background: var(--branco); border-radius: var(--raio); max-width: 680px; width: 100%; max-height: 92vh; overflow-y: auto; box-shadow: 0 12px 40px rgba(29,38,32,0.25); }
         .biome-scroll::-webkit-scrollbar { display: none; }
+
+        /* Celular, tablet e desktop no CSS, não em JS: o HTML estático já sai certo. */
+        .status-valor { font-size: 26px; }
+        .ficha-foto { height: 300px; }
+        .ficha-credito { padding: 6px 32px 0; }
+        .ficha-corpo { padding: 28px 32px 36px; }
+        .ficha-nome { font-size: 32px; }
+        .ani-abertura { min-height: 520px; }
+        .ani-abertura-texto { padding: 80px 24px 48px; }
+        .ani-titulo { font-size: clamp(48px, 6vw, 80px); }
+        .ani-intro { font-size: 20px; }
+        .ani-numero { font-size: 40px; }
+        .ani-barra { padding: 16px 24px; top: var(--altura-cabecalho-interno); }
+        .ani-busca { margin-bottom: 12px; }
+        .ani-filtros { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+        .ani-biomas { flex-wrap: wrap; }
+        .ani-lista { padding: 48px 24px 80px; }
+        .ani-grade { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 56px 32px; }
+        .ani-rodape { padding: 24px; }
+        @media (min-width: 768px) and (max-width: 1023px) {
+          .ani-grade { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 767px) {
+          .status-valor { font-size: 22px; }
+          .ficha-foto { height: 200px; }
+          .ficha-credito { padding: 6px 18px 0; }
+          .ficha-corpo { padding: 20px 18px 28px; }
+          .ficha-nome { font-size: 26px; }
+          .ani-abertura { min-height: 420px; }
+          .ani-abertura-texto { padding: 48px 16px 32px; }
+          .ani-titulo { font-size: 38px; }
+          .ani-intro { font-size: 17px; }
+          .ani-numero { font-size: 30px; }
+          .ani-barra { padding: 12px 16px; }
+          .ani-busca { margin-bottom: 0; }
+          .ani-filtros { flex-direction: column; flex-wrap: nowrap; align-items: stretch; gap: 10px; padding-top: 12px; }
+          .ani-filtros[data-aberto="false"] { display: none; }
+          .ani-biomas { flex-wrap: nowrap; overflow-x: auto; }
+          .ani-status { flex: 1; }
+          .ani-lista { padding: 28px 16px 56px; }
+          .ani-grade { grid-template-columns: 1fr; gap: 40px 16px; }
+          .ani-rodape { padding: 20px 16px; }
+        }
       `}</style>
 
-      <CabecalhoInterno titulo="Animais" ehMobile={ehMobile} />
+      <CabecalhoInterno titulo="Animais" />
 
       <main>
         {/* Abertura sobre a foto da primeira espécie, como a faixa de foto da Home. */}
-        <div style={{ position: "relative", minHeight: ehMobile ? 420 : 520, display: "flex", alignItems: "flex-end", backgroundImage: `url('${animais[0]?.imagem}')`, backgroundSize: "cover", backgroundPosition: "center 35%", backgroundColor: "var(--mata-noite)" }}>
+        <div className="ani-abertura" style={{ position: "relative", display: "flex", alignItems: "flex-end", backgroundImage: `url('${animais[0]?.imagem}')`, backgroundSize: "cover", backgroundPosition: "center 35%", backgroundColor: "var(--mata-noite)" }}>
           <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(16,24,18,0.92) 0%, rgba(16,24,18,0.45) 55%, rgba(16,24,18,0.2) 100%)" }} />
-          <div style={{ position: "relative", width: "100%", maxWidth: 1120, margin: "0 auto", padding: ehMobile ? "48px 16px 32px" : "80px 24px 48px" }}>
-            <h1 style={{ fontSize: ehMobile ? 38 : "clamp(48px, 6vw, 80px)", margin: "0 0 16px", maxWidth: 820, color: "var(--branco)", letterSpacing: "-0.02em", lineHeight: 1.02 }}>Espécies que o desmatamento está levando embora</h1>
-            <p style={{ fontSize: ehMobile ? 17 : 20, maxWidth: 600, marginBottom: 28, color: "rgba(255,253,248,0.85)" }}>
+          <div className="ani-abertura-texto" style={{ position: "relative", width: "100%", maxWidth: 1120, margin: "0 auto" }}>
+            <h1 className="ani-titulo" style={{ margin: "0 0 16px", maxWidth: 820, color: "var(--branco)", letterSpacing: "-0.02em", lineHeight: 1.02 }}>Espécies que o desmatamento está levando embora</h1>
+            <p className="ani-intro" style={{ maxWidth: 600, marginBottom: 28, color: "rgba(255,253,248,0.85)" }}>
               Ameaçada ou não, cada uma depende de um pedaço de mata que está sumindo. Toque numa espécie para ver o status dela no Brasil e no mundo, e quantas restam, onde alguém contou.
             </p>
             <p style={{ display: "flex", flexWrap: "wrap", gap: "8px 32px", fontSize: 16, color: "rgba(255,253,248,0.78)" }}>
               {resumo.map((s) => (
                 <span key={s.rotulo}>
-                  <strong style={{ fontFamily: "var(--fonte-titulo)", fontWeight: 500, fontSize: ehMobile ? 30 : 40, color: "var(--sol)", marginRight: 8 }}>{s.valor}</strong>
+                  <strong className="ani-numero" style={{ fontFamily: "var(--fonte-titulo)", fontWeight: 500, color: "var(--sol)", marginRight: 8 }}>{s.valor}</strong>
                   {s.rotulo}
                 </span>
               ))}
@@ -172,9 +209,9 @@ export function Animais() {
           </div>
         </div>
 
-        <div style={{ background: "var(--papel)", borderBottom: "1px solid var(--linha)", padding: ehMobile ? "12px 16px" : "16px 24px", position: "sticky", top: alturaCabecalhoInterno(ehMobile), zIndex: 40 }}>
+        <div className="ani-barra" style={{ background: "var(--papel)", borderBottom: "1px solid var(--linha)", position: "sticky", zIndex: 40 }}>
           <div style={{ maxWidth: 1120, margin: "0 auto" }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: ehMobile ? 0 : 12 }}>
+            <div className="ani-busca" style={{ display: "flex", gap: 10, alignItems: "center" }}>
               <div style={{ position: "relative", flex: 1 }}>
                 <i className="fas fa-search" aria-hidden="true" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "var(--tinta-3)", fontSize: 13 }} />
                 <input
@@ -188,27 +225,26 @@ export function Animais() {
                 />
               </div>
 
-              {ehMobile ? (
-                <button
+              <button
                   type="button"
+                  className="so-celular"
                   onClick={() => setFiltrosAbertos((v) => !v)}
                   aria-expanded={filtrosAbertos}
+                  aria-controls="filtros-animais"
                   style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 14px", borderRadius: "var(--raio)", border: `1px solid ${temFiltroAtivo ? "var(--mata)" : "var(--linha)"}`, background: filtrosAbertos ? "var(--papel-2)" : "var(--branco)", color: temFiltroAtivo ? "var(--mata)" : "var(--tinta-2)", fontSize: 15, cursor: "pointer", whiteSpace: "nowrap", minHeight: 44, flexShrink: 0 }}
                 >
                   <i className="fas fa-sliders-h" aria-hidden="true" style={{ fontSize: 13 }} />
                   Filtros
                   {temFiltroAtivo && <span className="sr-only">(com filtro ativo)</span>}
                 </button>
-              ) : (
-                <span role="status" style={{ fontSize: 15, color: "var(--tinta-3)", whiteSpace: "nowrap" }}>
-                  {contador}
-                </span>
-              )}
+              <span role="status" className="so-desktop" style={{ fontSize: 15, color: "var(--tinta-3)", whiteSpace: "nowrap" }}>
+                {contador}
+              </span>
             </div>
 
-            {(!ehMobile || filtrosAbertos) && (
-              <div style={{ display: "flex", gap: ehMobile ? 10 : 16, flexDirection: ehMobile ? "column" : "row", flexWrap: ehMobile ? "nowrap" : "wrap", alignItems: ehMobile ? "stretch" : "center", paddingTop: ehMobile ? 12 : 0 }}>
-                <div className="biome-scroll" role="group" aria-label="Filtrar por bioma" style={{ display: "flex", gap: 6, flexWrap: ehMobile ? "nowrap" : "wrap", overflowX: ehMobile ? "auto" : "visible", scrollbarWidth: "none" }}>
+            {/* No celular os filtros ficam atrás do botão "Filtros"; no resto, sempre à vista. */}
+            <div id="filtros-animais" className="ani-filtros" data-aberto={filtrosAbertos}>
+                <div className="biome-scroll ani-biomas" role="group" aria-label="Filtrar por bioma" style={{ display: "flex", gap: 6, scrollbarWidth: "none" }}>
                   {filtrosBioma.map((b) => {
                     const ativo = filtroBioma === b;
                     return (
@@ -231,7 +267,8 @@ export function Animais() {
                     aria-label="Filtrar por status de conservação"
                     value={filtroStatus}
                     onChange={(e) => setFiltroStatus(e.target.value)}
-                    style={{ padding: "7px 12px", borderRadius: "var(--raio)", border: "1px solid var(--linha)", fontSize: 15, color: "var(--tinta-2)", cursor: "pointer", background: "var(--branco)", flex: ehMobile ? 1 : "unset", minHeight: 36 }}
+                    className="ani-status"
+                    style={{ padding: "7px 12px", borderRadius: "var(--raio)", border: "1px solid var(--linha)", fontSize: 15, color: "var(--tinta-2)", cursor: "pointer", background: "var(--branco)", minHeight: 36 }}
                   >
                     {filtrosStatus.map((s) => (
                       <option key={s} value={s}>
@@ -239,14 +276,15 @@ export function Animais() {
                       </option>
                     ))}
                   </select>
-                  {ehMobile && <span style={{ fontSize: 15, color: "var(--tinta-3)", whiteSpace: "nowrap" }}>{contador}</span>}
+                  <span className="so-celular" style={{ fontSize: 15, color: "var(--tinta-3)", whiteSpace: "nowrap" }}>
+                    {contador}
+                  </span>
                 </div>
               </div>
-            )}
           </div>
         </div>
 
-        <div style={{ maxWidth: 1120, margin: "0 auto", padding: ehMobile ? "28px 16px 56px" : "48px 24px 80px" }}>
+        <div className="ani-lista" style={{ maxWidth: 1120, margin: "0 auto" }}>
           {filtrados.length === 0 ? (
             <div style={{ padding: "64px 0", maxWidth: 420 }}>
               <p style={{ fontSize: 18, color: "var(--tinta)", marginBottom: 12 }}>Nenhuma espécie encontrada com esses filtros.</p>
@@ -264,7 +302,7 @@ export function Animais() {
               </button>
             </div>
           ) : (
-            <div style={{ display: "grid", gridTemplateColumns: colunas, gap: ehMobile ? "40px 16px" : "56px 32px" }}>
+            <div className="ani-grade">
               {filtrados.map((animal) => {
                 return (
                   <article key={animal.nome} className="animal-card" style={{ cursor: "pointer" }}>
@@ -296,9 +334,9 @@ export function Animais() {
         </div>
       </main>
 
-      {selecionado && <Ficha animal={selecionado} ehMobile={ehMobile} aoFechar={() => setSelecionado(null)} />}
+      {selecionado && <Ficha animal={selecionado} aoFechar={() => setSelecionado(null)} />}
 
-      <footer style={{ borderTop: "1px solid var(--linha)", padding: ehMobile ? "20px 16px" : "24px", fontSize: 14, color: "var(--tinta-3)" }}>
+      <footer className="ani-rodape" style={{ borderTop: "1px solid var(--linha)", fontSize: 14, color: "var(--tinta-3)" }}>
         <div style={{ maxWidth: 1120, margin: "0 auto" }}>© 2025–2026 EcoMapBrasil · Status no Brasil: lista nacional de fauna ameaçada do{" "}
           <a href={listaNacional.fonte} target="_blank" rel="noopener noreferrer" className="link">
             MMA
