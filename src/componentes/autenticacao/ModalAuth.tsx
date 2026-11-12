@@ -171,7 +171,8 @@ export default function ModalAuth({ aoFechar }: { aoFechar: () => void }) {
         .rotulo-auth { display: block; font-size: 14px; color: var(--tinta-2); margin-bottom: 4px; }
       `}</style>
       <form onSubmit={enviar} noValidate>
-        <button type="button" onClick={aoFechar} aria-label="Fechar" style={{ position: "absolute", top: 16, right: 16, background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--tinta-3)" }}>
+        {/* 44x44 de toque: o × sozinho media 16x31, abaixo dos 24px do WCAG 2.5.8. */}
+        <button type="button" onClick={aoFechar} aria-label="Fechar" style={{ position: "absolute", top: 8, right: 8, width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "var(--tinta-3)" }}>
           ✕
         </button>
 
@@ -303,7 +304,8 @@ const estiloCampo: CSSProperties = {
   padding: "11px 14px",
   border: "1px solid var(--linha)",
   borderRadius: "var(--raio)",
-  fontSize: 14,
+  // 16px: com menos, o Safari do iPhone dá zoom na página ao focar o campo.
+  fontSize: 16,
   marginBottom: 12,
   // O contorno padrão sai, mas o foco ganha borda verde e halo (.campo-auth).
   outline: "none",
